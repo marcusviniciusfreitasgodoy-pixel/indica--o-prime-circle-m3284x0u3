@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T19:12:54.662Z",
+  "generatedAt": "2026-10-27T19:28:58.150Z",
   "collections": [
     {
       "name": "users",
@@ -29,14 +29,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         },
         {
           "name": "agency",
@@ -67,8 +72,8 @@
       "name": "referrals",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id)",
-        "view": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id)",
+        "list": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
+        "view": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
         "create": "@request.auth.id != ''",
         "update": "@request.auth.id != '' && current_owner_id = @request.auth.id",
         "delete": "@request.auth.id != '' && current_owner_id = @request.auth.id"
@@ -79,7 +84,14 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["imovel", "cliente"]
+          "selectValues": [
+            "proprietario",
+            "comprador",
+            "imovel",
+            "cliente",
+            "proprietario_venda",
+            "proprietario_locacao"
+          ]
         },
         {
           "name": "referrer_name",
@@ -110,14 +122,44 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["nova", "em_atendimento", "atendida", "concluida", "repassada"]
+          "selectValues": [
+            "recebida",
+            "em_triagem",
+            "aceita",
+            "em_contato",
+            "qualificada",
+            "em_negociacao",
+            "captacao_solicitada",
+            "captada",
+            "em_divulgacao",
+            "vendida",
+            "alugada",
+            "recusada",
+            "duplicada",
+            "perdida",
+            "declinada_pela_godoy",
+            "retirada",
+            "cancelada",
+            "em_atendimento",
+            "visitando",
+            "proposta",
+            "comprou",
+            "alugou",
+            "nova",
+            "atendida",
+            "concluida",
+            "repassada"
+          ]
         },
         {
           "name": "channel",
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["link_publico", "manual"]
+          "selectValues": [
+            "link_publico",
+            "manual"
+          ]
         },
         {
           "name": "current_owner_id",
@@ -150,14 +192,222 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        },
+        {
+          "name": "referral_type",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "proprietario",
+            "comprador"
+          ]
+        },
+        {
+          "name": "participant_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "participants"
+        },
+        {
+          "name": "assigned_operator_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "condominium_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "condominiums"
+        },
+        {
+          "name": "unit",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "normalized_address",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "owner_name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "owner_phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "owner_email",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "owner_cpf",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "target_neighborhood",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "buyer_name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "buyer_phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "buyer_email",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "source_origin",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "attribution_status",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "atribuida",
+            "pendente",
+            "recusada"
+          ]
+        },
+        {
+          "name": "attribution_hint",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "consent_declared",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "consent_confirmed_by_operator",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "status_reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "public_reason_code",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "loss_responsibility",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": [
+            "proprietario",
+            "indicacao_invalida"
+          ]
+        },
+        {
+          "name": "declined_reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "declined_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "listing_link",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_reserved_listing",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "public_summary",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "public_photos",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deal_value_brl",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deal_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "deal_property_description",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -190,21 +440,30 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["admin", "operador", "financeiro"]
+          "selectValues": [
+            "admin",
+            "operador",
+            "financeiro"
+          ]
         },
         {
           "name": "created",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -253,17 +512,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE UNIQUE INDEX idx_profiles_user_id ON profiles (user_id)"]
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_profiles_user_id ON profiles (user_id)"
+      ]
     },
     {
       "name": "programs",
@@ -305,17 +571,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE UNIQUE INDEX idx_programs_slug ON programs (slug)"]
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_programs_slug ON programs (slug)"
+      ]
     },
     {
       "name": "program_levels",
@@ -370,14 +643,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -420,7 +698,10 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["comunidade", "parceiros"]
+          "selectValues": [
+            "comunidade",
+            "parceiros"
+          ]
         },
         {
           "name": "requires_approval",
@@ -433,7 +714,10 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["link_only", "link_and_direct"]
+          "selectValues": [
+            "link_only",
+            "link_and_direct"
+          ]
         },
         {
           "name": "description",
@@ -446,14 +730,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -519,14 +808,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -571,7 +865,12 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["pendente_aprovacao", "ativo", "suspenso", "inativo"]
+          "selectValues": [
+            "pendente_aprovacao",
+            "ativo",
+            "suspenso",
+            "inativo"
+          ]
         },
         {
           "name": "pix_key",
@@ -584,7 +883,13 @@
           "type": "select",
           "required": false,
           "system": false,
-          "selectValues": ["cpf", "cnpj", "email", "telefone", "aleatoria"]
+          "selectValues": [
+            "cpf",
+            "cnpj",
+            "email",
+            "telefone",
+            "aleatoria"
+          ]
         },
         {
           "name": "referral_code",
@@ -616,14 +921,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -668,14 +978,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -734,14 +1049,19 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
@@ -797,17 +1117,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE INDEX idx_acceptances_user_doc ON acceptances (user_id, document_id)"]
+      "indexes": [
+        "CREATE INDEX idx_acceptances_user_doc ON acceptances (user_id, document_id)"
+      ]
     },
     {
       "name": "program_settings",
@@ -843,17 +1170,24 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
-      "indexes": ["CREATE UNIQUE INDEX idx_program_settings_key ON program_settings (key)"]
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_program_settings_key ON program_settings (key)"
+      ]
     },
     {
       "name": "audit_logs",
@@ -914,20 +1248,995 @@
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate"]
+          "autodateTriggers": [
+            "onCreate"
+          ]
         },
         {
           "name": "updated",
           "type": "autodate",
           "required": false,
           "system": false,
-          "autodateTriggers": ["onCreate", "onUpdate"]
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
         }
       ],
       "indexes": [
         "CREATE INDEX idx_audit_logs_action ON audit_logs (action)",
         "CREATE INDEX idx_audit_logs_resource ON audit_logs (resource_type, resource_id)",
         "CREATE INDEX idx_audit_logs_created ON audit_logs (created DESC)"
+      ]
+    },
+    {
+      "name": "referral_events",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (referral_id.current_owner_id = @request.auth.id || referral_id.original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
+        "view": "@request.auth.id != '' && (referral_id.current_owner_id = @request.auth.id || referral_id.original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
+        "create": null,
+        "update": null,
+        "delete": null
+      },
+      "fields": [
+        {
+          "name": "referral_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "from_status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "to_status",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "actor_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "actor_name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "public_reason_code",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "public_label",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "visible_to_participant",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "metadata",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_ref_events_ref ON referral_events (referral_id, created DESC)",
+        "CREATE INDEX idx_ref_events_visible ON referral_events (visible_to_participant)"
+      ]
+    },
+    {
+      "name": "duplicate_flags",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": null,
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "referral_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "conflicting_referral_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "conflict_type",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "conflict_details",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "is_resolved",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "resolution_action",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "resolved_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "resolved_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_dup_flags_ref ON duplicate_flags (referral_id)",
+        "CREATE INDEX idx_dup_flags_resolved ON duplicate_flags (is_resolved)"
+      ]
+    },
+    {
+      "name": "known_owner_base",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "normalized_phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cpf",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "condominium_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "condominiums"
+        },
+        {
+          "name": "unit",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "address",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "normalized_address",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "last_real_contact_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_known_owners_phone ON known_owner_base (normalized_phone)",
+        "CREATE INDEX idx_known_owners_email ON known_owner_base (email)",
+        "CREATE INDEX idx_known_owners_address ON known_owner_base (normalized_address)"
+      ]
+    },
+    {
+      "name": "known_buyer_base",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "normalized_phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "email",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "target_neighborhood",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "last_real_contact_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_known_buyers_phone ON known_buyer_base (normalized_phone)",
+        "CREATE INDEX idx_known_buyers_email ON known_buyer_base (email)"
+      ]
+    },
+    {
+      "name": "contact_attempts",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "referral_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "operator_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "channel",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "whatsapp",
+            "telefone",
+            "email",
+            "presencial"
+          ]
+        },
+        {
+          "name": "outcome",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "sucesso",
+            "sem_resposta",
+            "recusou",
+            "numero_invalido",
+            "agendou_retorno",
+            "outro"
+          ]
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "scheduled_callback_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_contact_attempts_ref ON contact_attempts (referral_id, created DESC)"
+      ]
+    },
+    {
+      "name": "referral_notes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "referral_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "author_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "content",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_ref_notes_ref ON referral_notes (referral_id, created DESC)"
+      ]
+    },
+    {
+      "name": "referral_tasks",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "referral_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "assigned_to",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "due_date",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_completed",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "completed_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "completed_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_ref_tasks_ref ON referral_tasks (referral_id)",
+        "CREATE INDEX idx_ref_tasks_due ON referral_tasks (due_date)"
+      ]
+    },
+    {
+      "name": "documents",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "referral_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "participant_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "participants"
+        },
+        {
+          "name": "bucket_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "capture-documents",
+            "partner-contracts"
+          ]
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "file",
+          "type": "file",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "uploaded_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "file_type",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "notes",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_documents_ref ON documents (referral_id)",
+        "CREATE INDEX idx_documents_part ON documents (participant_id)",
+        "CREATE INDEX idx_documents_bucket ON documents (bucket_type)"
+      ]
+    },
+    {
+      "name": "capture_records",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "referral_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "instrument_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "autorizacao_exclusiva",
+            "autorizacao_simples",
+            "contrato_parceria",
+            "termo_opcao"
+          ]
+        },
+        {
+          "name": "document_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "documents"
+        },
+        {
+          "name": "requested_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "requested_at",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "solicitada",
+            "aprovada",
+            "devolvida"
+          ]
+        },
+        {
+          "name": "approved_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "approved_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "return_reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_capture_records_ref ON capture_records (referral_id)",
+        "CREATE INDEX idx_capture_records_status ON capture_records (status)"
+      ]
+    },
+    {
+      "name": "deals",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "owner_referral_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "buyer_referral_id",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "referrals"
+        },
+        {
+          "name": "deal_type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "venda",
+            "locacao"
+          ]
+        },
+        {
+          "name": "value_brl",
+          "type": "number",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "deal_date",
+          "type": "date",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "commission_received_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "commission_received_brl",
+          "type": "number",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "commission_split",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cancelled_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "cancel_reason",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "property_description",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "registered_by",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_deals_owner_ref ON deals (owner_referral_id)",
+        "CREATE INDEX idx_deals_buyer_ref ON deals (buyer_referral_id)",
+        "CREATE INDEX idx_deals_date ON deals (deal_date DESC)"
+      ]
+    },
+    {
+      "name": "public_reason_codes",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != ''",
+        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
+        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
+        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+      },
+      "fields": [
+        {
+          "name": "code",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "display_text",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "category",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": [
+            "recusada",
+            "duplicada",
+            "perdida",
+            "retirada",
+            "cancelada",
+            "declinada"
+          ]
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate"
+          ]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": [
+            "onCreate",
+            "onUpdate"
+          ]
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX idx_public_reason_code ON public_reason_codes (code)"
       ]
     }
   ]

@@ -2,20 +2,20 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import pb from '@/lib/pocketbase/client'
+import { AdminNavbar } from '@/components/AdminNavbar'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import {
   Users,
   Shield,
-  FileText,
   Sliders,
   Activity,
   ArrowRight,
-  Sparkles,
-  LogOut,
   Building,
-  CheckCircle,
+  Inbox,
+  Kanban,
+  UserSquare2,
 } from 'lucide-react'
 
 export default function AdminDashboardPage() {
@@ -76,56 +76,11 @@ export default function AdminDashboardPage() {
   }, [isAdmin])
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
-      {/* Top Navigation */}
-      <header className="border-b border-stone-800 bg-stone-900/90 sticky top-0 z-30 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="font-serif text-lg text-white font-semibold">Prime Circle</span>
-              <span className="ml-2 text-xs uppercase tracking-wider text-amber-500 bg-amber-950/40 border border-amber-800/40 px-2 py-0.5">
-                Área Interna
-              </span>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden sm:flex flex-col text-right">
-              <span className="text-xs text-stone-300 font-medium">
-                {user?.name || user?.email}
-              </span>
-              <span className="text-[10px] text-amber-400 capitalize">
-                {roles.join(', ') || 'Equipe Interna'}
-              </span>
-            </div>
-
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="rounded-none border-stone-800 text-stone-300 text-xs"
-            >
-              <Link to="/painel">Ver Painel Participante</Link>
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={logout}
-              className="rounded-none text-stone-400 hover:text-white text-xs"
-            >
-              <LogOut className="w-4 h-4 mr-1.5" />
-              Sair
-            </Button>
-          </div>
-        </div>
-      </header>
+    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+      <AdminNavbar />
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Welcome Banner */}
         <div className="border border-stone-800 bg-stone-900/40 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -200,69 +155,86 @@ export default function AdminDashboardPage() {
         {/* Quick Management Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <Card className="rounded-none border-stone-800 bg-stone-900/80">
-            <CardHeader>
+            <CardHeader className="pb-3">
               <CardTitle className="text-lg font-serif text-white flex items-center gap-2">
                 <Shield className="w-5 h-5 text-amber-500" />
-                Módulos de Controle
+                Módulos de Operação Interna (Etapa 3)
               </CardTitle>
               <CardDescription className="text-xs text-stone-400">
-                Acesso aos módulos de governança da etapa de fundação.
+                Acesso rápido aos fluxos de triagem, funis e auditoria.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="p-3 border border-stone-800 hover:border-amber-600/50 transition-colors flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-semibold text-white">Gestão da Equipe & Papéis</h4>
-                  <p className="text-[11px] text-stone-400">
-                    Atribuir papéis de admin, operador e financeiro para usuários.
-                  </p>
-                </div>
-                {isAdmin ? (
-                  <Button asChild size="sm" variant="ghost" className="rounded-none text-amber-400">
-                    <Link to="/admin/equipe">
-                      Acessar
-                      <ArrowRight className="w-4 h-4 ml-1" />
-                    </Link>
-                  </Button>
-                ) : (
-                  <Badge variant="outline" className="rounded-none text-stone-500 border-stone-800">
-                    Requer Admin
-                  </Badge>
-                )}
-              </div>
-
-              <div className="p-3 border border-stone-800 flex items-center justify-between opacity-80">
-                <div>
-                  <h4 className="text-xs font-semibold text-white">
-                    Documentos Jurídicos & Termos
+                  <h4 className="text-xs font-semibold text-white flex items-center gap-1.5">
+                    <Inbox className="w-4 h-4 text-amber-400" />
+                    Fila de Triagem & Atribuições
                   </h4>
                   <p className="text-[11px] text-stone-400">
-                    5 documentos base registrados com texto provisório aguardando revisão.
+                    Avaliar novas indicações e verificar alertas de duplicidade lado a lado.
                   </p>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="rounded-none text-amber-400 border-amber-900/40"
-                >
-                  5 Minutas Ativas
-                </Badge>
+                <Button asChild size="sm" variant="ghost" className="rounded-none text-amber-400">
+                  <Link to="/admin/triagem">
+                    Acessar
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
               </div>
 
-              <div className="p-3 border border-stone-800 flex items-center justify-between opacity-80">
+              <div className="p-3 border border-stone-800 hover:border-amber-600/50 transition-colors flex items-center justify-between">
                 <div>
-                  <h4 className="text-xs font-semibold text-white">
-                    Parâmetros Operacionais (Seção 5)
+                  <h4 className="text-xs font-semibold text-white flex items-center gap-1.5">
+                    <Kanban className="w-4 h-4 text-amber-400" />
+                    Funis de Captação & Compradores
                   </h4>
                   <p className="text-[11px] text-stone-400">
-                    Janela 7 dias, silêncio WhatsApp 21h-8h, apuração dia 10, repasse até dia 25.
+                    Kanban e lista com filtros por condomínio, etapa e indicações paradas.
                   </p>
                 </div>
-                <Badge
-                  variant="outline"
-                  className="rounded-none text-emerald-400 border-emerald-900/40"
-                >
-                  Configurado
-                </Badge>
+                <Button asChild size="sm" variant="ghost" className="rounded-none text-amber-400">
+                  <Link to="/admin/indicacoes">
+                    Acessar
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="p-3 border border-stone-800 hover:border-amber-600/50 transition-colors flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-semibold text-white flex items-center gap-1.5">
+                    <UserSquare2 className="w-4 h-4 text-amber-400" />
+                    Proprietários & Base Conhecida
+                  </h4>
+                  <p className="text-[11px] text-stone-400">
+                    Busca unificada e controle da janela de precedência de 180 dias.
+                  </p>
+                </div>
+                <Button asChild size="sm" variant="ghost" className="rounded-none text-amber-400">
+                  <Link to="/admin/proprietarios">
+                    Acessar
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
+              </div>
+
+              <div className="p-3 border border-stone-800 hover:border-amber-600/50 transition-colors flex items-center justify-between">
+                <div>
+                  <h4 className="text-xs font-semibold text-white flex items-center gap-1.5">
+                    <Building className="w-4 h-4 text-amber-400" />
+                    Condomínios Semeados
+                  </h4>
+                  <p className="text-[11px] text-stone-400">
+                    Edifícios da Barra e Recreio e histórico por prédio.
+                  </p>
+                </div>
+                <Button asChild size="sm" variant="ghost" className="rounded-none text-amber-400">
+                  <Link to="/admin/condominios">
+                    Acessar
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </Button>
               </div>
             </CardContent>
           </Card>

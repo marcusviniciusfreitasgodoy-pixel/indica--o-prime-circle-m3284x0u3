@@ -15,6 +15,14 @@ import ProfilePage from './pages/Profile'
 import PublicCapturePage from './pages/PublicCapture'
 import AdminDashboardPage from './pages/AdminDashboard'
 import AdminTeamPage from './pages/AdminTeam'
+import { AdminTriagePage } from './pages/AdminTriage'
+import { AdminReferralsPage } from './pages/AdminReferrals'
+import { AdminReferralDetailPage } from './pages/AdminReferralDetail'
+import { AdminParticipantsPage } from './pages/AdminParticipants'
+import { AdminCondominiumsPage } from './pages/AdminCondominiums'
+import { AdminOwnersPage } from './pages/AdminOwners'
+import { AdminAuditPage } from './pages/AdminAudit'
+import { PublicVitrinePage } from './pages/PublicVitrine'
 import AccessDeniedPage from './pages/AccessDenied'
 import NotFound from './pages/NotFound'
 
@@ -27,6 +35,9 @@ const App = () => (
         <Routes>
           {/* Public Capture Form for doormen, síndicos, clients, partners */}
           <Route path="/indicacao/:slugOrId" element={<PublicCapturePage />} />
+
+          {/* Public Vitrine Route for shared properties */}
+          <Route path="/v/:codigo/:imovel" element={<PublicVitrinePage />} />
 
           {/* Auth Routes */}
           <Route path="/entrar" element={<LoginPage />} />
@@ -77,6 +88,62 @@ const App = () => (
             element={
               <ProtectedRoute requireInternal>
                 <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/triagem"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminTriagePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/indicacoes"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminReferralsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/indicacoes/:id"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminReferralDetailPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/participantes"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminParticipantsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/condominios"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminCondominiumsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/proprietarios"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminOwnersPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/auditoria"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminAuditPage />
               </ProtectedRoute>
             }
           />
