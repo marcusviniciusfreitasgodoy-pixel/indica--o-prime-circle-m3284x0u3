@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0F1118"/>
+      <stop offset="100%" stop-color="#1A2030"/>
+    </linearGradient>
+    <linearGradient id="gold" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"/>
+      <stop offset="50%" stop-color="#D4AF37"/>
+      <stop offset="100%" stop-color="#B45309"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="100" fill="url(#bg)"/>
+  <rect x="24" y="24" width="464" height="464" rx="80" fill="none" stroke="url(#gold)" stroke-width="4" stroke-opacity="0.3"/>
+  <g transform="translate(256, 230) scale(1.4)">
+    <path d="M 0,-80 L 70,0 L 0,80 L -70,0 Z" fill="none" stroke="url(#gold)" stroke-width="12" stroke-linejoin="round"/>
+    <path d="M 0,-40 L 35,0 L 0,40 L -35,0 Z" fill="url(#gold)"/>
+    <circle cx="0" cy="-95" r="8" fill="#F59E0B"/>
+    <circle cx="85" cy="0" r="8" fill="#F59E0B"/>
+    <circle cx="0" cy="95" r="8" fill="#F59E0B"/>
+    <circle cx="-85" cy="0" r="8" fill="#F59E0B"/>
+  </g>
+  <text x="256" y="390" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" font-weight="700" font-size="34" letter-spacing="4" fill="#FFFFFF">GODOY PRIME</text>
+  <text x="256" y="425" text-anchor="middle" font-family="'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif" font-weight="600" font-size="20" letter-spacing="8" fill="#D4AF37">INDICA</text>
+</svg>

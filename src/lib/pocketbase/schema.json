@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-27T21:08:00.088Z",
+  "generatedAt": "2026-10-27T21:25:35.423Z",
   "collections": [
     {
       "name": "users",
@@ -392,6 +392,18 @@
           "required": false,
           "system": false,
           "collectionRef": "campaigns"
+        },
+        {
+          "name": "anonymized_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "anonymized_reason",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1448,6 +1460,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "anonymized_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "anonymized_reason",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1522,6 +1546,18 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "anonymized_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "anonymized_reason",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [

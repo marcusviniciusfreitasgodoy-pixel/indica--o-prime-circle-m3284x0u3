@@ -14,6 +14,8 @@ import ReferralDetailPage from './pages/ReferralDetail'
 import ProfilePage from './pages/Profile'
 import PublicCapturePage from './pages/PublicCapture'
 import AdminDashboardPage from './pages/AdminDashboard'
+import AdminReportsPage from './pages/AdminReports'
+import AdminKnownBasePage from './pages/AdminKnownBase'
 import AdminTeamPage from './pages/AdminTeam'
 import { AdminTriagePage } from './pages/AdminTriage'
 import { AdminReferralsPage } from './pages/AdminReferrals'
@@ -101,6 +103,22 @@ const App = () => (
             element={
               <ProtectedRoute requireInternal>
                 <AdminDashboardPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/relatorios"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminReportsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/base-conhecida"
+            element={
+              <ProtectedRoute requireAdmin>
+                <AdminKnownBasePage />
               </ProtectedRoute>
             }
           />

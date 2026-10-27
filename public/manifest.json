@@ -1,0 +1,24 @@
+{
+  "name": "Godoy Prime Indica",
+  "short_name": "Godoy Indica",
+  "description": "Programa Oficial de Indicação Imobiliária Godoy Prime",
+  "start_url": "/painel",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0F1118",
+  "theme_color": "#0F1118",
+  "icons": [
+    {
+      "src": "/pwa-icon.svg",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/og-image.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -18,6 +18,8 @@ import {
   Megaphone,
   Coins,
   Settings,
+  BarChart3,
+  Database,
 } from 'lucide-react'
 
 export function AdminNavbar() {
@@ -26,11 +28,13 @@ export function AdminNavbar() {
 
   const navItems = [
     { label: 'Visão Geral', path: '/admin', icon: Layers },
+    { label: 'Relatórios & Gráficos', path: '/admin/relatorios', icon: BarChart3 },
     { label: 'Triagem & Fila', path: '/admin/triagem', icon: Inbox },
     { label: 'Indicações (Funis)', path: '/admin/indicacoes', icon: Kanban },
     { label: 'Recompensas', path: '/admin/recompensas', icon: Award },
     { label: 'Lotes de Pagamento', path: '/admin/lotes', icon: Layers },
     { label: 'Participantes', path: '/admin/participantes', icon: Users },
+    { label: 'Base Conhecida (LGPD)', path: '/admin/base-conhecida', icon: Database },
     { label: 'Mensagens', path: '/admin/mensagens', icon: Mail },
     { label: 'Campanhas & Materiais', path: '/admin/campanhas', icon: Megaphone },
     { label: 'Condomínios', path: '/admin/condominios', icon: Building },

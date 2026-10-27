@@ -1564,3 +1564,593 @@ routerAdd('GET', '/backend/v1/documents/{id}/download-url', (e) => {
     expires_in_seconds: 300,
   })
 })
+
+/**
+ * POST /backend/v1/admin/import-known-base
+ * Endpoint exclusivo para admin para importar base conhecida de proprietários ou compradores via CSV / JSON de linhas normalizadas.
+ * Body: {
+ *   dry_run?: boolean,
+ *   items: [
+ *     {
+ *       kind: 'proprietario' | 'comprador',
+ *       name: string,
+ *       phone?: string,
+ *       email?: string,
+ *       cpf?: string,
+ *       address?: string,
+ *       unit?: string,
+ *       condominium_id?: string,
+ *       target_neighborhood?: string,
+ *       last_real_contact_at?: string,
+ *       notes?: string
+ *     }
+ *   ]
+ * }
+ */
+routerAdd('POST', '/backend/v1/admin/import-known-base', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
+
+  let isAdmin = false
+  try {
+    const check = $app.findFirstRecordByFilter(
+      'user_roles',
+      `user_id = '${authRecord.id}' && role = 'admin'`,
+    )
+    isAdmin = !!check
+  } catch (_) {
+    isAdmin = false
+  }
+
+  if (!isAdmin) {
+    return e.json(403, {
+      message: 'Acesso negado. Apenas administradores podem importar para a base conhecida.',
+    })
+  }
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const dryRun = !!body.dry_run
+  const items = Array.isArray(body.items) ? body.items : []
+
+  if (items.length === 0) {
+    return e.json(400, { message: 'Nenhum registro enviado para importação.' })
+  }
+
+  function cleanPhone(str) {
+    if (!str) return ''
+    let digits = String(str).replace(/\D/g, '')
+    if (digits.startsWith('0')) digits = digits.substring(1)
+    if (digits.length > 0 && !digits.startsWith('55')) {
+      digits = '55' + digits
+    }
+    return digits
+  }
+
+  function cleanAddr(str) {
+    if (!str) return ''
+    return String(str)
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim()
+  }
+
+  function cleanUnit(str) {
+    if (!str) return ''
+    return String(str).trim()
+  }
+
+  const preview = []
+  let countOwners = 0
+  let countBuyers = 0
+  let insertedOwners = 0
+  let insertedBuyers = 0
+
+  const ownersCol = $app.findCollectionByNameOrId('known_owner_base')
+  const buyersCol = $app.findCollectionByNameOrId('known_buyer_base')
+
+  for (let i = 0; i < items.length; i++) {
+    const raw = items[i]
+    const rawKind = (raw.kind || raw.tipo || '').toLowerCase().trim()
+    const isBuyer = rawKind === 'comprador' || rawKind === 'interessado' || rawKind === 'inquilino'
+    const kind = isBuyer ? 'comprador' : 'proprietario'
+
+    const name = (raw.name || raw.nome || '').trim()
+    if (!name) continue
+
+    const phone = (raw.phone || raw.telefone || '').trim()
+    const normPhone = cleanPhone(phone)
+    const email = (raw.email || '').trim().toLowerCase()
+    const cpf = (raw.cpf || '').trim()
+    const address = (raw.address || raw.endereco || '').trim()
+    const normAddr = cleanAddr(address)
+    const unit = cleanUnit(raw.unit || raw.unidade || '')
+    const condoId = (raw.condominium_id || raw.condominio_id || '').trim()
+    const targetNeighborhood = (raw.target_neighborhood || raw.bairro || '').trim()
+    const lastContact = (
+      raw.last_real_contact_at ||
+      raw.data_ultima_conversa ||
+      raw.ultima_conversa ||
+      ''
+    ).trim()
+    const notes = (raw.notes || raw.observacoes || '').trim()
+
+    if (kind === 'comprador') countBuyers++
+    else countOwners++
+
+    const normalizedItem = {
+      index: i + 1,
+      kind,
+      name,
+      phone,
+      normalized_phone: normPhone,
+      email,
+      cpf,
+      address,
+      normalized_address: normAddr,
+      unit,
+      condominium_id: condoId,
+      target_neighborhood: targetNeighborhood,
+      last_real_contact_at: lastContact || null,
+      notes,
+    }
+
+    if (preview.length < 10) {
+      preview.push(normalizedItem)
+    }
+
+    if (!dryRun) {
+      if (kind === 'comprador') {
+        const rec = new Record(buyersCol)
+        rec.set('name', name)
+        if (phone) rec.set('phone', phone)
+        if (normPhone) rec.set('normalized_phone', normPhone)
+        if (email) rec.set('email', email)
+        if (targetNeighborhood) rec.set('target_neighborhood', targetNeighborhood)
+        if (lastContact) rec.set('last_real_contact_at', lastContact)
+        if (notes) rec.set('notes', notes)
+        $app.save(rec)
+        insertedBuyers++
+      } else {
+        const rec = new Record(ownersCol)
+        rec.set('name', name)
+        if (phone) rec.set('phone', phone)
+        if (normPhone) rec.set('normalized_phone', normPhone)
+        if (email) rec.set('email', email)
+        if (cpf) rec.set('cpf', cpf)
+        if (condoId) rec.set('condominium_id', condoId)
+        if (unit) rec.set('unit', unit)
+        if (address) rec.set('address', address)
+        if (normAddr) rec.set('normalized_address', normAddr)
+        if (lastContact) rec.set('last_real_contact_at', lastContact)
+        if (notes) rec.set('notes', notes)
+        $app.save(rec)
+        insertedOwners++
+      }
+    }
+  }
+
+  if (!dryRun) {
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const audit = new Record(auditCol)
+      audit.set('actor_id', authRecord.id)
+      audit.set('actor_email', authRecord.getString('email'))
+      audit.set('action', 'import_known_base')
+      audit.set('resource_type', 'known_base')
+      audit.set('resource_id', 'batch_import')
+      audit.set(
+        'details',
+        JSON.stringify({
+          total_items: items.length,
+          inserted_owners: insertedOwners,
+          inserted_buyers: insertedBuyers,
+        }),
+      )
+      audit.set('ip_address', e.request.remoteAddr)
+      $app.save(audit)
+    } catch (_) {}
+  }
+
+  return e.json(200, {
+    success: true,
+    dry_run: dryRun,
+    total_received: items.length,
+    count_owners: countOwners,
+    count_buyers: countBuyers,
+    inserted_owners: insertedOwners,
+    inserted_buyers: insertedBuyers,
+    sample_preview: preview,
+    message: dryRun
+      ? `Prévia gerada com sucesso: ${countOwners} proprietários e ${countBuyers} compradores analisados.`
+      : `Importação concluída com sucesso: ${insertedOwners} proprietários e ${insertedBuyers} compradores gravados.`,
+  })
+})
+
+/**
+ * POST /backend/v1/admin/anonymize-person
+ * RPC Security Definer equivalente: só admin pode executar.
+ * Anonimiza proprietário ou comprador (ou indicação específica) de acordo com a LGPD:
+ * Substitui nome, telefone, e-mail e CPF, marca anonymized_at e anonymized_reason,
+ * mantendo registros estatísticos de valores, datas, status e condomínio.
+ * Body: {
+ *   entity_type: 'referral' | 'known_owner' | 'known_buyer',
+ *   entity_id: string,
+ *   reason: string // obrigatório
+ * }
+ */
+routerAdd('POST', '/backend/v1/admin/anonymize-person', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
+
+  let isAdmin = false
+  try {
+    const check = $app.findFirstRecordByFilter(
+      'user_roles',
+      `user_id = '${authRecord.id}' && role = 'admin'`,
+    )
+    isAdmin = !!check
+  } catch (_) {
+    isAdmin = false
+  }
+
+  if (!isAdmin) {
+    return e.json(403, {
+      message: 'Acesso negado. Apenas administradores podem executar anonimização LGPD.',
+    })
+  }
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const entityType = (body.entity_type || '').trim()
+  const entityId = (body.entity_id || '').trim()
+  const reason = (body.reason || '').trim()
+
+  if (!entityType || !entityId) {
+    return e.json(400, { message: 'Tipo de entidade e ID são obrigatórios.' })
+  }
+
+  if (!reason) {
+    return e.json(400, { message: 'Motivo da anonimização é obrigatório para conformidade LGPD.' })
+  }
+
+  const nowIso = new Date().toISOString()
+  let maskedLabel = '[DADO ANONIMIZADO LGPD]'
+
+  if (entityType === 'referral') {
+    let ref
+    try {
+      ref = $app.findRecordById('referrals', entityId)
+    } catch (_) {
+      return e.json(404, { message: 'Indicação não encontrada.' })
+    }
+
+    const origOwnerName = ref.getString('owner_name')
+    const origBuyerName = ref.getString('buyer_name')
+
+    ref.set('owner_name', maskedLabel)
+    ref.set('owner_phone', '')
+    ref.set('owner_email', '')
+    ref.set('owner_cpf', '')
+    ref.set('buyer_name', maskedLabel)
+    ref.set('buyer_phone', '')
+    ref.set('buyer_email', '')
+    ref.set('return_contact', maskedLabel)
+    ref.set('unit', '[OMITIDO]')
+    ref.set('normalized_address', '[ENDEREÇO ANONIMIZADO]')
+    ref.set(
+      'description',
+      `[Dados cadastrais originais anonimizados sob justificativa LGPD: ${reason}]`,
+    )
+    ref.set('anonymized_at', nowIso)
+    ref.set('anonymized_reason', reason)
+    $app.save(ref)
+
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const audit = new Record(auditCol)
+      audit.set('actor_id', authRecord.id)
+      audit.set('actor_email', authRecord.getString('email'))
+      audit.set('action', 'anonymize_person')
+      audit.set('resource_type', 'referrals')
+      audit.set('resource_id', ref.id)
+      audit.set(
+        'details',
+        JSON.stringify({
+          entity_type: 'referral',
+          entity_id: ref.id,
+          reason,
+          prev_owner_name: origOwnerName ? origOwnerName.substring(0, 3) + '***' : null,
+          prev_buyer_name: origBuyerName ? origBuyerName.substring(0, 3) + '***' : null,
+        }),
+      )
+      audit.set('ip_address', e.request.remoteAddr)
+      $app.save(audit)
+    } catch (_) {}
+
+    return e.json(200, {
+      success: true,
+      message: 'Indicação anonimizada com sucesso. Métricas estatísticas preservadas.',
+      entity_id: ref.id,
+      anonymized_at: nowIso,
+    })
+  } else if (entityType === 'known_owner') {
+    let rec
+    try {
+      rec = $app.findRecordById('known_owner_base', entityId)
+    } catch (_) {
+      return e.json(404, { message: 'Registro de proprietário conhecido não encontrado.' })
+    }
+
+    rec.set('name', maskedLabel)
+    rec.set('phone', '')
+    rec.set('normalized_phone', '')
+    rec.set('email', '')
+    rec.set('cpf', '')
+    rec.set('unit', '[OMITIDO]')
+    rec.set('address', '[ENDEREÇO ANONIMIZADO]')
+    rec.set('normalized_address', '[ENDEREÇO ANONIMIZADO]')
+    rec.set('notes', `[Registro anonimizado sob justificativa LGPD: ${reason}]`)
+    rec.set('anonymized_at', nowIso)
+    rec.set('anonymized_reason', reason)
+    $app.save(rec)
+
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const audit = new Record(auditCol)
+      audit.set('actor_id', authRecord.id)
+      audit.set('actor_email', authRecord.getString('email'))
+      audit.set('action', 'anonymize_person')
+      audit.set('resource_type', 'known_owner_base')
+      audit.set('resource_id', rec.id)
+      audit.set(
+        'details',
+        JSON.stringify({ entity_type: 'known_owner', entity_id: rec.id, reason }),
+      )
+      audit.set('ip_address', e.request.remoteAddr)
+      $app.save(audit)
+    } catch (_) {}
+
+    return e.json(200, {
+      success: true,
+      message: 'Proprietário da base conhecida anonimizado com sucesso.',
+      entity_id: rec.id,
+      anonymized_at: nowIso,
+    })
+  } else if (entityType === 'known_buyer') {
+    let rec
+    try {
+      rec = $app.findRecordById('known_buyer_base', entityId)
+    } catch (_) {
+      return e.json(404, { message: 'Registro de interessado conhecido não encontrado.' })
+    }
+
+    rec.set('name', maskedLabel)
+    rec.set('phone', '')
+    rec.set('normalized_phone', '')
+    rec.set('email', '')
+    rec.set('notes', `[Registro anonimizado sob justificativa LGPD: ${reason}]`)
+    rec.set('anonymized_at', nowIso)
+    rec.set('anonymized_reason', reason)
+    $app.save(rec)
+
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const audit = new Record(auditCol)
+      audit.set('actor_id', authRecord.id)
+      audit.set('actor_email', authRecord.getString('email'))
+      audit.set('action', 'anonymize_person')
+      audit.set('resource_type', 'known_buyer_base')
+      audit.set('resource_id', rec.id)
+      audit.set(
+        'details',
+        JSON.stringify({ entity_type: 'known_buyer', entity_id: rec.id, reason }),
+      )
+      audit.set('ip_address', e.request.remoteAddr)
+      $app.save(audit)
+    } catch (_) {}
+
+    return e.json(200, {
+      success: true,
+      message: 'Comprador da base conhecida anonimizado com sucesso.',
+      entity_id: rec.id,
+      anonymized_at: nowIso,
+    })
+  }
+
+  return e.json(400, {
+    message: "Tipo de entidade inválido. Use 'referral', 'known_owner' ou 'known_buyer'.",
+  })
+})
+
+/**
+ * POST /backend/v1/admin/apply-retention
+ * Permite disparo manual ou agendado da política de retenção LGPD.
+ * Anonimiza proprietários e interessados de indicações não convertidas fora do prazo de retenção (program_settings.retention_before_anonymization_months).
+ */
+routerAdd('POST', '/backend/v1/admin/apply-retention', (e) => {
+  const authRecord = e.auth
+  let isAdmin = false
+  if (authRecord) {
+    try {
+      const check = $app.findFirstRecordByFilter(
+        'user_roles',
+        `user_id = '${authRecord.id}' && role = 'admin'`,
+      )
+      isAdmin = !!check
+    } catch (_) {}
+  }
+
+  // Permite chamada interna ou admin
+  const reqSecret =
+    e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
+  const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
+  const isSecretMatch = envSecret && reqSecret && reqSecret === envSecret
+
+  if (!isAdmin && !isSecretMatch) {
+    return e.json(403, {
+      message:
+        'Acesso negado. Apenas administradores ou automações internas podem rodar a retenção.',
+    })
+  }
+
+  let retentionMonths = 24
+  try {
+    const st = $app.findFirstRecordByData(
+      'program_settings',
+      'key',
+      'retention_before_anonymization_months',
+    )
+    const val = JSON.parse(st.getString('value_json'))
+    if (typeof val === 'number') retentionMonths = val
+  } catch (_) {}
+
+  const cutoff = new Date()
+  cutoff.setUTCMonth(cutoff.getUTCMonth() - retentionMonths)
+  const cutoffIso = cutoff.toISOString()
+
+  // Indicações não convertidas: recusada, cancelada, perdida, retirada, declinada_pela_godoy
+  const nonConvertedFilter = `(status = 'recusada' || status = 'cancelada' || status = 'perdida' || status = 'retirada' || status = 'declinada_pela_godoy') && created <= '${cutoffIso}' && anonymized_at = ''`
+
+  const oldReferrals = $app.findRecordsByFilter('referrals', nonConvertedFilter, 'created', 500, 0)
+
+  let anonymizedCount = 0
+  const nowIso = new Date().toISOString()
+  const maskedLabel = '[DADO ANONIMIZADO LGPD]'
+
+  for (let i = 0; i < oldReferrals.length; i++) {
+    const ref = oldReferrals[i]
+    ref.set('owner_name', maskedLabel)
+    ref.set('owner_phone', '')
+    ref.set('owner_email', '')
+    ref.set('owner_cpf', '')
+    ref.set('buyer_name', maskedLabel)
+    ref.set('buyer_phone', '')
+    ref.set('buyer_email', '')
+    ref.set('return_contact', maskedLabel)
+    ref.set('unit', '[OMITIDO]')
+    ref.set('normalized_address', '[ENDEREÇO ANONIMIZADO]')
+    ref.set(
+      'description',
+      `[Anonimização automática da política de retenção LGPD: ${retentionMonths} meses sem conversão]`,
+    )
+    ref.set('anonymized_at', nowIso)
+    ref.set('anonymized_reason', `Política de retenção periódica (${retentionMonths} meses)`)
+    $app.save(ref)
+    anonymizedCount++
+  }
+
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    if (authRecord) {
+      audit.set('actor_id', authRecord.id)
+      audit.set('actor_email', authRecord.getString('email'))
+    }
+    audit.set('action', 'apply_retention_policy')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', 'cron_retention')
+    audit.set(
+      'details',
+      JSON.stringify({
+        retention_months: retentionMonths,
+        cutoff_date: cutoffIso,
+        anonymized_count: anonymizedCount,
+      }),
+    )
+    audit.set('ip_address', e.request.remoteAddr)
+    $app.save(audit)
+  } catch (_) {}
+
+  return e.json(200, {
+    success: true,
+    retention_months: retentionMonths,
+    cutoff_date: cutoffIso,
+    anonymized_count: anonymizedCount,
+    message: `Política de retenção aplicada: ${anonymizedCount} indicações antigas não convertidas anonimizadas com sucesso.`,
+  })
+})
+
+/**
+ * Scheduled job: Runs weekly on Sunday at 03:00 UTC to apply data retention and anonymization policy
+ */
+cronAdd('apply_retention', '0 3 * * 0', () => {
+  try {
+    let retentionMonths = 24
+    try {
+      const st = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'retention_before_anonymization_months',
+      )
+      const val = JSON.parse(st.getString('value_json'))
+      if (typeof val === 'number') retentionMonths = val
+    } catch (_) {}
+
+    const cutoff = new Date()
+    cutoff.setUTCMonth(cutoff.getUTCMonth() - retentionMonths)
+    const cutoffIso = cutoff.toISOString()
+
+    const nonConvertedFilter = `(status = 'recusada' || status = 'cancelada' || status = 'perdida' || status = 'retirada' || status = 'declinada_pela_godoy') && created <= '${cutoffIso}' && anonymized_at = ''`
+
+    const oldReferrals = $app.findRecordsByFilter(
+      'referrals',
+      nonConvertedFilter,
+      'created',
+      500,
+      0,
+    )
+
+    let anonymizedCount = 0
+    const nowIso = new Date().toISOString()
+    const maskedLabel = '[DADO ANONIMIZADO LGPD]'
+
+    for (let i = 0; i < oldReferrals.length; i++) {
+      const ref = oldReferrals[i]
+      ref.set('owner_name', maskedLabel)
+      ref.set('owner_phone', '')
+      ref.set('owner_email', '')
+      ref.set('owner_cpf', '')
+      ref.set('buyer_name', maskedLabel)
+      ref.set('buyer_phone', '')
+      ref.set('buyer_email', '')
+      ref.set('return_contact', maskedLabel)
+      ref.set('unit', '[OMITIDO]')
+      ref.set('normalized_address', '[ENDEREÇO ANONIMIZADO]')
+      ref.set(
+        'description',
+        `[Anonimização automática da política de retenção LGPD: ${retentionMonths} meses sem conversão]`,
+      )
+      ref.set('anonymized_at', nowIso)
+      ref.set('anonymized_reason', `Política de retenção periódica (${retentionMonths} meses)`)
+      $app.save(ref)
+      anonymizedCount++
+    }
+
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const audit = new Record(auditCol)
+      audit.set('action', 'apply_retention_policy_cron')
+      audit.set('resource_type', 'referrals')
+      audit.set('resource_id', 'cron_retention')
+      audit.set(
+        'details',
+        JSON.stringify({
+          retention_months: retentionMonths,
+          cutoff_date: cutoffIso,
+          anonymized_count: anonymizedCount,
+        }),
+      )
+      $app.save(audit)
+    } catch (_) {}
+
+    console.log(
+      `[cron:apply_retention] Retenção concluída: ${anonymizedCount} registros anonimizados.`,
+    )
+  } catch (err) {
+    console.error('[cron:apply_retention] Erro ao aplicar retenção semanal:', err)
+  }
+})
