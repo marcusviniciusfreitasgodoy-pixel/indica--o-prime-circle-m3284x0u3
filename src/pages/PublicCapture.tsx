@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, useSearchParams, Link } from 'react-router-dom'
 import { getPublicMemberInfo, submitPublicReferral } from '@/services/referrals'
 import { PublicMemberInfo, ReferralType } from '@/types/referral'
 import {
@@ -32,6 +32,8 @@ import {
 
 export default function PublicCapturePage() {
   const { slugOrId } = useParams<{ slugOrId: string }>()
+  const [searchParams] = useSearchParams()
+  const campaignCode = searchParams.get('c') || ''
 
   const [member, setMember] = useState<PublicMemberInfo | null>(null)
   const [isLoadingMember, setIsLoadingMember] = useState(true)
@@ -111,6 +113,7 @@ export default function PublicCapturePage() {
         referrer_phone: referrerPhone.trim(),
         description: description.trim(),
         return_contact: returnContact.trim(),
+        campaign_code: campaignCode || undefined,
       })
 
       setSubmittedSuccess(true)

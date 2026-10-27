@@ -203,9 +203,7 @@ migrate(
           { name: 'created', type: 'autodate', onCreate: true, onUpdate: false },
           { name: 'updated', type: 'autodate', onCreate: true, onUpdate: true },
         ],
-        indexes: [
-          'CREATE INDEX idx_msg_queue_status_after ON message_queue (status, send_after)',
-        ],
+        indexes: ['CREATE INDEX idx_msg_queue_status_after ON message_queue (status, send_after)'],
       })
       app.save(messageQueue)
     }

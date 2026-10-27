@@ -22,6 +22,8 @@ import { AdminParticipantsPage } from './pages/AdminParticipants'
 import { AdminCondominiumsPage } from './pages/AdminCondominiums'
 import { AdminOwnersPage } from './pages/AdminOwners'
 import { AdminAuditPage } from './pages/AdminAudit'
+import { AdminMessagesPage } from './pages/AdminMessages'
+import { AdminCampaignsPage } from './pages/AdminCampaigns'
 import { PublicVitrinePage } from './pages/PublicVitrine'
 import AccessDeniedPage from './pages/AccessDenied'
 import NotFound from './pages/NotFound'
@@ -152,6 +154,23 @@ const App = () => (
             element={
               <ProtectedRoute requireAdmin>
                 <AdminTeamPage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/admin/mensagens"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminMessagesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/campanhas"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminCampaignsPage />
               </ProtectedRoute>
             }
           />

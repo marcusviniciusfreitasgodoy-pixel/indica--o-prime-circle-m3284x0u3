@@ -15,6 +15,7 @@ routerAdd('POST', '/backend/v1/public-referrals', (e) => {
   const referrerPhone = (body.referrer_phone || '').trim()
   const description = (body.description || '').trim()
   const returnContact = (body.return_contact || '').trim()
+  const campaignCode = (body.campaign_code || '').trim()
 
   if (!memberIdentifier) {
     return e.json(400, { message: 'Identificador do membro não informado.' })
@@ -81,6 +82,15 @@ routerAdd('POST', '/backend/v1/public-referrals', (e) => {
   record.set('current_owner_id', targetUser.id)
   record.set('original_owner_id', targetUser.id)
   record.set('history', JSON.stringify([historyItem]))
+
+  if (campaignCode) {
+    try {
+      const camp = $app.findFirstRecordByFilter('campaigns', 'code = {:c}', { c: campaignCode })
+      if (camp) {
+        record.set('campaign_id', camp.id)
+      }
+    } catch (_) {}
+  }
 
   $app.save(record)
 

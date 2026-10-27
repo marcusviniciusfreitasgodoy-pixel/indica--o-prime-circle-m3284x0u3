@@ -1,9 +1,11 @@
 # Catálogo Oficial de Modelos de Mensagem do WhatsApp (Meta Cloud API)
+
 ## Programa Prime Circle Indica — Godoy Prime Imóveis
 
 Este documento contém o catálogo padronizado dos modelos de mensagem que devem ser submetidos e aprovados no **Meta WhatsApp Manager** (Gerenciador do WhatsApp Business).
 
 > **Atenção às Regras da Meta**:
+>
 > - O idioma padrão configurado é **Português (Brasil)** (`pt_BR`).
 > - Apenas modelos **aprovados** (`approved`) podem ser enviados pela API oficial.
 > - As categorias são divididas estritamente entre **UTILITY** (notificações operacionais, transações, status e alertas) e **MARKETING** (sequência de ativação e convites para engajamento).
@@ -13,35 +15,36 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 
 ### Sumário dos Modelos
 
-| Nome do Modelo (`meta_template_name`) | Categoria | Evento Correspondente | Destinatário |
-| :--- | :--- | :--- | :--- |
-| `indicacao_recebida_indicador` | **UTILITY** | Indicação recebida | Indicador (Participante) |
-| `indicacao_recebida_indicado` | **UTILITY** | Indicação recebida | Titular indicado (Proprietário/Cliente) |
-| `etapa_em_analise` | **UTILITY** | Mudança: Em análise | Indicador |
-| `etapa_em_contato` | **UTILITY** | Mudança: Em contato / Atendimento | Indicador |
-| `etapa_captado` | **UTILITY** | Mudança: Captado | Indicador |
-| `etapa_em_divulgacao` | **UTILITY** | Mudança: Em divulgação | Indicador |
-| `etapa_visita_proposta` | **UTILITY** | Mudança: Visitando / Proposta | Indicador |
-| `etapa_negocio_fechado` | **UTILITY** | Mudança: Vendido / Alugado / Comprou | Indicador |
-| `etapa_nao_aproveitada` | **UTILITY** | Mudança: Recusada / Perdida / Duplicada | Indicador |
-| `recompensa_aprovada` | **UTILITY** | Recompensa aprovada com data prevista | Indicador |
-| `recompensa_paga` | **UTILITY** | Recompensa paga via PIX | Indicador |
-| `cadastro_aprovado` | **UTILITY** | Cadastro de participante aprovado | Indicador |
-| `cadastro_suspenso` | **UTILITY** | Cadastro suspenso | Indicador |
-| `alerta_indicacao_parada` | **UTILITY** | Indicação parada (SLA) | Consultor / Equipe |
-| `parceiro_mudou_nivel` | **UTILITY** | Evolução de nível (Prime / Signature) | Parceiro |
-| `gratificacao_entregue` | **UTILITY** | Gratificação física ou bônus entregue | Indicador |
-| `godoy_enviou_indicacao` | **UTILITY** | Godoy Prime enviou lead ao parceiro | Parceiro |
-| `ativacao_passo_0` | **MARKETING** | Régua de ativação: Dia 0 (Boas-vindas) | Participante |
-| `ativacao_passo_3` | **MARKETING** | Régua de ativação: Dia 3 (Primeira indicação) | Participante sem indicações |
-| `ativacao_passo_10` | **MARKETING** | Régua de ativação: Dia 10 (Dicas de captação) | Participante |
-| `ativacao_passo_30` | **MARKETING** | Régua de ativação: Dia 30 (Check-in mensal) | Participante |
+| Nome do Modelo (`meta_template_name`) | Categoria     | Evento Correspondente                         | Destinatário                            |
+| :------------------------------------ | :------------ | :-------------------------------------------- | :-------------------------------------- |
+| `indicacao_recebida_indicador`        | **UTILITY**   | Indicação recebida                            | Indicador (Participante)                |
+| `indicacao_recebida_indicado`         | **UTILITY**   | Indicação recebida                            | Titular indicado (Proprietário/Cliente) |
+| `etapa_em_analise`                    | **UTILITY**   | Mudança: Em análise                           | Indicador                               |
+| `etapa_em_contato`                    | **UTILITY**   | Mudança: Em contato / Atendimento             | Indicador                               |
+| `etapa_captado`                       | **UTILITY**   | Mudança: Captado                              | Indicador                               |
+| `etapa_em_divulgacao`                 | **UTILITY**   | Mudança: Em divulgação                        | Indicador                               |
+| `etapa_visita_proposta`               | **UTILITY**   | Mudança: Visitando / Proposta                 | Indicador                               |
+| `etapa_negocio_fechado`               | **UTILITY**   | Mudança: Vendido / Alugado / Comprou          | Indicador                               |
+| `etapa_nao_aproveitada`               | **UTILITY**   | Mudança: Recusada / Perdida / Duplicada       | Indicador                               |
+| `recompensa_aprovada`                 | **UTILITY**   | Recompensa aprovada com data prevista         | Indicador                               |
+| `recompensa_paga`                     | **UTILITY**   | Recompensa paga via PIX                       | Indicador                               |
+| `cadastro_aprovado`                   | **UTILITY**   | Cadastro de participante aprovado             | Indicador                               |
+| `cadastro_suspenso`                   | **UTILITY**   | Cadastro suspenso                             | Indicador                               |
+| `alerta_indicacao_parada`             | **UTILITY**   | Indicação parada (SLA)                        | Consultor / Equipe                      |
+| `parceiro_mudou_nivel`                | **UTILITY**   | Evolução de nível (Prime / Signature)         | Parceiro                                |
+| `gratificacao_entregue`               | **UTILITY**   | Gratificação física ou bônus entregue         | Indicador                               |
+| `godoy_enviou_indicacao`              | **UTILITY**   | Godoy Prime enviou lead ao parceiro           | Parceiro                                |
+| `ativacao_passo_0`                    | **MARKETING** | Régua de ativação: Dia 0 (Boas-vindas)        | Participante                            |
+| `ativacao_passo_3`                    | **MARKETING** | Régua de ativação: Dia 3 (Primeira indicação) | Participante sem indicações             |
+| `ativacao_passo_10`                   | **MARKETING** | Régua de ativação: Dia 10 (Dicas de captação) | Participante                            |
+| `ativacao_passo_30`                   | **MARKETING** | Régua de ativação: Dia 30 (Check-in mensal)   | Participante                            |
 
 ---
 
 ## 1. Modelos da Categoria UTILITY
 
 ### 1.1 `indicacao_recebida_indicador`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante indicador
@@ -57,6 +60,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.2 `indicacao_recebida_indicado`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome da pessoa indicada
@@ -72,6 +76,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.3 `etapa_em_analise`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -87,6 +92,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.4 `etapa_em_contato`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -102,6 +108,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.5 `etapa_captado`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -117,6 +124,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.6 `etapa_em_divulgacao`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -132,6 +140,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.7 `etapa_visita_proposta`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -147,6 +156,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.8 `etapa_negocio_fechado`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -163,6 +173,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.9 `etapa_nao_aproveitada`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -179,6 +190,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.10 `recompensa_aprovada`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -195,6 +207,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.11 `recompensa_paga`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -210,6 +223,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.12 `cadastro_aprovado`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -223,6 +237,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.13 `cadastro_suspenso`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -237,6 +252,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.14 `alerta_indicacao_parada`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Protocolo da indicação
@@ -253,6 +269,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.15 `parceiro_mudou_nivel`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do parceiro
@@ -268,6 +285,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.16 `gratificacao_entregue`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -282,6 +300,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 1.17 `godoy_enviou_indicacao`
+
 - **Categoria**: `UTILITY`
 - **Variáveis**:
   - `{{1}}`: Nome do parceiro
@@ -298,6 +317,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ## 2. Modelos da Categoria MARKETING (Sequência de Ativação)
 
 ### 2.1 `ativacao_passo_0`
+
 - **Categoria**: `MARKETING`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -311,6 +331,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 2.2 `ativacao_passo_3`
+
 - **Categoria**: `MARKETING`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -324,6 +345,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 2.3 `ativacao_passo_10`
+
 - **Categoria**: `MARKETING`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -337,6 +359,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ---
 
 ### 2.4 `ativacao_passo_30`
+
 - **Categoria**: `MARKETING`
 - **Variáveis**:
   - `{{1}}`: Nome do participante
@@ -352,6 +375,7 @@ Este documento contém o catálogo padronizado dos modelos de mensagem que devem
 ## 3. Instruções para Sincronização
 
 Após criar e obter a aprovação dos modelos no WhatsApp Manager:
+
 1. Acesse o menu administrativo: `/admin/mensagens`.
 2. Clique no botão **"Sincronizar Modelos com Meta"**.
 3. O endpoint interno `POST /backend/v1/communication/sync-whatsapp-templates` buscará os status atualizados na Graph API da Meta (`https://graph.facebook.com/v19.0/{META_WA_BUSINESS_ACCOUNT_ID}/message_templates`) e atualizará a coleção `message_templates` automaticamente para `approved`.

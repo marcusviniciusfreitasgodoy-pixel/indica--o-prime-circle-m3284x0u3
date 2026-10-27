@@ -8,7 +8,8 @@
 routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
   // --- Inline Helpers ---
   function checkAuth() {
-    const reqSecret = e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
+    const reqSecret =
+      e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
     const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
 
     if (envSecret && reqSecret && reqSecret === envSecret) {
@@ -17,7 +18,11 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
 
     const authRecord = e.auth
     if (!authRecord) {
-      return { ok: false, error: 'Acesso não autorizado. Cabeçalho de segredo interno ou login de usuário interno é obrigatório.' }
+      return {
+        ok: false,
+        error:
+          'Acesso não autorizado. Cabeçalho de segredo interno ou login de usuário interno é obrigatório.',
+      }
     }
 
     try {
@@ -178,8 +183,11 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
 
         if (res.statusCode >= 200 && res.statusCode < 300) {
           let respData = {}
-          try { respData = JSON.parse(res.rawText) } catch (_) {}
-          const providerMsgId = respData.messages && respData.messages[0] ? respData.messages[0].id : null
+          try {
+            respData = JSON.parse(res.rawText)
+          } catch (_) {}
+          const providerMsgId =
+            respData.messages && respData.messages[0] ? respData.messages[0].id : null
           return { ok: true, provider_message_id: providerMsgId, data: respData, attempt }
         } else {
           lastError = `Meta API retornou status ${res.statusCode}: ${res.rawText}`
@@ -218,14 +226,22 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
 
   let templateRec = null
   if (templateId) {
-    try { templateRec = $app.findRecordById('message_templates', templateId) } catch (_) {}
+    try {
+      templateRec = $app.findRecordById('message_templates', templateId)
+    } catch (_) {}
   } else if (templateName) {
     try {
-      templateRec = $app.findFirstRecordByFilter('message_templates', `meta_template_name = '${templateName}' && channel = 'whatsapp'`)
+      templateRec = $app.findFirstRecordByFilter(
+        'message_templates',
+        `meta_template_name = '${templateName}' && channel = 'whatsapp'`,
+      )
     } catch (_) {}
   } else if (eventCode) {
     try {
-      templateRec = $app.findFirstRecordByFilter('message_templates', `event_code = '${eventCode}' && channel = 'whatsapp' && active = true`)
+      templateRec = $app.findFirstRecordByFilter(
+        'message_templates',
+        `event_code = '${eventCode}' && channel = 'whatsapp' && active = true`,
+      )
     } catch (_) {}
   }
 
@@ -261,7 +277,10 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
 
   let hasOptin = false
   try {
-    const optinRec = $app.findFirstRecordByFilter('whatsapp_optins', `phone = '${formattedPhone}' && opted_out_at = ''`)
+    const optinRec = $app.findFirstRecordByFilter(
+      'whatsapp_optins',
+      `phone = '${formattedPhone}' && opted_out_at = ''`,
+    )
     if (optinRec) hasOptin = true
   } catch (_) {
     hasOptin = false
@@ -283,7 +302,11 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
   if (metaCategory === 'marketing') {
     let monthlyLimit = 4
     try {
-      const st = $app.findFirstRecordByData('program_settings', 'key', 'marketing_messages_monthly_limit')
+      const st = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'marketing_messages_monthly_limit',
+      )
       const parsedVal = JSON.parse(st.getString('value_json'))
       if (typeof parsedVal === 'number') monthlyLimit = parsedVal
     } catch (_) {}
@@ -328,7 +351,14 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
       qRec.set('send_after', resumeAt)
       qRec.set('attempts', 0)
       qRec.set('status', 'pending')
-      qRec.set('metadata', JSON.stringify({ button_url_param: buttonUrlParam, entity_id: entityId, event_code: finalEventCode }))
+      qRec.set(
+        'metadata',
+        JSON.stringify({
+          button_url_param: buttonUrlParam,
+          entity_id: entityId,
+          event_code: finalEventCode,
+        }),
+      )
       $app.save(qRec)
     } catch (_) {}
 
@@ -401,7 +431,11 @@ routerAdd('GET', '/backend/v1/communication/whatsapp-webhook', (e) => {
   const challenge = query['hub.challenge']
 
   const verifyToken = $os.getenv('META_WEBHOOK_VERIFY_TOKEN')
-  if (!verifyToken || verifyToken === 'placeholder_meta_webhook_verify_token' || verifyToken.trim() === '') {
+  if (
+    !verifyToken ||
+    verifyToken === 'placeholder_meta_webhook_verify_token' ||
+    verifyToken.trim() === ''
+  ) {
     return e.string(500, 'Secret META_WEBHOOK_VERIFY_TOKEN não configurado no servidor.')
   }
 
@@ -426,7 +460,8 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
 
   function sendResendEmail(options) {
     const apiKey = $os.getenv('RESEND_API_KEY')
-    if (!apiKey || apiKey === 'placeholder_resend_api_key' || apiKey.trim() === '') return { ok: false }
+    if (!apiKey || apiKey === 'placeholder_resend_api_key' || apiKey.trim() === '')
+      return { ok: false }
     try {
       $http.send({
         url: 'https://api.resend.com/emails',
@@ -452,7 +487,8 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
   }
 
   const rawBody = e.request.rawBody || ''
-  const hubSig = e.request.header.get('X-Hub-Signature-256') || e.request.header.get('x-hub-signature-256') || ''
+  const hubSig =
+    e.request.header.get('X-Hub-Signature-256') || e.request.header.get('x-hub-signature-256') || ''
 
   if (!hubSig.startsWith('sha256=')) {
     return e.json(401, { error: 'Assinatura X-Hub-Signature-256 ausente ou formato inválido.' })
@@ -490,7 +526,13 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
 
         if (wamid) {
           try {
-            const logs = $app.findRecordsByFilter('notification_logs', `provider_message_id = '${wamid}'`, '-created', 1, 0)
+            const logs = $app.findRecordsByFilter(
+              'notification_logs',
+              `provider_message_id = '${wamid}'`,
+              '-created',
+              1,
+              0,
+            )
             if (logs.length > 0) {
               const logRec = logs[0]
               logRec.set('status', st)
@@ -514,7 +556,13 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
 
         if (textBody === 'SAIR' || textBody === 'PARAR' || textBody === 'STOP') {
           try {
-            const optins = $app.findRecordsByFilter('whatsapp_optins', `phone = '${fromNumber}' && opted_out_at = ''`, '-created', 10, 0)
+            const optins = $app.findRecordsByFilter(
+              'whatsapp_optins',
+              `phone = '${fromNumber}' && opted_out_at = ''`,
+              '-created',
+              10,
+              0,
+            )
             for (let o = 0; o < optins.length; o++) {
               const opt = optins[o]
               opt.set('opted_out_at', new Date().toISOString())
@@ -570,21 +618,27 @@ routerAdd('POST', '/backend/v1/communication/sync-whatsapp-templates', (e) => {
 
   if (authRecord) {
     try {
-      const check = $app.findFirstRecordByFilter('user_roles', `user_id = '${authRecord.id}' && role = 'admin'`)
+      const check = $app.findFirstRecordByFilter(
+        'user_roles',
+        `user_id = '${authRecord.id}' && role = 'admin'`,
+      )
       isAdmin = !!check
     } catch (_) {
       isAdmin = false
     }
   }
 
-  const reqSecret = e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
+  const reqSecret =
+    e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
   const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
   if (envSecret && reqSecret && reqSecret === envSecret) {
     isAdmin = true
   }
 
   if (!isAdmin) {
-    return e.json(403, { message: 'Acesso negado. Apenas administradores podem sincronizar modelos.' })
+    return e.json(403, {
+      message: 'Acesso negado. Apenas administradores podem sincronizar modelos.',
+    })
   }
 
   const token = $os.getenv('META_WA_ACCESS_TOKEN')
@@ -594,7 +648,9 @@ routerAdd('POST', '/backend/v1/communication/sync-whatsapp-templates', (e) => {
     return e.json(400, { message: 'Secret META_WA_ACCESS_TOKEN não configurado no servidor.' })
   }
   if (!wabaId || wabaId === 'placeholder_meta_waba_id' || wabaId.trim() === '') {
-    return e.json(400, { message: 'Secret META_WA_BUSINESS_ACCOUNT_ID não configurado no servidor.' })
+    return e.json(400, {
+      message: 'Secret META_WA_BUSINESS_ACCOUNT_ID não configurado no servidor.',
+    })
   }
 
   try {
@@ -620,7 +676,13 @@ routerAdd('POST', '/backend/v1/communication/sync-whatsapp-templates', (e) => {
       const category = String(t.category || '').toLowerCase()
 
       try {
-        const localTpls = $app.findRecordsByFilter('message_templates', `meta_template_name = '${name}' && channel = 'whatsapp'`, '-created', 5, 0)
+        const localTpls = $app.findRecordsByFilter(
+          'message_templates',
+          `meta_template_name = '${name}' && channel = 'whatsapp'`,
+          '-created',
+          5,
+          0,
+        )
         for (let j = 0; j < localTpls.length; j++) {
           const local = localTpls[j]
           local.set('meta_status', status)
@@ -642,7 +704,13 @@ routerAdd('POST', '/backend/v1/communication/sync-whatsapp-templates', (e) => {
       }
       audit.set('action', 'whatsapp_templates_synced')
       audit.set('resource_type', 'message_templates')
-      audit.set('details', JSON.stringify({ templates_received: remoteTemplates.length, templates_updated: updatedCount }))
+      audit.set(
+        'details',
+        JSON.stringify({
+          templates_received: remoteTemplates.length,
+          templates_updated: updatedCount,
+        }),
+      )
       $app.save(audit)
     } catch (_) {}
 
@@ -661,19 +729,28 @@ routerAdd('POST', '/backend/v1/communication/sync-whatsapp-templates', (e) => {
  * 3. POST /backend/v1/communication/send-email
  */
 routerAdd('POST', '/backend/v1/communication/send-email', (e) => {
-  const reqSecret = e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
+  const reqSecret =
+    e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
   const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
   let isAuthorized = envSecret && reqSecret && reqSecret === envSecret
 
   if (!isAuthorized && e.auth) {
     try {
-      const roles = $app.findRecordsByFilter('user_roles', `user_id = '${e.auth.id}'`, 'created', 5, 0)
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        `user_id = '${e.auth.id}'`,
+        'created',
+        5,
+        0,
+      )
       if (roles.length > 0) isAuthorized = true
     } catch (_) {}
   }
 
   if (!isAuthorized) {
-    return e.json(403, { message: 'Acesso negado. Segredo interno ou autenticação de equipe obrigatória.' })
+    return e.json(403, {
+      message: 'Acesso negado. Segredo interno ou autenticação de equipe obrigatória.',
+    })
   }
 
   const reqInfo = e.requestInfo()
@@ -686,12 +763,17 @@ routerAdd('POST', '/backend/v1/communication/send-email', (e) => {
   const entityId = (body.entity_id || '').trim()
 
   if (!to || !subject || !text) {
-    return e.json(400, { message: 'Destinatário (to), assunto (subject) e corpo (text) são obrigatórios.' })
+    return e.json(400, {
+      message: 'Destinatário (to), assunto (subject) e corpo (text) são obrigatórios.',
+    })
   }
 
   const apiKey = $os.getenv('RESEND_API_KEY')
   if (!apiKey || apiKey === 'placeholder_resend_api_key' || apiKey.trim() === '') {
-    return e.json(500, { success: false, message: 'Secret RESEND_API_KEY ausente ou não configurado.' })
+    return e.json(500, {
+      success: false,
+      message: 'Secret RESEND_API_KEY ausente ou não configurado.',
+    })
   }
 
   try {
@@ -714,7 +796,9 @@ routerAdd('POST', '/backend/v1/communication/send-email', (e) => {
 
     if (res.statusCode >= 200 && res.statusCode < 300) {
       let data = {}
-      try { data = JSON.parse(res.rawText) } catch (_) {}
+      try {
+        data = JSON.parse(res.rawText)
+      } catch (_) {}
       const msgId = data.id || 'resend_ok'
 
       try {
@@ -732,7 +816,10 @@ routerAdd('POST', '/backend/v1/communication/send-email', (e) => {
 
       return e.json(200, { success: true, message: 'E-mail enviado com sucesso.', id: msgId })
     } else {
-      return e.json(500, { success: false, message: `Resend erro (${res.statusCode}): ${res.rawText}` })
+      return e.json(500, {
+        success: false,
+        message: `Resend erro (${res.statusCode}): ${res.rawText}`,
+      })
     }
   } catch (err) {
     return e.json(500, { success: false, message: `Erro ao enviar e-mail: ${err.message}` })
@@ -743,13 +830,20 @@ routerAdd('POST', '/backend/v1/communication/send-email', (e) => {
  * 4. POST /backend/v1/communication/notify-event
  */
 routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
-  const reqSecret = e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
+  const reqSecret =
+    e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
   const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
   let isAuthorized = envSecret && reqSecret && reqSecret === envSecret
 
   if (!isAuthorized && e.auth) {
     try {
-      const roles = $app.findRecordsByFilter('user_roles', `user_id = '${e.auth.id}'`, 'created', 5, 0)
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        `user_id = '${e.auth.id}'`,
+        'created',
+        5,
+        0,
+      )
       if (roles.length > 0) isAuthorized = true
     } catch (_) {}
   }
@@ -776,7 +870,13 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
     return e.json(400, { message: 'event_code é obrigatório.' })
   }
 
-  const templates = $app.findRecordsByFilter('message_templates', `event_code = '${eventCode}' && active = true`, 'channel', 20, 0)
+  const templates = $app.findRecordsByFilter(
+    'message_templates',
+    `event_code = '${eventCode}' && active = true`,
+    'channel',
+    20,
+    0,
+  )
   const results = []
 
   for (let i = 0; i < templates.length; i++) {
@@ -834,12 +934,19 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
 
       let hasOptin = false
       try {
-        const opt = $app.findFirstRecordByFilter('whatsapp_optins', `phone = '${formattedTo}' && opted_out_at = ''`)
+        const opt = $app.findFirstRecordByFilter(
+          'whatsapp_optins',
+          `phone = '${formattedTo}' && opted_out_at = ''`,
+        )
         if (opt) hasOptin = true
       } catch (_) {}
 
       if (!isApproved || !hasOptin) {
-        results.push({ channel: 'whatsapp', status: 'skipped', reason: !isApproved ? 'template_not_approved' : 'no_optin' })
+        results.push({
+          channel: 'whatsapp',
+          status: 'skipped',
+          reason: !isApproved ? 'template_not_approved' : 'no_optin',
+        })
         continue
       }
 
@@ -849,7 +956,9 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
       if (metaToken && phoneId && metaToken !== 'placeholder_meta_wa_access_token') {
         const metaParams = []
         let rawParams = []
-        try { rawParams = JSON.parse(tpl.getString('meta_params')) || [] } catch (_) {}
+        try {
+          rawParams = JSON.parse(tpl.getString('meta_params')) || []
+        } catch (_) {}
         for (let p = 0; p < rawParams.length; p++) {
           const key = rawParams[p]
           metaParams.push(extraParams[key] || recipientName || '')
@@ -867,7 +976,9 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
             type: 'button',
             sub_type: 'url',
             index: '0',
-            parameters: [{ type: 'text', text: String(extraParams.link || tpl.getString('button_url_param')) }],
+            parameters: [
+              { type: 'text', text: String(extraParams.link || tpl.getString('button_url_param')) },
+            ],
           })
         }
 
@@ -983,12 +1094,32 @@ onRecordUpdate((e) => {
     function getVisibleStage(status) {
       if (status === 'recebida') return 'recebida'
       if (status === 'em_triagem' || status === 'aceita') return 'em_analise'
-      if (status === 'em_contato' || status === 'qualificada' || status === 'em_negociacao' || status === 'captacao_solicitada' || status === 'em_atendimento') return 'em_contato'
+      if (
+        status === 'em_contato' ||
+        status === 'qualificada' ||
+        status === 'em_negociacao' ||
+        status === 'captacao_solicitada' ||
+        status === 'em_atendimento'
+      )
+        return 'em_contato'
       if (status === 'captada') return 'captada'
       if (status === 'em_divulgacao') return 'em_divulgacao'
       if (status === 'visitando' || status === 'proposta') return 'visitando_proposta'
-      if (status === 'vendida' || status === 'alugada' || status === 'comprou' || status === 'alugou') return 'concluida'
-      if (status === 'recusada' || status === 'duplicada' || status === 'perdida' || status === 'retirada' || status === 'cancelada') return 'nao_aproveitada'
+      if (
+        status === 'vendida' ||
+        status === 'alugada' ||
+        status === 'comprou' ||
+        status === 'alugou'
+      )
+        return 'concluida'
+      if (
+        status === 'recusada' ||
+        status === 'duplicada' ||
+        status === 'perdida' ||
+        status === 'retirada' ||
+        status === 'cancelada'
+      )
+        return 'nao_aproveitada'
       return status
     }
 
@@ -1082,7 +1213,13 @@ cronAdd('flush_message_queue', '*/15 * * * *', () => {
     if (currentMinutes >= 1260 || currentMinutes < 480) return
 
     const nowIso = now.toISOString()
-    const pendingQueue = $app.findRecordsByFilter('message_queue', `status = 'pending' && send_after <= '${nowIso}'`, 'send_after', 50, 0)
+    const pendingQueue = $app.findRecordsByFilter(
+      'message_queue',
+      `status = 'pending' && send_after <= '${nowIso}'`,
+      'send_after',
+      50,
+      0,
+    )
     if (pendingQueue.length === 0) return
 
     const internalSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
@@ -1093,9 +1230,13 @@ cronAdd('flush_message_queue', '*/15 * * * *', () => {
       q.set('attempts', attempts)
 
       let params = []
-      try { params = JSON.parse(q.getString('params')) || [] } catch (_) {}
+      try {
+        params = JSON.parse(q.getString('params')) || []
+      } catch (_) {}
       let metadata = {}
-      try { metadata = JSON.parse(q.getString('metadata')) || {} } catch (_) {}
+      try {
+        metadata = JSON.parse(q.getString('metadata')) || {}
+      } catch (_) {}
 
       const res = $http.send({
         url: 'http://127.0.0.1:8090/backend/v1/communication/send-whatsapp',
@@ -1137,14 +1278,29 @@ cronAdd('check_stalled_referrals', '0 11 * * *', () => {
     let triageDays = 5
     let activeDays = 10
     try {
-      const st = $app.findFirstRecordByData('program_settings', 'key', 'stalled_referral_thresholds_days')
+      const st = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'stalled_referral_thresholds_days',
+      )
       const val = JSON.parse(st.getString('value_json'))
       if (val.triage_days) triageDays = val.triage_days
       if (val.active_states_days) activeDays = val.active_states_days
     } catch (_) {}
 
     const now = Date.now()
-    const finalStatuses = ['vendida', 'alugada', 'comprou', 'alugou', 'recusada', 'duplicada', 'perdida', 'retirada', 'cancelada', 'declinada_pela_godoy']
+    const finalStatuses = [
+      'vendida',
+      'alugada',
+      'comprou',
+      'alugou',
+      'recusada',
+      'duplicada',
+      'perdida',
+      'retirada',
+      'cancelada',
+      'declinada_pela_godoy',
+    ]
     const filter = finalStatuses.map((s) => `status != '${s}'`).join(' && ')
 
     const activeRefs = $app.findRecordsByFilter('referrals', filter, '-created', 200, 0)
@@ -1156,7 +1312,10 @@ cronAdd('check_stalled_referrals', '0 11 * * *', () => {
       const updatedAt = new Date(ref.getString('updated') || ref.getString('created')).getTime()
       const daysSince = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24))
 
-      const isStalled = (status === 'em_triagem' || status === 'recebida') ? daysSince >= triageDays : daysSince >= activeDays
+      const isStalled =
+        status === 'em_triagem' || status === 'recebida'
+          ? daysSince >= triageDays
+          : daysSince >= activeDays
 
       if (isStalled) {
         $http.send({
@@ -1190,13 +1349,21 @@ cronAdd('check_stalled_referrals', '0 11 * * *', () => {
  */
 cronAdd('process_activation', '0 13 * * *', () => {
   try {
-    const activeParticipants = $app.findRecordsByFilter('participants', "status = 'ativo'", '-created', 300, 0)
+    const activeParticipants = $app.findRecordsByFilter(
+      'participants',
+      "status = 'ativo'",
+      '-created',
+      300,
+      0,
+    )
     const now = Date.now()
     const internalSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
 
     for (let i = 0; i < activeParticipants.length; i++) {
       const part = activeParticipants[i]
-      const approvedAt = new Date(part.getString('approved_at') || part.getString('created')).getTime()
+      const approvedAt = new Date(
+        part.getString('approved_at') || part.getString('created'),
+      ).getTime()
       const daysActive = Math.floor((now - approvedAt) / (1000 * 60 * 60 * 24))
 
       const stepsToCheck = [
@@ -1211,7 +1378,10 @@ cronAdd('process_activation', '0 13 * * *', () => {
         if (daysActive >= stepDef.targetDays) {
           let alreadySent = false
           try {
-            const check = $app.findFirstRecordByFilter('activation_log', `participant_id = '${part.id}' && step = ${stepDef.step}`)
+            const check = $app.findFirstRecordByFilter(
+              'activation_log',
+              `participant_id = '${part.id}' && step = ${stepDef.step}`,
+            )
             if (check) alreadySent = true
           } catch (_) {
             alreadySent = false
@@ -1222,7 +1392,10 @@ cronAdd('process_activation', '0 13 * * *', () => {
           if (stepDef.requiresZeroReferrals) {
             let refCount = 0
             try {
-              refCount = $app.countRecords('referrals', `participant_id = '${part.id}' || original_owner_id = '${part.getString('user_id')}'`)
+              refCount = $app.countRecords(
+                'referrals',
+                `participant_id = '${part.id}' || original_owner_id = '${part.getString('user_id')}'`,
+              )
             } catch (_) {}
             if (refCount > 0) {
               const actCol = $app.findCollectionByNameOrId('activation_log')
@@ -1268,7 +1441,10 @@ cronAdd('process_activation', '0 13 * * *', () => {
  * 9. GET /backend/v1/communication/qr-code
  */
 routerAdd('GET', '/backend/v1/communication/qr-code', (e) => {
-  const url = e.request.url.query()['text'] || e.request.url.query()['url'] || 'https://indicacao.godoyprime.com.br'
+  const url =
+    e.request.url.query()['text'] ||
+    e.request.url.query()['url'] ||
+    'https://indicacao.godoyprime.com.br'
   const qrSvgUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`
 
   return e.json(200, {

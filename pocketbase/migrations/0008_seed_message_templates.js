@@ -300,7 +300,8 @@ migrate(
         event_code: 'indicacao_parada_responsavel',
         channel: 'email',
         audience: 'equipe',
-        subject: '[Alerta de SLA] Indicação {{protocolo}} sem movimentação há mais de {{dias}} dias',
+        subject:
+          '[Alerta de SLA] Indicação {{protocolo}} sem movimentação há mais de {{dias}} dias',
         body: 'Atenção, consultor responsável!\n\nA indicação {{protocolo}} (etapa: {{etapa}}) ultrapassou o tempo limite de SLA estabelecido sem novas interações ({{dias}} dias sem movimentação).\n\nPor favor, atualize o status ou registre uma nova tentativa de contato imediatamente:\n{{link}}\n\nPrime Circle Indica',
         active: true,
       },
@@ -468,14 +469,14 @@ migrate(
 
     for (let i = 0; i < seeds.length; i++) {
       const s = seeds[i]
-      try {
-        // Idempotent check
-        const existing = app.findFirstRecordByFilter(
-          'message_templates',
-          `event_code = '${s.event_code}' && channel = '${s.channel}' && audience = '${s.audience}'`,
-        )
-        if (existing) continue
-      } catch (_) {}
+      const existing = app.findRecordsByFilter(
+        'message_templates',
+        `event_code = '${s.event_code}' && channel = '${s.channel}' && audience = '${s.audience}'`,
+        '',
+        1,
+        0,
+      )
+      if (existing && existing.length > 0) continue
 
       const rec = new Record(templatesCol)
       rec.set('event_code', s.event_code)

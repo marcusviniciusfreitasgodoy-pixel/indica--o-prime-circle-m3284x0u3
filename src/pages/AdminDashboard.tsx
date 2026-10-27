@@ -16,6 +16,8 @@ import {
   Inbox,
   Kanban,
   UserSquare2,
+  AlertTriangle,
+  Sliders,
 } from 'lucide-react'
 
 export default function AdminDashboardPage() {
@@ -28,6 +30,7 @@ export default function AdminDashboardPage() {
     condosCount: 0,
     settingsCount: 0,
     teamCount: 0,
+    stalledCount: 0,
     auditCount: 0,
   })
   const [recentAudits, setRecentAudits] = useState<any[]>([])
@@ -56,6 +59,24 @@ export default function AdminDashboardPage() {
           }
         }
 
+        let stalled = 0
+        try {
+          const refs = await pb.collection('referrals').getFullList({
+            filter:
+              "status != 'vendida' && status != 'alugada' && status != 'comprou' && status != 'alugou' && status != 'recusada' && status != 'duplicada' && status != 'perdida' && status != 'retirada' && status != 'cancelada' && status != 'declinada_pela_godoy'",
+          })
+          const now = Date.now()
+          stalled = refs.filter((r: any) => {
+            const updatedAt = new Date(r.updated || r.created).getTime()
+            const daysSince = Math.floor((now - updatedAt) / (1000 * 60 * 60 * 24))
+            return r.status === 'em_triagem' || r.status === 'recebida'
+              ? daysSince >= 5
+              : daysSince >= 10
+          }).length
+        } catch {
+          /* intentionally ignored */
+        }
+
         setStats({
           programsCount: programs.length,
           categoriesCount: cats.length,
@@ -63,6 +84,7 @@ export default function AdminDashboardPage() {
           settingsCount: settings.length,
           teamCount: usersList.length,
           auditCount: auditsList.length,
+          stalledCount: stalled,
         })
         setRecentAudits(auditsList)
       } catch (err) {
@@ -106,7 +128,7 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           <Card className="rounded-none border-stone-800 bg-stone-900/60 p-4">
             <div className="flex items-center justify-between pb-2">
               <span className="text-xs text-stone-400 uppercase tracking-wider font-sans">
@@ -149,6 +171,21 @@ export default function AdminDashboardPage() {
             </div>
             <div className="text-2xl font-serif text-white">{stats.settingsCount}</div>
             <p className="text-[11px] text-stone-500 mt-1">Prazos, tetos e precedências</p>
+          </Card>
+
+          <Card className="rounded-none border-red-950/40 bg-stone-900/60 p-4">
+            <div className="flex items-center justify-between pb-2">
+              <span className="text-xs text-red-400 uppercase tracking-wider font-sans font-medium">
+                Paradas (SLA)
+              </span>
+              <AlertTriangle className="w-4 h-4 text-red-400" />
+            </div>
+            <div className="text-2xl font-serif text-red-400">{stats.stalledCount}</div>
+            <p className="text-[11px] text-stone-500 mt-1">
+              <Link to="/admin/indicacoes" className="hover:underline text-stone-400">
+                Ver no pipeline &rarr;
+              </Link>
+            </p>
           </Card>
         </div>
 

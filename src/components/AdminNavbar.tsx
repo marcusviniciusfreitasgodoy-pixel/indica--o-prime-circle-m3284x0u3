@@ -13,6 +13,9 @@ import {
   LogOut,
   Shield,
   Layers,
+  Award,
+  Mail,
+  Megaphone,
 } from 'lucide-react'
 
 export function AdminNavbar() {
@@ -23,7 +26,10 @@ export function AdminNavbar() {
     { label: 'Visão Geral', path: '/admin', icon: Layers },
     { label: 'Triagem & Fila', path: '/admin/triagem', icon: Inbox },
     { label: 'Indicações (Funis)', path: '/admin/indicacoes', icon: Kanban },
+    { label: 'Recompensas', path: '/admin/recompensas', icon: Award },
     { label: 'Participantes', path: '/admin/participantes', icon: Users },
+    { label: 'Mensagens', path: '/admin/mensagens', icon: Mail },
+    { label: 'Campanhas & Materiais', path: '/admin/campanhas', icon: Megaphone },
     { label: 'Condomínios', path: '/admin/condominios', icon: Building },
     { label: 'Proprietários & Imóveis', path: '/admin/proprietarios', icon: UserSquare2 },
     { label: 'Auditoria', path: '/admin/auditoria', icon: Activity },

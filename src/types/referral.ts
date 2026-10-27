@@ -325,4 +325,5 @@ export interface PublicReferralSubmissionPayload {
   referrer_phone: string
   description: string
   return_contact: string
+  campaign_code?: string
 }

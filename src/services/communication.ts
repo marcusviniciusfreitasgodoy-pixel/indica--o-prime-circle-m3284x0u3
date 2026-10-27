@@ -45,7 +45,11 @@ export interface Campaign {
   updated: string
   expand?: {
     condominium_id?: { id: string; name: string }
-    participant_id?: { id: string; user_id?: string; expand?: { user_id?: { name: string; email: string } } }
+    participant_id?: {
+      id: string
+      user_id?: string
+      expand?: { user_id?: { name: string; email: string } }
+    }
   }
 }
 
