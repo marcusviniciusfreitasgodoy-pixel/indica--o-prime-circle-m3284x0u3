@@ -1,0 +1,171 @@
+{
+  "generatedAt": "2026-10-27T18:41:21.985Z",
+  "collections": [
+    {
+      "name": "users",
+      "type": "auth",
+      "apiRules": {
+        "list": "@request.auth.id != ''",
+        "view": "@request.auth.id != '' || public_slug != ''",
+        "create": "",
+        "update": "id = @request.auth.id",
+        "delete": "id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "name",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "avatar",
+          "type": "file",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "agency",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "phone",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "public_slug",
+          "type": "text",
+          "required": false,
+          "system": false
+        }
+      ],
+      "indexes": [
+        "CREATE UNIQUE INDEX `idx_tokenKey__pb_users_auth_` ON `users` (`tokenKey`)",
+        "CREATE UNIQUE INDEX `idx_email__pb_users_auth_` ON `users` (`email`) WHERE `email` != ''",
+        "CREATE INDEX `idx_users_public_slug` ON `users` (public_slug) WHERE public_slug != ''"
+      ]
+    },
+    {
+      "name": "referrals",
+      "type": "base",
+      "apiRules": {
+        "list": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id)",
+        "view": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id)",
+        "create": "@request.auth.id != ''",
+        "update": "@request.auth.id != '' && current_owner_id = @request.auth.id",
+        "delete": "@request.auth.id != '' && current_owner_id = @request.auth.id"
+      },
+      "fields": [
+        {
+          "name": "type",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["imovel", "cliente"]
+        },
+        {
+          "name": "referrer_name",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "referrer_phone",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "description",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "return_contact",
+          "type": "text",
+          "required": true,
+          "system": false
+        },
+        {
+          "name": "status",
+          "type": "select",
+          "required": true,
+          "system": false,
+          "selectValues": ["nova", "em_atendimento", "atendida", "concluida", "repassada"]
+        },
+        {
+          "name": "channel",
+          "type": "select",
+          "required": false,
+          "system": false,
+          "selectValues": ["link_publico", "manual"]
+        },
+        {
+          "name": "current_owner_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "original_owner_id",
+          "type": "relation",
+          "required": true,
+          "system": false,
+          "collectionRef": "users"
+        },
+        {
+          "name": "attended_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "history",
+          "type": "json",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "created",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate"]
+        },
+        {
+          "name": "updated",
+          "type": "autodate",
+          "required": false,
+          "system": false,
+          "autodateTriggers": ["onCreate", "onUpdate"]
+        }
+      ],
+      "indexes": [
+        "CREATE INDEX idx_referrals_current_owner ON referrals (current_owner_id)",
+        "CREATE INDEX idx_referrals_original_owner ON referrals (original_owner_id)",
+        "CREATE INDEX idx_referrals_status ON referrals (status)",
+        "CREATE INDEX idx_referrals_created ON referrals (created DESC)"
+      ]
+    }
+  ]
+}
