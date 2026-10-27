@@ -95,7 +95,7 @@ export async function updateReferralStatus(
   const historyList = parseReferralHistory(referral.history)
   const now = new Date().toISOString()
 
-  const statusLabels: Partial<Record<ReferralStatus, string>> = {
+  const statusLabels: Record<ReferralStatus, string> = {
     recebida: 'Recebida',
     em_triagem: 'Em Triagem',
     aceita: 'Aceita',
@@ -127,7 +127,7 @@ export async function updateReferralStatus(
   const historyItem: ReferralHistoryItem = {
     date: now,
     action: `status_${newStatus}`,
-    description: `Status alterado para "${statusLabels[newStatus]}" por ${currentUserName || 'Membro'}${
+    description: `Status alterado para "${statusLabels[newStatus] || newStatus}" por ${currentUserName || 'Membro'}${
       notes ? ` (${notes})` : ''
     }`,
     actor: currentUserName || 'Membro',

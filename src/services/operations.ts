@@ -1,15 +1,11 @@
 import pb from '@/lib/pocketbase/client'
 import {
-  Referral,
   DuplicateFlag,
   ContactAttempt,
   ReferralNote,
   ReferralTask,
   DocumentItem,
   CaptureRecord,
-  Deal,
-  Participant,
-  Condominium,
   ReferralEvent,
 } from '@/types/referral'
 
