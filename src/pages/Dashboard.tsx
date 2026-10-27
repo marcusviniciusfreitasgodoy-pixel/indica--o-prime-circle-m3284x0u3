@@ -55,6 +55,7 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
+  const [rewardsStats, setRewardsStats] = useState({ aReceber: 0, recebido: 0 })
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState('')
@@ -82,6 +83,38 @@ export default function DashboardPage() {
         const [refs, members] = await Promise.all([getMemberReferrals(), getNetworkMembers()])
         setReferrals(refs)
         setNetworkMembers(members)
+
+        // Carrega recompensas reais do participante
+        if (user) {
+          try {
+            const partRec = await pb
+              .collection('participants')
+              .getFirstListItem(`user_id = '${user.id}'`)
+            if (partRec) {
+              const rList = await pb.collection('rewards').getFullList({
+                filter: `participant_id = '${partRec.id}'`,
+              })
+              const pending = rList
+                .filter((r: any) =>
+                  [
+                    'aguardando_comissao',
+                    'em_analise',
+                    'em_revisao_admin',
+                    'pendente_dados',
+                    'aprovada',
+                    'em_lote',
+                  ].includes(r.status),
+                )
+                .reduce((s: number, r: any) => s + (Number(r.final_amount_brl) || 0), 0)
+              const paid = rList
+                .filter((r: any) => r.status === 'paga')
+                .reduce((s: number, r: any) => s + (Number(r.final_amount_brl) || 0), 0)
+              setRewardsStats({ aReceber: pending, recebido: paid })
+            }
+          } catch {
+            /* intentionally ignored */
+          }
+        }
       } catch (err) {
         console.error('Erro ao carregar dados do painel:', err)
         toast({
@@ -300,27 +333,41 @@ export default function DashboardPage() {
 
           <Card className="bg-slate-900 border-slate-800 text-slate-100">
             <CardHeader className="p-4 pb-1">
-              <CardDescription className="text-xs font-medium text-orange-400 flex items-center justify-between">
-                <span>Repasses da Rede</span>
-                <ArrowRightLeft className="h-4 w-4" />
+              <CardDescription className="text-xs font-medium text-amber-500 flex items-center justify-between">
+                <span>A Receber</span>
+                <Link
+                  to="/painel/recompensas"
+                  className="text-[10px] text-amber-400 hover:underline"
+                >
+                  Extrato &rarr;
+                </Link>
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="text-2xl font-bold text-white">{stats.repassesRecebidos}</div>
-              <p className="text-[11px] text-slate-400 mt-1">Recebidos de outros parceiros</p>
+              <div className="text-2xl font-bold font-mono text-amber-400">
+                R$ {rewardsStats.aReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Em validação ou em lote</p>
             </CardContent>
           </Card>
 
           <Card className="bg-slate-900 border-slate-800 text-slate-100">
             <CardHeader className="p-4 pb-1">
               <CardDescription className="text-xs font-medium text-emerald-400 flex items-center justify-between">
-                <span>Total de Indicações</span>
-                <UserCheck className="h-4 w-4" />
+                <span>Recebido</span>
+                <Link
+                  to="/painel/recompensas"
+                  className="text-[10px] text-emerald-400 hover:underline"
+                >
+                  Ver &rarr;
+                </Link>
               </CardDescription>
             </CardHeader>
             <CardContent className="p-4 pt-0">
-              <div className="text-2xl font-bold text-white">{stats.total}</div>
-              <p className="text-[11px] text-slate-400 mt-1">{stats.concluidas} finalizadas</p>
+              <div className="text-2xl font-bold font-mono text-emerald-400">
+                R$ {rewardsStats.recebido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+              </div>
+              <p className="text-[11px] text-slate-400 mt-1">Total liquidado</p>
             </CardContent>
           </Card>
         </div>

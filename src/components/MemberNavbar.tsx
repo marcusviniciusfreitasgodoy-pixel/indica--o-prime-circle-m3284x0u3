@@ -40,6 +40,7 @@ export const MemberNavbar: React.FC = () => {
 
   const navItems = [
     { label: 'Painel', path: '/painel', icon: LayoutDashboard },
+    { label: 'Minhas Recompensas', path: '/painel/recompensas', icon: Sparkles },
     { label: 'Nova Indicação', path: '/nova-indicacao', icon: PlusCircle },
     { label: 'Meu Perfil & Link', path: '/perfil', icon: User },
   ]

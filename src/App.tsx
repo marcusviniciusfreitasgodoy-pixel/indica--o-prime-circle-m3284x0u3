@@ -60,6 +60,14 @@ const App = () => (
             }
           />
           <Route
+            path="/painel/recompensas"
+            element={
+              <ProtectedRoute>
+                <MemberRewardsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="/nova-indicacao"
             element={
               <ProtectedRoute>
@@ -68,7 +76,7 @@ const App = () => (
             }
           />
           <Route
-            path="/indicacao/detalhe/:id"
+            path="/indicacoes/:id"
             element={
               <ProtectedRoute>
                 <ReferralDetailPage />
@@ -83,7 +91,6 @@ const App = () => (
               </ProtectedRoute>
             }
           />
-
           {/* Protected Internal Routes (admin, operador, financeiro) */}
           <Route
             path="/admin"
@@ -171,6 +178,30 @@ const App = () => (
             element={
               <ProtectedRoute requireInternal>
                 <AdminCampaignsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/recompensas"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminRewardsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/lotes"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminBatchesPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/configuracoes"
+            element={
+              <ProtectedRoute requireInternal>
+                <AdminSettingsPage />
               </ProtectedRoute>
             }
           />

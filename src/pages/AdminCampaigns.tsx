@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { AdminNavbar } from '@/components/AdminNavbar'
 import { listCampaigns, createCampaign, updateCampaign, Campaign } from '@/services/communication'
-import { pb } from '@/lib/pocketbase/client'
+import pb from '@/lib/pocketbase/client'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -43,15 +43,14 @@ export function AdminCampaignsPage() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [code, setCode] = useState('')
   const [name, setName] = useState('')
-  const [type, setType] = useState('entidade')
+  const [channel, setChannel] = useState<
+    'portaria' | 'parceiro' | 'cliente' | 'impresso' | 'evento' | 'outro'
+  >('portaria')
   const [targetCondoId, setTargetCondoId] = useState('')
   const [targetParticipantId, setTargetParticipantId] = useState('')
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
-  const [utmSource, setUtmSource] = useState('entidade')
-  const [utmMedium, setUtmMedium] = useState('qrcode')
-  const [utmCampaign, setUtmCampaign] = useState('')
-  const [active, setActive] = useState(true)
+  const [notes, setNotes] = useState('')
   const [saving, setSaving] = useState(false)
 
   // Partner Materials Dialog
@@ -92,15 +91,12 @@ export function AdminCampaignsPage() {
     setEditingId(null)
     setCode('CAMP-' + Math.floor(1000 + Math.random() * 9000))
     setName('')
-    setType('entidade')
+    setChannel('portaria')
     setTargetCondoId('')
     setTargetParticipantId('')
     setStartDate(new Date().toISOString().substring(0, 10))
     setEndDate('')
-    setUtmSource('entidade')
-    setUtmMedium('qrcode')
-    setUtmCampaign('')
-    setActive(true)
+    setNotes('')
     setDialogOpen(true)
   }
 
@@ -108,15 +104,12 @@ export function AdminCampaignsPage() {
     setEditingId(c.id)
     setCode(c.code)
     setName(c.name)
-    setType(c.type)
-    setTargetCondoId(c.target_condominium_id || '')
-    setTargetParticipantId(c.target_participant_id || '')
-    setStartDate(c.start_date ? c.start_date.substring(0, 10) : '')
-    setEndDate(c.end_date ? c.end_date.substring(0, 10) : '')
-    setUtmSource(c.utm_source || 'entidade')
-    setUtmMedium(c.utm_medium || 'qrcode')
-    setUtmCampaign(c.utm_campaign || '')
-    setActive(c.active)
+    setChannel(c.channel || 'portaria')
+    setTargetCondoId(c.condominium_id || '')
+    setTargetParticipantId(c.participant_id || '')
+    setStartDate(c.starts_at ? c.starts_at.substring(0, 10) : '')
+    setEndDate(c.ends_at ? c.ends_at.substring(0, 10) : '')
+    setNotes(c.notes || '')
     setDialogOpen(true)
   }
 
@@ -135,15 +128,12 @@ export function AdminCampaignsPage() {
       const data: any = {
         code: code.trim().toUpperCase(),
         name: name.trim(),
-        type,
-        target_condominium_id: targetCondoId || null,
-        target_participant_id: targetParticipantId || null,
-        start_date: startDate || null,
-        end_date: endDate || null,
-        utm_source: utmSource || null,
-        utm_medium: utmMedium || null,
-        utm_campaign: utmCampaign || code.trim().toLowerCase(),
-        active,
+        channel,
+        condominium_id: targetCondoId || null,
+        participant_id: targetParticipantId || null,
+        starts_at: startDate || null,
+        ends_at: endDate || null,
+        notes: notes || null,
       }
 
       if (editingId) {
@@ -247,21 +237,15 @@ export function AdminCampaignsPage() {
                       <Badge className="bg-amber-950/70 text-amber-300 border-amber-800/60 text-[10px] font-mono rounded-none">
                         ?c={camp.code}
                       </Badge>
-                      <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none">
-                        {camp.type}
+                      <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none uppercase">
+                        {camp.channel}
                       </Badge>
                     </div>
                     <CardTitle className="text-sm font-semibold text-white">{camp.name}</CardTitle>
                   </div>
 
-                  <Badge
-                    className={`text-[10px] rounded-none ${
-                      camp.active
-                        ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
-                        : 'bg-stone-900 text-stone-500 border-stone-800'
-                    }`}
-                  >
-                    {camp.active ? 'Ativa' : 'Pausada'}
+                  <Badge className="text-[10px] rounded-none bg-emerald-950 text-emerald-300 border-emerald-800">
+                    Ativa
                   </Badge>
                 </div>
               </CardHeader>
@@ -272,19 +256,19 @@ export function AdminCampaignsPage() {
                 </div>
 
                 <div className="space-y-1 text-[11px]">
-                  {camp.target_condominium_id && (
+                  {camp.condominium_id && (
                     <div className="flex items-center gap-1.5 text-stone-300">
                       <Building className="w-3.5 h-3.5 text-amber-500" />
                       Condomínio vinculado
                     </div>
                   )}
-                  {camp.start_date && (
+                  {camp.starts_at && (
                     <div>
-                      Vigência: {new Date(camp.start_date).toLocaleDateString('pt-BR')}
-                      {camp.end_date &&
-                        ` até ${new Date(camp.end_date).toLocaleDateString('pt-BR')}`}
+                      Vigência: {new Date(camp.starts_at).toLocaleDateString('pt-BR')}
+                      {camp.ends_at && ` até ${new Date(camp.ends_at).toLocaleDateString('pt-BR')}`}
                     </div>
                   )}
+                  {camp.notes && <div className="text-stone-400 italic">{camp.notes}</div>}
                 </div>
               </CardContent>
 
@@ -341,17 +325,18 @@ export function AdminCampaignsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Tipo de Campanha</Label>
+                <Label className="text-xs text-stone-300">Canal da Campanha</Label>
                 <select
-                  value={type}
-                  onChange={(e) => setType(e.target.value)}
+                  value={channel}
+                  onChange={(e) => setChannel(e.target.value as any)}
                   className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
                 >
-                  <option value="entidade">Parceiro Institucional / Entidade</option>
-                  <option value="condominio">Condomínio / Associação</option>
-                  <option value="influencer">Influenciador / Parceiro</option>
-                  <option value="institucional">Institucional Godoy</option>
-                  <option value="sazonal">Sazonal / Temporária</option>
+                  <option value="portaria">Portaria</option>
+                  <option value="parceiro">Parceiro</option>
+                  <option value="cliente">Cliente</option>
+                  <option value="impresso">Impresso</option>
+                  <option value="evento">Evento</option>
+                  <option value="outro">Outro</option>
                 </select>
               </div>
             </div>
@@ -421,17 +406,15 @@ export function AdminCampaignsPage() {
               </div>
             </div>
 
-            <div className="flex items-center gap-2 pt-2">
-              <input
-                type="checkbox"
-                id="campActive"
-                checked={active}
-                onChange={(e) => setActive(e.target.checked)}
-                className="rounded border-stone-700 bg-stone-950 text-amber-500"
+            <div className="space-y-1">
+              <Label className="text-xs text-stone-300">Observações / Notas</Label>
+              <Textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Detalhes ou metas da campanha..."
+                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                rows={2}
               />
-              <Label htmlFor="campActive" className="text-xs text-stone-300 cursor-pointer">
-                Campanha ativa para novas indicações
-              </Label>
             </div>
           </div>
 

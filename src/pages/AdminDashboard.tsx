@@ -17,7 +17,6 @@ import {
   Kanban,
   UserSquare2,
   AlertTriangle,
-  Sliders,
 } from 'lucide-react'
 
 export default function AdminDashboardPage() {
