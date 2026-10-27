@@ -24,14 +24,14 @@ import {
 } from 'lucide-react'
 
 export const MemberNavbar: React.FC = () => {
-  const { user, logout } = useAuth()
+  const { user, logout, isInternal, isAdmin } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
 
   const handleLogout = () => {
     logout()
-    navigate('/login')
+    navigate('/entrar')
   }
 
   const publicLink = user?.public_slug
@@ -39,7 +39,7 @@ export const MemberNavbar: React.FC = () => {
     : `/indicacao/${user?.id || ''}`
 
   const navItems = [
-    { label: 'Painel', path: '/', icon: LayoutDashboard },
+    { label: 'Painel', path: '/painel', icon: LayoutDashboard },
     { label: 'Nova Indicação', path: '/nova-indicacao', icon: PlusCircle },
     { label: 'Meu Perfil & Link', path: '/perfil', icon: User },
   ]
@@ -164,6 +164,20 @@ export const MemberNavbar: React.FC = () => {
                   <span>Página de Captação</span>
                 </Link>
               </DropdownMenuItem>
+              {isInternal && (
+                <>
+                  <DropdownMenuSeparator className="bg-slate-800" />
+                  <DropdownMenuItem
+                    asChild
+                    className="focus:bg-amber-950/40 text-amber-400 focus:text-amber-300 cursor-pointer"
+                  >
+                    <Link to="/admin" className="flex items-center gap-2">
+                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <span>Painel Admin / Interno</span>
+                    </Link>
+                  </DropdownMenuItem>
+                </>
+              )}
               <DropdownMenuSeparator className="bg-slate-800" />
               <DropdownMenuItem
                 onClick={handleLogout}
