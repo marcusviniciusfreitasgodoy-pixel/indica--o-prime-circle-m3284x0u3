@@ -33,9 +33,8 @@ import pb from '@/lib/pocketbase/client'
 import { listRewardRules, RewardRule } from '@/services/rewards'
 
 export function AdminSettingsPage() {
-  const { userRoles } = useAuth()
+  const { isAdmin } = useAuth()
   const { toast } = useToast()
-  const isAdmin = userRoles.includes('admin')
 
   const [activeTab, setActiveTab] = useState<'recompensas' | 'geral'>('recompensas')
   const [rules, setRules] = useState<RewardRule[]>([])

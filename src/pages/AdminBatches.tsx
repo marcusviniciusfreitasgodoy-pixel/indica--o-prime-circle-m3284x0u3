@@ -38,10 +38,9 @@ import {
 } from '@/services/rewards'
 
 export function AdminBatchesPage() {
-  const { userRoles } = useAuth()
+  const { roles, isAdmin, isFinance } = useAuth()
   const { toast } = useToast()
-  const isAdmin = userRoles.includes('admin')
-  const isFinanceiro = userRoles.includes('financeiro')
+  const isFinanceiro = isFinance || roles.includes('financeiro')
   const canManage = isAdmin || isFinanceiro
 
   const [batches, setBatches] = useState<PaymentBatch[]>([])

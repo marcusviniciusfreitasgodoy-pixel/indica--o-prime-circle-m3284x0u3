@@ -51,10 +51,9 @@ type TabState =
   | 'cancelada'
 
 export function AdminRewardsPage() {
-  const { userRoles } = useAuth()
+  const { roles, isAdmin, isFinance } = useAuth()
   const { toast } = useToast()
-  const isAdmin = userRoles.includes('admin')
-  const isFinanceiro = userRoles.includes('financeiro')
+  const isFinanceiro = isFinance || roles.includes('financeiro')
   const canApproveOrPay = isAdmin || isFinanceiro
 
   const [activeTab, setActiveTab] = useState<TabState>('em_analise')

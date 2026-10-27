@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
 import { Link } from 'react-router-dom'
+import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { MemberNavbar } from '@/components/MemberNavbar'
 import { StatusBadge, TypeBadge } from '@/components/ReferralBadges'
