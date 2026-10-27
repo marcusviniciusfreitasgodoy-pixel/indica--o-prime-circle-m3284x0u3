@@ -103,7 +103,9 @@ export function AdminReferralDetailPage() {
 
   // Contact Attempt Modal
   const [contactModalOpen, setContactModalOpen] = useState(false)
-  const [contactChannel, setContactChannel] = useState<'whatsapp' | 'telefone' | 'email' | 'presencial'>('whatsapp')
+  const [contactChannel, setContactChannel] = useState<
+    'whatsapp' | 'telefone' | 'email' | 'presencial'
+  >('whatsapp')
   const [contactOutcome, setContactOutcome] = useState<any>('sucesso')
   const [contactNotes, setContactNotes] = useState('')
 
@@ -112,7 +114,9 @@ export function AdminReferralDetailPage() {
   const [targetStatus, setTargetStatus] = useState('')
   const [statusReason, setStatusReason] = useState('')
   const [publicReasonCode, setPublicReasonCode] = useState('')
-  const [lossResponsibility, setLossResponsibility] = useState<'proprietario' | 'indicacao_invalida'>('proprietario')
+  const [lossResponsibility, setLossResponsibility] = useState<
+    'proprietario' | 'indicacao_invalida'
+  >('proprietario')
   const [dealValueBrl, setDealValueBrl] = useState<string>('')
   const [dealDate, setDealDate] = useState<string>('')
 
@@ -154,7 +158,8 @@ export function AdminReferralDetailPage() {
       setLoading(true)
       const [refRes, evRes, caRes, ntRes, tkRes, docRes, cpRes, rcRes, opsRes] = await Promise.all([
         pb.collection('referrals').getOne<Referral>(id, {
-          expand: 'current_owner_id,original_owner_id,condominium_id,assigned_operator_id,participant_id',
+          expand:
+            'current_owner_id,original_owner_id,condominium_id,assigned_operator_id,participant_id',
         }),
         getReferralEvents(id),
         getContactAttempts(id),
@@ -216,7 +221,11 @@ export function AdminReferralDetailPage() {
       toast({ title: 'Consentimento confirmado pelo operador!' })
       loadData()
     } catch (err: any) {
-      toast({ title: 'Erro ao confirmar consentimento', description: err.message, variant: 'destructive' })
+      toast({
+        title: 'Erro ao confirmar consentimento',
+        description: err.message,
+        variant: 'destructive',
+      })
     }
   }
 
@@ -270,7 +279,11 @@ export function AdminReferralDetailPage() {
       toast({ title: 'Tentativa de contato registrada!' })
       loadData()
     } catch (err: any) {
-      toast({ title: 'Erro ao registrar contato', description: err.message, variant: 'destructive' })
+      toast({
+        title: 'Erro ao registrar contato',
+        description: err.message,
+        variant: 'destructive',
+      })
     } finally {
       setSubmitting(false)
     }
@@ -339,7 +352,11 @@ export function AdminReferralDetailPage() {
       toast({ title: 'Documento protegido anexado com sucesso!' })
       loadData()
     } catch (err: any) {
-      toast({ title: 'Erro no envio do documento', description: err.message, variant: 'destructive' })
+      toast({
+        title: 'Erro no envio do documento',
+        description: err.message,
+        variant: 'destructive',
+      })
     } finally {
       setSubmitting(false)
     }
@@ -454,7 +471,11 @@ export function AdminReferralDetailPage() {
       })
       loadData()
     } catch (err: any) {
-      toast({ title: 'Erro ao registrar negócio', description: err.message, variant: 'destructive' })
+      toast({
+        title: 'Erro ao registrar negócio',
+        description: err.message,
+        variant: 'destructive',
+      })
     } finally {
       setSubmitting(false)
     }
@@ -513,7 +534,10 @@ export function AdminReferralDetailPage() {
               >
                 {isProp ? 'Captação (Proprietário)' : 'Comprador / Locatário'}
               </Badge>
-              <Badge variant="outline" className="rounded-none border-stone-700 text-stone-300 text-xs">
+              <Badge
+                variant="outline"
+                className="rounded-none border-stone-700 text-stone-300 text-xs"
+              >
                 Status Atual: <strong className="ml-1 text-white">{referral.status}</strong>
               </Badge>
               <span className="text-xs text-stone-500">#{referral.id.substring(0, 8)}</span>
@@ -610,7 +634,10 @@ export function AdminReferralDetailPage() {
                 <span className="text-stone-500 block">Telefone:</span>
                 <span className="flex items-center gap-1 font-mono text-stone-200">
                   <Phone className="w-3 h-3 text-stone-500" />
-                  {referral.owner_phone || referral.buyer_phone || referral.referrer_phone || 'Não informado'}
+                  {referral.owner_phone ||
+                    referral.buyer_phone ||
+                    referral.referrer_phone ||
+                    'Não informado'}
                 </span>
               </div>
 
@@ -618,7 +645,10 @@ export function AdminReferralDetailPage() {
                 <span className="text-stone-500 block">E-mail:</span>
                 <span className="flex items-center gap-1 font-mono text-stone-200">
                   <Mail className="w-3 h-3 text-stone-500" />
-                  {referral.owner_email || referral.buyer_email || referral.return_contact || 'Não informado'}
+                  {referral.owner_email ||
+                    referral.buyer_email ||
+                    referral.return_contact ||
+                    'Não informado'}
                 </span>
               </div>
 
@@ -683,7 +713,10 @@ export function AdminReferralDetailPage() {
                       Declarado pelo Indicador
                     </Badge>
                   ) : (
-                    <Badge variant="outline" className="border-stone-700 text-stone-500 text-[10px] rounded-none">
+                    <Badge
+                      variant="outline"
+                      className="border-stone-700 text-stone-500 text-[10px] rounded-none"
+                    >
                       Não Declarado
                     </Badge>
                   )}
@@ -775,8 +808,8 @@ export function AdminReferralDetailPage() {
                             cap.status === 'aprovada'
                               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                               : cap.status === 'solicitada'
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                           }`}
                         >
                           {cap.status.toUpperCase()}
@@ -937,7 +970,9 @@ export function AdminReferralDetailPage() {
                           {ca.outcome}
                         </Badge>
                       </div>
-                      <p className="text-stone-300 mt-1">{ca.notes || 'Sem observações adicionais.'}</p>
+                      <p className="text-stone-300 mt-1">
+                        {ca.notes || 'Sem observações adicionais.'}
+                      </p>
                       <p className="text-stone-500 text-[11px]">
                         Por: {ca.expand?.operator_id?.name || 'Operador'}
                       </p>
@@ -1045,7 +1080,11 @@ export function AdminReferralDetailPage() {
                         }}
                         className="rounded-none bg-stone-950 border-stone-700 text-amber-500"
                       />
-                      <span className={t.is_completed ? 'line-through text-stone-500' : 'text-stone-200'}>
+                      <span
+                        className={
+                          t.is_completed ? 'line-through text-stone-500' : 'text-stone-200'
+                        }
+                      >
                         {t.title}
                       </span>
                     </div>
@@ -1065,7 +1104,8 @@ export function AdminReferralDetailPage() {
           <TabsContent value="documentos" className="space-y-4">
             <div className="flex justify-between items-center">
               <span className="text-xs text-stone-400">
-                Arquivos armazenados nos buckets privados de captação e parceiros (acesso restrito por URL assinada).
+                Arquivos armazenados nos buckets privados de captação e parceiros (acesso restrito
+                por URL assinada).
               </span>
               <Button
                 size="sm"
@@ -1119,7 +1159,10 @@ export function AdminReferralDetailPage() {
                   <div className="flex items-center gap-2">
                     <span className="font-semibold text-stone-200">{ev.to_status}</span>
                     {ev.public_label && (
-                      <Badge variant="outline" className="text-[10px] border-stone-700 text-stone-400 rounded-none">
+                      <Badge
+                        variant="outline"
+                        className="text-[10px] border-stone-700 text-stone-400 rounded-none"
+                      >
                         Rótulo Indicador: {ev.public_label}
                       </Badge>
                     )}
@@ -1156,9 +1199,12 @@ export function AdminReferralDetailPage() {
       <Dialog open={statusModalOpen} onOpenChange={setStatusModalOpen}>
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Mudar Status da Indicação</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Mudar Status da Indicação
+            </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              A transição será validada contra a matriz de regras operacionais de {isProp ? 'proprietário' : 'comprador'}.
+              A transição será validada contra a matriz de regras operacionais de{' '}
+              {isProp ? 'proprietário' : 'comprador'}.
             </DialogDescription>
           </DialogHeader>
 
@@ -1202,10 +1248,14 @@ export function AdminReferralDetailPage() {
             </div>
 
             {/* Motivos obrigatórios */}
-            {['recusada', 'duplicada', 'perdida', 'retirada', 'cancelada'].includes(targetStatus) && (
+            {['recusada', 'duplicada', 'perdida', 'retirada', 'cancelada'].includes(
+              targetStatus,
+            ) && (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-stone-300 font-medium">Código do Motivo Público (Indicador verá):</label>
+                  <label className="text-stone-300 font-medium">
+                    Código do Motivo Público (Indicador verá):
+                  </label>
                   <Select value={publicReasonCode} onValueChange={setPublicReasonCode}>
                     <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
                       <SelectValue placeholder="Selecione o código público..." />
@@ -1223,7 +1273,9 @@ export function AdminReferralDetailPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-stone-300 font-medium">Motivo / Justificativa Interna:</label>
+                  <label className="text-stone-300 font-medium">
+                    Motivo / Justificativa Interna:
+                  </label>
                   <Textarea
                     placeholder="Descreva o motivo detalhado para fins de auditoria..."
                     value={statusReason}
@@ -1277,10 +1329,12 @@ export function AdminReferralDetailPage() {
       <Dialog open={declineModalOpen} onOpenChange={setDeclineModalOpen}>
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Declinar pela Godoy Prime</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Declinar pela Godoy Prime
+            </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              Apenas administradores. A indicação será movida para <em>declinada_pela_godoy</em> e aparecerá
-              como <strong>Reconhecida</strong> no painel do participante.
+              Apenas administradores. A indicação será movida para <em>declinada_pela_godoy</em> e
+              aparecerá como <strong>Reconhecida</strong> no painel do participante.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
@@ -1305,7 +1359,11 @@ export function AdminReferralDetailPage() {
               onClick={handleDeclineByGodoy}
               className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
             >
-              {submitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : 'Confirmar Declínio'}
+              {submitting ? (
+                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+              ) : (
+                'Confirmar Declínio'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1319,7 +1377,8 @@ export function AdminReferralDetailPage() {
               Solicitar Formalização de Captação
             </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              Exige anexo de autorização/contrato de corretagem. O solicitante não poderá aprovar esta formalização.
+              Exige anexo de autorização/contrato de corretagem. O solicitante não poderá aprovar
+              esta formalização.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
@@ -1331,7 +1390,9 @@ export function AdminReferralDetailPage() {
                 </SelectTrigger>
                 <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
                   <SelectItem value="autorizacao_simples">Autorização Simples</SelectItem>
-                  <SelectItem value="autorizacao_exclusiva">Autorização com Exclusividade</SelectItem>
+                  <SelectItem value="autorizacao_exclusiva">
+                    Autorização com Exclusividade
+                  </SelectItem>
                   <SelectItem value="contrato_parceria">Contrato de Parceria</SelectItem>
                   <SelectItem value="termo_opcao">Termo de Opção</SelectItem>
                 </SelectContent>
@@ -1372,7 +1433,11 @@ export function AdminReferralDetailPage() {
               onClick={handleRequestCapture}
               className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
             >
-              {submitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : 'Enviar Solicitação'}
+              {submitting ? (
+                <Loader2 className="w-3 h-3 animate-spin mr-1" />
+              ) : (
+                'Enviar Solicitação'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -1382,9 +1447,12 @@ export function AdminReferralDetailPage() {
       <Dialog open={returnCaptureModalOpen} onOpenChange={setReturnCaptureModalOpen}>
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Devolver Formalização</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Devolver Formalização
+            </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              A indicação retornará para o status <em>em_negociacao</em> para adequações pelo operador.
+              A indicação retornará para o status <em>em_negociacao</em> para adequações pelo
+              operador.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
@@ -1419,9 +1487,12 @@ export function AdminReferralDetailPage() {
       <Dialog open={listingModalOpen} onOpenChange={setListingModalOpen}>
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Colocar Imóvel em Divulgação</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Colocar Imóvel em Divulgação
+            </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              Muda para <em>em_divulgacao</em> e libera link público de vitrine para compartilhamento pelo parceiro.
+              Muda para <em>em_divulgacao</em> e libera link público de vitrine para
+              compartilhamento pelo parceiro.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
@@ -1478,9 +1549,12 @@ export function AdminReferralDetailPage() {
       <Dialog open={dealModalOpen} onOpenChange={setDealModalOpen}>
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Registrar Negócio Fechado</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Registrar Negócio Fechado
+            </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              Só administradores. Conclui o negócio, gravando valor e data em <em>deals</em> e na indicação.
+              Só administradores. Conclui o negócio, gravando valor e data em <em>deals</em> e na
+              indicação.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
@@ -1557,7 +1631,9 @@ export function AdminReferralDetailPage() {
       <Dialog open={uploadModalOpen} onOpenChange={setUploadModalOpen}>
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Anexar Documento Protegido</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Anexar Documento Protegido
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
             <div className="space-y-1">
@@ -1601,7 +1677,9 @@ export function AdminReferralDetailPage() {
       <Dialog open={contactModalOpen} onOpenChange={setContactModalOpen}>
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Registrar Tentativa de Contato</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Registrar Tentativa de Contato
+            </DialogTitle>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
             <div className="grid grid-cols-2 gap-2">

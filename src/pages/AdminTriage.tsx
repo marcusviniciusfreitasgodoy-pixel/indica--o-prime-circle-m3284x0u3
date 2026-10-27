@@ -227,8 +227,8 @@ export function AdminTriagePage() {
             Fila de Triagem & Atribuições
           </h1>
           <p className="text-sm text-stone-400 mt-1">
-            Avalie novas indicações nos estados Recebida e Em Triagem, examine alertas de duplicidade
-            e resolva pendências de indicação direta.
+            Avalie novas indicações nos estados Recebida e Em Triagem, examine alertas de
+            duplicidade e resolva pendências de indicação direta.
           </p>
         </div>
 
@@ -445,8 +445,8 @@ export function AdminTriagePage() {
                             ))}
                           </div>
                           <p className="text-[10px] text-stone-400 italic">
-                            * O sistema nunca rejeita automaticamente. O operador tem autonomia
-                            para validar ou declinar.
+                            * O sistema nunca rejeita automaticamente. O operador tem autonomia para
+                            validar ou declinar.
                           </p>
                         </div>
                       )}
@@ -552,11 +552,10 @@ export function AdminTriagePage() {
                     </SelectTrigger>
                     <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
                       {reasonCodes
-                        .filter(
-                          (c) =>
-                            actionModal.type === 'duplicada'
-                              ? c.category === 'duplicada'
-                              : c.category === 'recusada' || c.category === 'perdida',
+                        .filter((c) =>
+                          actionModal.type === 'duplicada'
+                            ? c.category === 'duplicada'
+                            : c.category === 'recusada' || c.category === 'perdida',
                         )
                         .map((c) => (
                           <SelectItem key={c.code} value={c.code}>
@@ -568,7 +567,9 @@ export function AdminTriagePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs text-stone-300">Justificativa Operacional Interna:</label>
+                  <label className="text-xs text-stone-300">
+                    Justificativa Operacional Interna:
+                  </label>
                   <Textarea
                     placeholder="Descreva o motivo detalhado para registro na auditoria..."
                     value={customReason}

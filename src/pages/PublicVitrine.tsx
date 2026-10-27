@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import pb from '@/lib/pocketbase/client'
-import { Referral } from '@/types/referral'
-import { submitBuyerLead } from '@/services/operations'
+import { useParams } from 'react-router-dom'
+import { submitBuyerLead, getPublicVitrineProperty } from '@/services/operations'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,7 +25,15 @@ export function PublicVitrinePage() {
   const { codigo, imovel } = useParams<{ codigo: string; imovel: string }>()
   const { toast } = useToast()
 
-  const [property, setProperty] = useState<Referral | null>(null)
+  const [property, setProperty] = useState<{
+    id: string
+    condo_name: string
+    neighborhood: string
+    public_summary: string
+    public_photos: string[]
+    listing_link?: string
+    is_reserved_listing: boolean
+  } | null>(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
 
@@ -44,12 +50,9 @@ export function PublicVitrinePage() {
       if (!imovel) return
       try {
         setLoading(true)
-        // Public vitrine displays property in em_divulgacao
-        const res = await pb.collection('referrals').getOne<Referral>(imovel, {
-          expand: 'condominium_id',
-        })
-
+        // Public vitrine displays property in em_divulgacao via safe endpoint
         // NUNCA exibe unidade nem endereço completo por exigência de privacidade
+        const res = await getPublicVitrineProperty(imovel)
         setProperty(res)
       } catch (err: any) {
         setNotFound(true)
@@ -119,22 +122,9 @@ export function PublicVitrinePage() {
     )
   }
 
-  const condoName = property.expand?.condominium_id?.name || 'Condomínio de Alto Padrão'
-  const neighborhood =
-    property.expand?.condominium_id?.neighborhood ||
-    property.target_neighborhood ||
-    'Barra da Tijuca / Recreio'
-
-  let photos: string[] = []
-  if (property.public_photos) {
-    if (Array.isArray(property.public_photos)) {
-      photos = property.public_photos
-    } else if (typeof property.public_photos === 'string') {
-      try {
-        photos = JSON.parse(property.public_photos)
-      } catch { /* intentionally ignored */ }
-    }
-  }
+  const condoName = property.condo_name || 'Condomínio de Alto Padrão'
+  const neighborhood = property.neighborhood || 'Barra da Tijuca / Recreio'
+  const photos = property.public_photos || []
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
@@ -155,7 +145,10 @@ export function PublicVitrinePage() {
             </div>
           </div>
 
-          <Badge variant="outline" className="border-amber-500/40 text-amber-300 rounded-none text-xs">
+          <Badge
+            variant="outline"
+            className="border-amber-500/40 text-amber-300 rounded-none text-xs"
+          >
             Parceria Oficial • Código #{codigo}
           </Badge>
         </div>
@@ -187,11 +180,7 @@ export function PublicVitrinePage() {
             {/* Photos carousel or fallback image */}
             <div className="aspect-video bg-stone-900 border border-stone-800 overflow-hidden relative">
               {photos.length > 0 ? (
-                <img
-                  src={photos[0]}
-                  alt={condoName}
-                  className="w-full h-full object-cover"
-                />
+                <img src={photos[0]} alt={condoName} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-stone-900/80 p-6 text-center space-y-2">
                   <Building className="w-12 h-12 text-stone-700" />
@@ -210,7 +199,6 @@ export function PublicVitrinePage() {
               <h2 className="font-serif text-lg text-amber-200">Sobre o Imóvel</h2>
               <p className="text-stone-300 text-sm whitespace-pre-wrap leading-relaxed">
                 {property.public_summary ||
-                  property.description ||
                   'Excelente oportunidade em condomínio de prestígio com infraestrutura completa e segurança 24h.'}
               </p>
 
@@ -232,8 +220,8 @@ export function PublicVitrinePage() {
             <div className="flex items-center gap-2 text-xs text-stone-500">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
               <span>
-                Por questões de privacidade e segurança dos proprietários, o número exato da unidade é
-                disponibilizado apenas mediante agendamento de visita.
+                Por questões de privacidade e segurança dos proprietários, o número exato da unidade
+                é disponibilizado apenas mediante agendamento de visita.
               </span>
             </div>
           </div>
@@ -244,17 +232,20 @@ export function PublicVitrinePage() {
               <CardHeader>
                 <CardTitle className="font-serif text-xl text-white">Tenho Interesse</CardTitle>
                 <CardDescription className="text-stone-400 text-xs">
-                  Preencha o formulário para receber a ficha técnica completa e agendar uma visita guiada.
+                  Preencha o formulário para receber a ficha técnica completa e agendar uma visita
+                  guiada.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {submitted ? (
                   <div className="py-6 text-center space-y-3">
                     <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-                    <h3 className="font-serif text-lg text-white font-medium">Obrigado pelo contato!</h3>
+                    <h3 className="font-serif text-lg text-white font-medium">
+                      Obrigado pelo contato!
+                    </h3>
                     <p className="text-xs text-stone-300">
-                      Recebemos seu interesse no <strong>{condoName}</strong>. Nossa equipe entrará em
-                      contato nas próximas horas.
+                      Recebemos seu interesse no <strong>{condoName}</strong>. Nossa equipe entrará
+                      em contato nas próximas horas.
                     </p>
                   </div>
                 ) : (
@@ -332,8 +323,8 @@ export function PublicVitrinePage() {
                     </Button>
 
                     <p className="text-[10px] text-stone-500 text-center">
-                      Ao enviar, seus dados são protegidos conforme a LGPD e compartilhados apenas com a equipe
-                      Godoy Prime.
+                      Ao enviar, seus dados são protegidos conforme a LGPD e compartilhados apenas
+                      com a equipe Godoy Prime.
                     </p>
                   </form>
                 )}

@@ -45,7 +45,9 @@ export function AdminParticipantsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
 
   // Performance stats per participant (referrals count, deals count)
-  const [metrics, setMetrics] = useState<Record<string, { totalRefs: number; dealsCount: number }>>({})
+  const [metrics, setMetrics] = useState<Record<string, { totalRefs: number; dealsCount: number }>>(
+    {},
+  )
 
   // Suspend modal
   const [suspendModal, setSuspendModal] = useState<{ open: boolean; part: Participant | null }>({
@@ -157,7 +159,11 @@ export function AdminParticipantsPage() {
       toast({ title: 'Contrato de parceria anexado com sucesso ao bucket partner-contracts!' })
       loadData()
     } catch (err: any) {
-      toast({ title: 'Erro no envio do contrato', description: err.message, variant: 'destructive' })
+      toast({
+        title: 'Erro no envio do contrato',
+        description: err.message,
+        variant: 'destructive',
+      })
     } finally {
       setSubmitting(false)
     }
@@ -186,7 +192,8 @@ export function AdminParticipantsPage() {
               Gestão de Participantes do Programa
             </h1>
             <p className="text-sm text-stone-400 mt-1">
-              Aprovação de categorias, anexo de contratos assinados (partner-contracts), suspensão e desempenho.
+              Aprovação de categorias, anexo de contratos assinados (partner-contracts), suspensão e
+              desempenho.
             </p>
           </div>
         </div>
@@ -209,7 +216,9 @@ export function AdminParticipantsPage() {
               size="sm"
               onClick={() => setStatusFilter('all')}
               className={`rounded-none text-xs ${
-                statusFilter === 'all' ? 'bg-amber-600 text-white' : 'border-stone-800 text-stone-400'
+                statusFilter === 'all'
+                  ? 'bg-amber-600 text-white'
+                  : 'border-stone-800 text-stone-400'
               }`}
             >
               Todos
@@ -231,7 +240,9 @@ export function AdminParticipantsPage() {
               size="sm"
               onClick={() => setStatusFilter('ativo')}
               className={`rounded-none text-xs ${
-                statusFilter === 'ativo' ? 'bg-amber-600 text-white' : 'border-stone-800 text-stone-400'
+                statusFilter === 'ativo'
+                  ? 'bg-amber-600 text-white'
+                  : 'border-stone-800 text-stone-400'
               }`}
             >
               Ativos
@@ -241,7 +252,9 @@ export function AdminParticipantsPage() {
               size="sm"
               onClick={() => setStatusFilter('suspenso')}
               className={`rounded-none text-xs ${
-                statusFilter === 'suspenso' ? 'bg-amber-600 text-white' : 'border-stone-800 text-stone-400'
+                statusFilter === 'suspenso'
+                  ? 'bg-amber-600 text-white'
+                  : 'border-stone-800 text-stone-400'
               }`}
             >
               Suspensos
@@ -310,8 +323,8 @@ export function AdminParticipantsPage() {
                             p.status === 'ativo'
                               ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
                               : p.status === 'pendente_aprovacao'
-                              ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                              : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                                : 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                           }`}
                         >
                           {p.status}
@@ -378,9 +391,12 @@ export function AdminParticipantsPage() {
       >
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">Suspender Participante</DialogTitle>
+            <DialogTitle className="font-serif text-lg text-white">
+              Suspender Participante
+            </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              As indicações em aberto do participante ficarão congeladas para revisão de conformidade.
+              As indicações em aberto do participante ficarão congeladas para revisão de
+              conformidade.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">
@@ -422,7 +438,8 @@ export function AdminParticipantsPage() {
               Anexar Contrato de Parceria (partner-contracts)
             </DialogTitle>
             <DialogDescription className="text-stone-400 text-xs">
-              Upload seguro para o bucket privado <em>partner-contracts</em>, com acesso restrito por URL assinada.
+              Upload seguro para o bucket privado <em>partner-contracts</em>, com acesso restrito
+              por URL assinada.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-2 text-xs">

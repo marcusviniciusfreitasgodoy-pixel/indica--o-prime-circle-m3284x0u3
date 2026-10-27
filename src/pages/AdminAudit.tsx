@@ -80,7 +80,8 @@ export function AdminAuditPage() {
             Trilha de Auditoria & Conformidade
           </h1>
           <p className="text-sm text-stone-400 mt-1">
-            Registro imutável de todas as ações operacionais, transições de status, formalizações e cadastros.
+            Registro imutável de todas as ações operacionais, transições de status, formalizações e
+            cadastros.
           </p>
         </div>
 
@@ -164,7 +165,9 @@ export function AdminAuditPage() {
                   if (typeof log.details === 'string') {
                     try {
                       parsedDetails = JSON.parse(log.details)
-                    } catch { /* intentionally ignored */ }
+                    } catch {
+                      /* intentionally ignored */
+                    }
                   }
 
                   return (

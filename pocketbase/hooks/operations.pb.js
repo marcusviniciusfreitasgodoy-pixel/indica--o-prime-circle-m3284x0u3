@@ -37,7 +37,11 @@ onRecordCreate((e) => {
 
     let precedenceDays = 180
     try {
-      const st = $app.findFirstRecordByData('program_settings', 'key', 'known_owner_precedence_days')
+      const st = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'known_owner_precedence_days',
+      )
       const val = JSON.parse(st.getString('value_json'))
       if (typeof val === 'number') precedenceDays = val
     } catch (_) {}
@@ -64,8 +68,12 @@ onRecordCreate((e) => {
     if (refType === 'proprietario') {
       const condoId = record.getString('condominium_id')
       const unit = (record.getString('unit') || '').trim().toLowerCase()
-      const normAddr = cleanAddr(record.getString('normalized_address') || record.getString('description'))
-      const normPhone = cleanPhone(record.getString('owner_phone') || record.getString('referrer_phone'))
+      const normAddr = cleanAddr(
+        record.getString('normalized_address') || record.getString('description'),
+      )
+      const normPhone = cleanPhone(
+        record.getString('owner_phone') || record.getString('referrer_phone'),
+      )
 
       const activeStates =
         "status != 'recusada' && status != 'cancelada' && status != 'vendida' && status != 'alugada' && status != 'perdida' && status != 'retirada' && status != 'declinada_pela_godoy'"
@@ -84,10 +92,14 @@ onRecordCreate((e) => {
           (other.getString('type') === 'cliente' ? 'comprador' : 'proprietario')
         if (otherType !== 'proprietario') continue
 
-        const otherPhone = cleanPhone(other.getString('owner_phone') || other.getString('referrer_phone'))
+        const otherPhone = cleanPhone(
+          other.getString('owner_phone') || other.getString('referrer_phone'),
+        )
         const otherCondo = other.getString('condominium_id')
         const otherUnit = (other.getString('unit') || '').trim().toLowerCase()
-        const otherAddr = cleanAddr(other.getString('normalized_address') || other.getString('description'))
+        const otherAddr = cleanAddr(
+          other.getString('normalized_address') || other.getString('description'),
+        )
 
         if (normPhone && otherPhone && normPhone === otherPhone) {
           flags.push({
@@ -97,7 +109,14 @@ onRecordCreate((e) => {
           })
         }
 
-        if (condoId && otherCondo && condoId === otherCondo && unit && otherUnit && unit === otherUnit) {
+        if (
+          condoId &&
+          otherCondo &&
+          condoId === otherCondo &&
+          unit &&
+          otherUnit &&
+          unit === otherUnit
+        ) {
           flags.push({
             conflicting_referral_id: other.id,
             conflict_type: 'condo_unit',
@@ -139,12 +158,10 @@ onRecordCreate((e) => {
       }
     } else {
       // Comprador
-      const normPhone = cleanPhone(record.getString('buyer_phone') || record.getString('referrer_phone'))
-      const email = (
-        record.getString('buyer_email') ||
-        record.getString('return_contact') ||
-        ''
+      const normPhone = cleanPhone(
+        record.getString('buyer_phone') || record.getString('referrer_phone'),
       )
+      const email = (record.getString('buyer_email') || record.getString('return_contact') || '')
         .trim()
         .toLowerCase()
 
@@ -160,7 +177,9 @@ onRecordCreate((e) => {
 
       for (let i = 0; i < activeBuyers.length; i++) {
         const other = activeBuyers[i]
-        const otherPhone = cleanPhone(other.getString('buyer_phone') || other.getString('referrer_phone'))
+        const otherPhone = cleanPhone(
+          other.getString('buyer_phone') || other.getString('referrer_phone'),
+        )
         const otherEmail = (
           other.getString('buyer_email') ||
           other.getString('return_contact') ||
@@ -207,7 +226,8 @@ onRecordCreate((e) => {
       const item = flags[f]
       const rec = new Record(flagsCol)
       rec.set('referral_id', refId)
-      if (item.conflicting_referral_id) rec.set('conflicting_referral_id', item.conflicting_referral_id)
+      if (item.conflicting_referral_id)
+        rec.set('conflicting_referral_id', item.conflicting_referral_id)
       rec.set('conflict_type', item.conflict_type)
       rec.set('conflict_details', item.conflict_details)
       rec.set('is_resolved', false)
@@ -354,7 +374,8 @@ routerAdd('POST', '/backend/v1/referrals/change-status', (e) => {
     }
     if (!publicReasonCode) {
       return e.json(400, {
-        message: 'Código de motivo público (public_reason_code) é obrigatório para comunicar ao indicador.',
+        message:
+          'Código de motivo público (public_reason_code) é obrigatório para comunicar ao indicador.',
       })
     }
   }
@@ -507,7 +528,8 @@ routerAdd('POST', '/backend/v1/referrals/decline-by-godoy', (e) => {
   const declinedReason = (body.declined_reason || '').trim()
 
   if (!referralId) return e.json(400, { message: 'ID da indicação é obrigatório.' })
-  if (!declinedReason) return e.json(400, { message: 'Motivo do declínio pela Godoy é obrigatório.' })
+  if (!declinedReason)
+    return e.json(400, { message: 'Motivo do declínio pela Godoy é obrigatório.' })
 
   let referral
   try {
@@ -653,7 +675,11 @@ routerAdd('POST', '/backend/v1/referrals/request-capture', (e) => {
     audit.set('resource_id', capRec.id)
     audit.set(
       'details',
-      JSON.stringify({ referral_id: referral.id, instrument_type: instrumentType, document_id: doc.id }),
+      JSON.stringify({
+        referral_id: referral.id,
+        instrument_type: instrumentType,
+        document_id: doc.id,
+      }),
     )
     audit.set('ip_address', e.request.remoteAddr)
     $app.save(audit)
@@ -750,10 +776,7 @@ routerAdd('POST', '/backend/v1/referrals/approve-capture', (e) => {
     audit.set('action', 'capture_approved')
     audit.set('resource_type', 'capture_records')
     audit.set('resource_id', capRec.id)
-    audit.set(
-      'details',
-      JSON.stringify({ referral_id: referral.id, approved_by: authRecord.id }),
-    )
+    audit.set('details', JSON.stringify({ referral_id: referral.id, approved_by: authRecord.id }))
     audit.set('ip_address', e.request.remoteAddr)
     $app.save(audit)
   } catch (_) {}
@@ -982,7 +1005,8 @@ routerAdd('POST', '/backend/v1/referrals/register-deal', (e) => {
 
   if (!ownerReferralId && !buyerReferralId) {
     return e.json(400, {
-      message: 'Informe ao menos uma indicação (proprietário ou interessado) para registrar o negócio.',
+      message:
+        'Informe ao menos uma indicação (proprietário ou interessado) para registrar o negócio.',
     })
   }
 
@@ -1090,6 +1114,56 @@ routerAdd('POST', '/backend/v1/referrals/register-deal', (e) => {
 })
 
 /**
+ * GET /backend/v1/public/vitrine/{imovelId}
+ * Retorna dados públicos do imóvel em divulgação (sem unidade nem endereço completo)
+ */
+routerAdd('GET', '/backend/v1/public/vitrine/{imovelId}', (e) => {
+  const imovelId = e.request.pathValue('imovelId')
+  if (!imovelId) return e.json(400, { message: 'ID do imóvel não informado.' })
+
+  let referral
+  try {
+    referral = $app.findRecordById('referrals', imovelId)
+  } catch (_) {
+    return e.json(404, { message: 'Imóvel não encontrado.' })
+  }
+
+  const curStatus = referral.getString('status')
+  if (curStatus !== 'em_divulgacao') {
+    return e.json(404, { message: 'Imóvel não disponível na vitrine pública.' })
+  }
+
+  let condoName = 'Condomínio de Alto Padrão'
+  let condoNeighborhood = referral.getString('target_neighborhood') || ''
+  const condoId = referral.getString('condominium_id')
+  if (condoId) {
+    try {
+      const condo = $app.findRecordById('condominiums', condoId)
+      condoName = condo.getString('name') || condoName
+      if (!condoNeighborhood) condoNeighborhood = condo.getString('neighborhood') || ''
+    } catch (_) {}
+  }
+
+  let publicPhotos = []
+  try {
+    const rawPhotos = referral.getString('public_photos')
+    if (rawPhotos) publicPhotos = JSON.parse(rawPhotos)
+  } catch (_) {}
+
+  return e.json(200, {
+    id: referral.id,
+    condo_name: condoName,
+    neighborhood: condoNeighborhood || 'Barra da Tijuca / Recreio',
+    public_summary: referral.getString('public_summary') || referral.getString('description') || '',
+    public_photos: publicPhotos,
+    listing_link: referral.getString('is_reserved_listing')
+      ? ''
+      : referral.getString('listing_link'),
+    is_reserved_listing: referral.getBool('is_reserved_listing'),
+  })
+})
+
+/**
  * POST /backend/v1/public/submit-buyer-lead
  */
 routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
@@ -1171,7 +1245,11 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
     audit.set('resource_id', newRef.id)
     audit.set(
       'details',
-      JSON.stringify({ member_user_id: memberUser.id, code, property_referral_id: propertyReferralId }),
+      JSON.stringify({
+        member_user_id: memberUser.id,
+        code,
+        property_referral_id: propertyReferralId,
+      }),
     )
     audit.set('ip_address', e.request.remoteAddr)
     $app.save(audit)
@@ -1179,7 +1257,8 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
 
   return e.json(200, {
     success: true,
-    message: 'Seu interesse foi registrado com sucesso! Em breve um consultor Godoy Prime entrará em contato.',
+    message:
+      'Seu interesse foi registrado com sucesso! Em breve um consultor Godoy Prime entrará em contato.',
     lead_id: newRef.id,
   })
 })

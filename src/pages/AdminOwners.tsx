@@ -166,7 +166,8 @@ export function AdminOwnersPage() {
               Proprietários & Imóveis Conhecidos
             </h1>
             <p className="text-sm text-stone-400 mt-1">
-              Busca unificada de proprietários, histórico por imóvel e base de precedência (180 dias).
+              Busca unificada de proprietários, histórico por imóvel e base de precedência (180
+              dias).
             </p>
           </div>
 
@@ -217,7 +218,10 @@ export function AdminOwnersPage() {
               </thead>
               <tbody className="divide-y divide-stone-800/60">
                 {filteredOwners.map((owner, idx) => (
-                  <tr key={`${owner.id}-${idx}`} className="hover:bg-stone-800/30 transition-colors">
+                  <tr
+                    key={`${owner.id}-${idx}`}
+                    className="hover:bg-stone-800/30 transition-colors"
+                  >
                     <td className="p-3 font-medium text-stone-200">{owner.name}</td>
                     <td className="p-3 text-stone-400">
                       <div>{owner.phone || 'Sem telefone'}</div>
@@ -230,7 +234,9 @@ export function AdminOwnersPage() {
                           {owner.unit ? ` (${owner.unit})` : ''}
                         </span>
                       ) : (
-                        <span className="text-stone-400">{owner.address || 'Não especificado'}</span>
+                        <span className="text-stone-400">
+                          {owner.address || 'Não especificado'}
+                        </span>
                       )}
                     </td>
                     <td className="p-3">
@@ -246,7 +252,8 @@ export function AdminOwnersPage() {
                           variant="outline"
                           className="rounded-none border-stone-700 text-sky-400 text-[10px]"
                         >
-                          Indicação #{owner.rawReferral?.id.substring(0, 6)} ({owner.rawReferral?.status})
+                          Indicação #{owner.rawReferral?.id.substring(0, 6)} (
+                          {owner.rawReferral?.status})
                         </Badge>
                       )}
                     </td>
@@ -291,7 +298,8 @@ export function AdminOwnersPage() {
                 Adicionar à Base Conhecida
               </DialogTitle>
               <DialogDescription className="text-stone-400 text-xs">
-                Proprietários com conversa real cadastrada acionam a regra de precedência de 180 dias contra duplicações.
+                Proprietários com conversa real cadastrada acionam a regra de precedência de 180
+                dias contra duplicações.
               </DialogDescription>
             </DialogHeader>
 

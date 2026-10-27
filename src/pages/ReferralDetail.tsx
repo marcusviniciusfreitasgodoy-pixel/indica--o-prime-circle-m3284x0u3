@@ -358,7 +358,8 @@ export default function ReferralDetailPage() {
                     {referral.public_reason_code && (
                       <div className="p-3 bg-amber-950/30 border border-amber-500/30 text-xs text-amber-200 mb-3">
                         <strong className="block text-amber-300 mb-1">Status da Avaliação:</strong>
-                        {referral.status_reason || 'Indicação em processo de atendimento pela equipe.'}
+                        {referral.status_reason ||
+                          'Indicação em processo de atendimento pela equipe.'}
                       </div>
                     )}
                     {historyItems.map((item, index) => (

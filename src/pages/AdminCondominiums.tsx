@@ -116,7 +116,8 @@ export function AdminCondominiumsPage() {
               Condomínios & Empreendimentos
             </h1>
             <p className="text-sm text-stone-400 mt-1">
-              Base de condomínios semeada na Barra da Tijuca e Recreio dos Bandeirantes com histórico de captações.
+              Base de condomínios semeada na Barra da Tijuca e Recreio dos Bandeirantes com
+              histórico de captações.
             </p>
           </div>
 
@@ -148,7 +149,9 @@ export function AdminCondominiumsPage() {
               size="sm"
               onClick={() => setSelectedNeighborhood('all')}
               className={`rounded-none text-xs ${
-                selectedNeighborhood === 'all' ? 'bg-amber-600 text-white' : 'border-stone-800 text-stone-400'
+                selectedNeighborhood === 'all'
+                  ? 'bg-amber-600 text-white'
+                  : 'border-stone-800 text-stone-400'
               }`}
             >
               Todos os Bairros
@@ -270,8 +273,7 @@ export function AdminCondominiumsPage() {
                       >
                         <div>
                           <p className="font-medium text-stone-200">
-                            {r.owner_name || 'Proprietário'}{' '}
-                            {r.unit ? `(Unidade ${r.unit})` : ''}
+                            {r.owner_name || 'Proprietário'} {r.unit ? `(Unidade ${r.unit})` : ''}
                           </p>
                           <span className="text-[10px] text-stone-500">
                             Indicado por: {r.expand?.current_owner_id?.name || 'Membro'} •{' '}
@@ -319,7 +321,9 @@ export function AdminCondominiumsPage() {
         <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
           <form onSubmit={handleCreateCondo}>
             <DialogHeader>
-              <DialogTitle className="font-serif text-lg text-white">Cadastrar Condomínio</DialogTitle>
+              <DialogTitle className="font-serif text-lg text-white">
+                Cadastrar Condomínio
+              </DialogTitle>
             </DialogHeader>
             <div className="space-y-3 py-3 text-xs">
               <div className="space-y-1">

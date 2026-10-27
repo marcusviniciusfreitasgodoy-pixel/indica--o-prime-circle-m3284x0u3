@@ -200,9 +200,7 @@ migrate(
       referralsCol.fields.add(new DateField({ name: 'deal_date', required: false }))
     }
     if (!referralsCol.fields.getByName('deal_property_description')) {
-      referralsCol.fields.add(
-        new TextField({ name: 'deal_property_description', required: false }),
-      )
+      referralsCol.fields.add(new TextField({ name: 'deal_property_description', required: false }))
     }
 
     // Update referrals access rules so internal roles can see and manage all referrals:

@@ -222,6 +222,26 @@ export async function confirmConsent(referralId: string) {
 /**
  * Get short-lived signed download URL for protected documents
  */
+/**
+ * Public vitrine property fetcher (safe, no address/unit exposed)
+ */
+export async function getPublicVitrineProperty(imovelId: string) {
+  const res = await fetch(`${BACKEND_URL}/backend/v1/public/vitrine/${imovelId}`)
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || 'Imóvel não encontrado na vitrine.')
+  }
+  return data as {
+    id: string
+    condo_name: string
+    neighborhood: string
+    public_summary: string
+    public_photos: string[]
+    listing_link?: string
+    is_reserved_listing: boolean
+  }
+}
+
 export async function getDocumentDownloadUrl(documentId: string) {
   const res = await fetch(`${BACKEND_URL}/backend/v1/documents/${documentId}/download-url`, {
     headers: {

@@ -168,15 +168,7 @@ export function AdminReferralsPage() {
 
       return true
     })
-  }, [
-    referrals,
-    activeTab,
-    filterStage,
-    filterCondo,
-    filterOperator,
-    onlyStalled,
-    search,
-  ])
+  }, [referrals, activeTab, filterStage, filterCondo, filterOperator, onlyStalled, search])
 
   const currentStages = activeTab === 'proprietarios' ? OWNER_STAGES : BUYER_STAGES
 
@@ -362,9 +354,7 @@ export function AdminReferralsPage() {
                     {/* Cards list */}
                     <div className="p-2 space-y-2.5 overflow-y-auto flex-1">
                       {stageRefs.length === 0 ? (
-                        <div className="py-8 text-center text-stone-600 text-xs italic">
-                          Vazio
-                        </div>
+                        <div className="py-8 text-center text-stone-600 text-xs italic">Vazio</div>
                       ) : (
                         stageRefs.map((r) => {
                           const stalled = isStalled(r)
@@ -380,10 +370,7 @@ export function AdminReferralsPage() {
                             >
                               <div className="flex justify-between items-start gap-1">
                                 <span className="text-[11px] font-medium text-stone-200 line-clamp-1">
-                                  {r.owner_name ||
-                                    r.buyer_name ||
-                                    r.referrer_name ||
-                                    'Sem nome'}
+                                  {r.owner_name || r.buyer_name || r.referrer_name || 'Sem nome'}
                                 </span>
                                 {stalled && (
                                   <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[9px] px-1 py-0 rounded-none shrink-0">

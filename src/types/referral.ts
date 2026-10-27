@@ -230,7 +230,13 @@ export interface Participant {
   updated: string
   expand?: {
     user_id?: Member
-    category_id?: { id: string; name: string; slug: string; front: string; requires_approval: boolean }
+    category_id?: {
+      id: string
+      name: string
+      slug: string
+      front: string
+      requires_approval: boolean
+    }
     level_id?: { id: string; name: string; slug: string; reward_percentage?: number }
     approved_by?: Member
   }
