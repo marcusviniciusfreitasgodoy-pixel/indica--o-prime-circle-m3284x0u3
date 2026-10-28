@@ -540,14 +540,6 @@ export default function LoginPage() {
                 >
                   Marcus Godoy (Admin)
                 </button>
-                <span className="text-stone-600">•</span>
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('corretor.parceiro@primecircle.com.br')}
-                  className="text-amber-400 underline hover:text-amber-300"
-                >
-                  Ana Carolina (Corretor)
-                </button>
               </div>
             </div>
           </div>

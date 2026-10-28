@@ -124,10 +124,10 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
     const token = $os.getenv('META_WA_ACCESS_TOKEN')
     const phoneId = $os.getenv('META_WA_PHONE_NUMBER_ID')
 
-    if (!token || token === 'placeholder_meta_wa_access_token' || token.trim() === '') {
+    if (!token || token.trim() === '') {
       return { ok: false, error: 'Secret META_WA_ACCESS_TOKEN ausente ou não configurado.' }
     }
-    if (!phoneId || phoneId === 'placeholder_meta_phone_number_id' || phoneId.trim() === '') {
+    if (!phoneId || phoneId.trim() === '') {
       return { ok: false, error: 'Secret META_WA_PHONE_NUMBER_ID ausente ou não configurado.' }
     }
 
@@ -431,11 +431,7 @@ routerAdd('GET', '/backend/v1/communication/whatsapp-webhook', (e) => {
   const challenge = query['hub.challenge']
 
   const verifyToken = $os.getenv('META_WEBHOOK_VERIFY_TOKEN')
-  if (
-    !verifyToken ||
-    verifyToken === 'placeholder_meta_webhook_verify_token' ||
-    verifyToken.trim() === ''
-  ) {
+  if (!verifyToken || verifyToken.trim() === '') {
     return e.string(500, 'Secret META_WEBHOOK_VERIFY_TOKEN não configurado no servidor.')
   }
 
@@ -460,8 +456,7 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
 
   function sendResendEmail(options) {
     const apiKey = $os.getenv('RESEND_API_KEY')
-    if (!apiKey || apiKey === 'placeholder_resend_api_key' || apiKey.trim() === '')
-      return { ok: false }
+    if (!apiKey || apiKey.trim() === '') return { ok: false }
     try {
       $http.send({
         url: 'https://api.resend.com/emails',
@@ -482,7 +477,7 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
   }
 
   const appSecret = $os.getenv('META_APP_SECRET')
-  if (!appSecret || appSecret === 'placeholder_meta_app_secret' || appSecret.trim() === '') {
+  if (!appSecret || appSecret.trim() === '') {
     return e.json(500, { error: 'Secret META_APP_SECRET não configurado.' })
   }
 
@@ -644,10 +639,10 @@ routerAdd('POST', '/backend/v1/communication/sync-whatsapp-templates', (e) => {
   const token = $os.getenv('META_WA_ACCESS_TOKEN')
   const wabaId = $os.getenv('META_WA_BUSINESS_ACCOUNT_ID')
 
-  if (!token || token === 'placeholder_meta_wa_access_token' || token.trim() === '') {
+  if (!token || token.trim() === '') {
     return e.json(400, { message: 'Secret META_WA_ACCESS_TOKEN não configurado no servidor.' })
   }
-  if (!wabaId || wabaId === 'placeholder_meta_waba_id' || wabaId.trim() === '') {
+  if (!wabaId || wabaId.trim() === '') {
     return e.json(400, {
       message: 'Secret META_WA_BUSINESS_ACCOUNT_ID não configurado no servidor.',
     })
@@ -769,7 +764,7 @@ routerAdd('POST', '/backend/v1/communication/send-email', (e) => {
   }
 
   const apiKey = $os.getenv('RESEND_API_KEY')
-  if (!apiKey || apiKey === 'placeholder_resend_api_key' || apiKey.trim() === '') {
+  if (!apiKey || apiKey.trim() === '') {
     return e.json(500, {
       success: false,
       message: 'Secret RESEND_API_KEY ausente ou não configurado.',
@@ -953,7 +948,7 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
       const metaToken = $os.getenv('META_WA_ACCESS_TOKEN')
       const phoneId = $os.getenv('META_WA_PHONE_NUMBER_ID')
 
-      if (metaToken && phoneId && metaToken !== 'placeholder_meta_wa_access_token') {
+      if (metaToken && phoneId) {
         const metaParams = []
         let rawParams = []
         try {
@@ -1012,7 +1007,7 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
       }
     } else if (channel === 'email' && recipientEmail) {
       const resendKey = $os.getenv('RESEND_API_KEY')
-      if (resendKey && resendKey !== 'placeholder_resend_api_key') {
+      if (resendKey) {
         let subject = tpl.getString('subject') || 'Godoy Prime Indica'
         let bodyText = tpl.getString('body')
 
