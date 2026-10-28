@@ -35,6 +35,7 @@ import {
   uploadDocument,
   getCaptureRecords,
   getPublicReasonCodes,
+  assignOperator,
 } from '@/services/operations'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -203,9 +204,7 @@ export function AdminReferralDetailPage() {
   const handleAssignOperator = async (operatorId: string) => {
     if (!referral) return
     try {
-      await pb.collection('referrals').update(referral.id, {
-        assigned_operator_id: operatorId || null,
-      })
+      await assignOperator(referral.id, operatorId || null)
       toast({ title: 'Responsável atribuído com sucesso.' })
       loadData()
     } catch (err: any) {

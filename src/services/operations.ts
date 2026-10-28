@@ -216,6 +216,25 @@ export async function confirmConsent(referralId: string) {
 }
 
 /**
+ * Assign operator via server endpoint
+ */
+export async function assignOperator(referralId: string, operatorId: string | null) {
+  const res = await fetch(`${BACKEND_URL}/backend/v1/referrals/assign-operator`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: pb.authStore.token,
+    },
+    body: JSON.stringify({ referral_id: referralId, operator_id: operatorId }),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || 'Erro ao atribuir operador.')
+  }
+  return data
+}
+
+/**
  * Get short-lived signed download URL for protected documents
  */
 /**

@@ -1,14 +1,14 @@
 {
-  "generatedAt": "2026-10-28T13:57:07.682Z",
+  "generatedAt": "2026-10-28T14:34:12.571Z",
   "collections": [
     {
       "name": "users",
       "type": "auth",
       "apiRules": {
-        "list": "@request.auth.id != ''",
-        "view": "@request.auth.id != '' || public_slug != ''",
+        "list": "@request.auth.id != '' && (id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "view": "@request.auth.id != '' && (id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
         "create": "",
-        "update": "id = @request.auth.id",
+        "update": "@request.auth.id != '' && id = @request.auth.id",
         "delete": "id = @request.auth.id"
       },
       "fields": [
@@ -55,6 +55,24 @@
           "type": "text",
           "required": false,
           "system": false
+        },
+        {
+          "name": "is_admin",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_operador",
+          "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "is_financeiro",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -67,11 +85,11 @@
       "name": "referrals",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "view": "@request.auth.id != '' && (current_owner_id = @request.auth.id || original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != '' && current_owner_id = @request.auth.id",
-        "delete": "@request.auth.id != '' && current_owner_id = @request.auth.id"
+        "list": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "view": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "create": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "update": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -417,11 +435,11 @@
       "name": "user_roles",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.id = @collection.user_roles.user_id)",
-        "view": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.id = @collection.user_roles.user_id)",
-        "create": null,
-        "update": null,
-        "delete": null
+        "list": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.is_admin = true)",
+        "view": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.is_admin = true)",
+        "create": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "update": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -517,9 +535,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "update": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -569,9 +587,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "update": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -637,9 +655,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "update": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -713,9 +731,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true)",
+        "update": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true)",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -784,11 +802,11 @@
       "name": "participants",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (user_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "view": "@request.auth.id != '' && (user_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "create": "@request.auth.id != ''",
-        "update": "@request.auth.id != '' && (user_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "delete": null
+        "list": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "view": "@request.auth.id != '' && (user_id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "create": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "update": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -952,9 +970,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "update": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -1079,9 +1097,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": null,
-        "update": null,
-        "delete": null
+        "create": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "update": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -1123,8 +1141,8 @@
       "name": "audit_logs",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
-        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
+        "list": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "view": "@request.auth.id != '' && @request.auth.is_admin = true",
         "create": null,
         "update": null,
         "delete": null
@@ -1198,9 +1216,9 @@
       "name": "referral_events",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (referral_id.current_owner_id = @request.auth.id || referral_id.original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "view": "@request.auth.id != '' && (referral_id.current_owner_id = @request.auth.id || referral_id.original_owner_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "create": null,
+        "list": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "view": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "create": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
         "update": null,
         "delete": null
       },
@@ -2113,9 +2131,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
-        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
-        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+        "create": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true)",
+        "update": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_operador = true)",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -2584,11 +2602,11 @@
       "name": "payment_batches",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
-        "view": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id",
-        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && (@collection.user_roles.role ?= 'admin' || @collection.user_roles.role ?= 'financeiro')",
-        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && (@collection.user_roles.role ?= 'admin' || @collection.user_roles.role ?= 'financeiro')",
-        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+        "list": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_financeiro = true || @request.auth.is_operador = true)",
+        "view": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_financeiro = true || @request.auth.is_operador = true)",
+        "create": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_financeiro = true)",
+        "update": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_financeiro = true)",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -2673,9 +2691,9 @@
       "apiRules": {
         "list": "@request.auth.id != ''",
         "view": "@request.auth.id != ''",
-        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
-        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'",
-        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+        "create": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "update": "@request.auth.id != '' && @request.auth.is_admin = true",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
@@ -2850,11 +2868,11 @@
       "name": "rewards",
       "type": "base",
       "apiRules": {
-        "list": "@request.auth.id != '' && (participant_id.user_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "view": "@request.auth.id != '' && (participant_id.user_id = @request.auth.id || @collection.user_roles.user_id ?= @request.auth.id)",
-        "create": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && (@collection.user_roles.role ?= 'admin' || @collection.user_roles.role ?= 'financeiro')",
-        "update": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && (@collection.user_roles.role ?= 'admin' || @collection.user_roles.role ?= 'financeiro')",
-        "delete": "@request.auth.id != '' && @collection.user_roles.user_id ?= @request.auth.id && @collection.user_roles.role ?= 'admin'"
+        "list": "@request.auth.id != '' && (participant_id.user_id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "view": "@request.auth.id != '' && (participant_id.user_id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
+        "create": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_financeiro = true)",
+        "update": "@request.auth.id != '' && (@request.auth.is_admin = true || @request.auth.is_financeiro = true)",
+        "delete": "@request.auth.id != '' && @request.auth.is_admin = true"
       },
       "fields": [
         {
