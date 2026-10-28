@@ -1197,34 +1197,109 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
   const email = (body.email || '').trim()
   const notes = (body.notes || '').trim()
 
-  if (!code) {
-    return e.json(400, { message: 'Código do indicador não informado.' })
+  // 1. Honeypot check
+  const honeypot = (body.website || body.honeypot || '').trim()
+  if (honeypot) {
+    return e.json(200, {
+      success: true,
+      message:
+        'Seu interesse foi registrado com sucesso! Em breve um consultor Godoy Prime entrará em contato.',
+      lead_id: 'ok',
+    })
+  }
+
+  // 2. Rate limit por IP (máx 15 por hora)
+  const clientIp = (e.request && e.request.remoteAddr) || 'unknown'
+  const userAgent =
+    (e.request && e.request.headers && e.request.headers.get
+      ? e.request.headers.get('user-agent')
+      : '') || ''
+  if (clientIp && clientIp !== 'unknown') {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString().replace('T', ' ')
+    try {
+      const recentAttempts = $app.findRecordsByFilter(
+        'audit_logs',
+        "action = 'buyer_lead_submitted' && ip_address = {:ip} && created >= {:since}",
+        '-created',
+        20,
+        0,
+        { ip: clientIp, since: oneHourAgo },
+      )
+      if (recentAttempts.length >= 15) {
+        return e.json(429, {
+          message: 'Limite de envios excedido temporariamente. Tente novamente mais tarde.',
+        })
+      }
+    } catch (_) {}
   }
 
   if (!name || !phone) {
     return e.json(400, { message: 'Nome e telefone para contato são obrigatórios.' })
   }
 
+  const intent = (body.intent || 'comprar').toLowerCase().trim() // 'comprar' ou 'alugar'
+  const campaignCode = (body.campaign_code || body.c || '').trim()
+  const referrerFreeText = (body.referrer_free_text || '').trim()
+  const sourceOrigin = (body.source_origin || 'link').trim() // 'link' | 'vitrine' | 'direto'
+  const targetNeighborhood = (body.target_neighborhood || '').trim()
+  const propertyType = (body.property_type || '').trim()
+  const budget = (body.budget || '').trim()
+  const whatsappOptin = !!body.whatsapp_optin
+  const consentAccepted = body.consent !== false && body.consent_declared !== false
+
   let memberUser = null
   let participantRec = null
+  let attributionStatus = 'pendente'
 
-  try {
-    participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
-      c: code,
-    })
-    if (participantRec) {
-      memberUser = $app.findRecordById('users', participantRec.getString('user_id'))
+  if (code) {
+    try {
+      participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
+        c: code,
+      })
+      if (participantRec) {
+        memberUser = $app.findRecordById('users', participantRec.getString('user_id'))
+        attributionStatus = 'atribuida'
+      }
+    } catch (_) {}
+
+    // Fallback: busca por public_slug se não achar por referral_code
+    if (!memberUser) {
+      try {
+        memberUser = $app.findFirstRecordByFilter('users', 'public_slug = {:c}', { c: code })
+        if (memberUser) {
+          try {
+            participantRec = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', {
+              uid: memberUser.id,
+            })
+          } catch (_) {}
+          attributionStatus = 'atribuida'
+        }
+      } catch (_) {}
     }
-  } catch (_) {}
+  }
 
+  // Se não tem código ou o código não foi encontrado, mas veio da vitrine/link com code obrigatório
+  if (!memberUser && code && sourceOrigin === 'vitrine') {
+    return e.json(404, { message: 'Código de indicação de parceiro não localizado.' })
+  }
+
+  // Se não achou indicador ou veio sem código (página direta /quero-comprar)
   if (!memberUser) {
     try {
-      memberUser = $app.findFirstRecordByFilter('users', 'public_slug = {:c}', { c: code })
+      // Atribui ao admin responsável ou primeiro admin
+      const adminRole = $app.findFirstRecordByFilter('user_roles', "role = 'admin'", 'created')
+      if (adminRole) {
+        memberUser = $app.findRecordById('users', adminRole.getString('user_id'))
+      }
     } catch (_) {}
+    if (!memberUser) {
+      const allUsers = $app.findRecordsByFilter('users', '', 'created', 1, 0)
+      if (allUsers.length > 0) memberUser = allUsers[0]
+    }
   }
 
   if (!memberUser) {
-    return e.json(404, { message: 'Código de indicação de parceiro não localizado.' })
+    return e.json(500, { message: 'Configuração de equipe não inicializada.' })
   }
 
   let propInfo = ''
@@ -1240,24 +1315,391 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
 
   newRef.set('type', 'cliente')
   newRef.set('referral_type', 'comprador')
-  newRef.set('referrer_name', memberUser.getString('name') || 'Membro Vitrine')
-  newRef.set('referrer_phone', memberUser.getString('phone') || '')
   newRef.set(
-    'description',
-    `${propInfo ? propInfo + '\n\n' : ''}Lead interessado: ${name}. Contato: ${phone} / ${email}. ${notes ? 'Observações: ' + notes : ''}`,
+    'referrer_name',
+    participantRec ? memberUser.getString('name') || 'Indicador' : referrerFreeText || 'Direto',
   )
+  newRef.set('referrer_phone', participantRec ? memberUser.getString('phone') || '' : '')
+
+  const intentLabel =
+    intent === 'alugar' ? 'Interesse em Alugar (Inquilino)' : 'Interesse em Comprar'
+  const details = [
+    propInfo,
+    `Objetivo: ${intentLabel}`,
+    propertyType ? `Tipo de Imóvel: ${propertyType}` : '',
+    targetNeighborhood ? `Bairro/Região: ${targetNeighborhood}` : '',
+    budget ? `Faixa de Valor/Orçamento: ${budget}` : '',
+    notes ? `Observações: ${notes}` : '',
+    referrerFreeText && !participantRec
+      ? `Indicação Informada (Texto Livre): ${referrerFreeText}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  newRef.set('description', details || `Lead interessado: ${name}. Contato: ${phone} / ${email}.`)
   newRef.set('return_contact', `${email} / ${phone}`)
   newRef.set('status', 'recebida')
   newRef.set('channel', 'link_publico')
-  newRef.set('source_origin', 'vitrine')
+  newRef.set('source_origin', sourceOrigin)
   newRef.set('buyer_name', name)
   newRef.set('buyer_phone', phone)
   newRef.set('buyer_email', email)
+  if (targetNeighborhood) newRef.set('target_neighborhood', targetNeighborhood)
   newRef.set('current_owner_id', memberUser.id)
   newRef.set('original_owner_id', memberUser.id)
-  if (participantRec) newRef.set('participant_id', participantRec.id)
+  if (participantRec) {
+    newRef.set('participant_id', participantRec.id)
+    newRef.set('attribution_status', 'atribuida')
+  } else {
+    newRef.set('attribution_status', 'pendente')
+    if (referrerFreeText) {
+      newRef.set('attribution_hint', referrerFreeText)
+    }
+  }
+
+  newRef.set('consent_declared', consentAccepted)
+
+  // Campanha se houver
+  if (campaignCode) {
+    try {
+      const camp = $app.findFirstRecordByFilter('campaigns', 'code = {:c}', { c: campaignCode })
+      if (camp) newRef.set('campaign_id', camp.id)
+    } catch (_) {}
+  }
 
   $app.save(newRef)
+
+  // 3. Registrar opt-in de WhatsApp se selecionado
+  if (whatsappOptin && phone) {
+    try {
+      const woCol = $app.findCollectionByNameOrId('whatsapp_optins')
+      const wo = new Record(woCol)
+      wo.set('phone', phone)
+      wo.set('person_type', 'interessado')
+      wo.set('person_id', newRef.id)
+      wo.set('opted_in_at', new Date().toISOString())
+      wo.set('source', `lead_${intent}_${sourceOrigin}`)
+      $app.save(wo)
+    } catch (errOptin) {
+      console.error('[submit-buyer-lead] Erro ao gravar whatsapp_optin:', errOptin)
+    }
+  }
+
+  // 4. Gravar consentimento LGPD em acceptances se houver documento ativo de consentimento
+  if (consentAccepted) {
+    try {
+      const consentDoc = $app.findFirstRecordByFilter(
+        'legal_documents',
+        "slug = 'consentimento_proprietario' && is_active = true",
+        '-version',
+      )
+      if (consentDoc && memberUser) {
+        const accCol = $app.findCollectionByNameOrId('acceptances')
+        const acc = new Record(accCol)
+        acc.set('user_id', memberUser.id)
+        acc.set('document_id', consentDoc.id)
+        acc.set('ip_address', clientIp)
+        acc.set('user_agent', userAgent)
+        acc.set('accepted_at', new Date().toISOString())
+        $app.save(acc)
+      }
+    } catch (_) {}
+  }
+
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('action', 'buyer_lead_submitted')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', newRef.id)
+    audit.set(
+      'details',
+      JSON.stringify({
+        member_user_id: memberUser.id,
+        participant_id: participantRec ? participantRec.id : null,
+        code,
+        intent,
+        source_origin: sourceOrigin,
+        campaign_code: campaignCode,
+        property_referral_id: propertyReferralId,
+      }),
+    )
+    audit.set('ip_address', clientIp)
+    $app.save(audit)
+  } catch (_) {}
+
+  const protocol = '#' + newRef.id.substring(0, 8).toUpperCase()
+
+  return e.json(200, {
+    success: true,
+    protocol: protocol,
+    message:
+      'Seu interesse foi registrado com sucesso! Em breve um consultor Godoy Prime entrará em contato.',
+    lead_id: newRef.id,
+    referral_id: newRef.id,
+  })
+})
+
+/**
+ * POST /backend/v1/public/submit-owner-lead
+ * Rota pública para submissão de proprietário (vender, alugar ou saber quanto vale).
+ */
+routerAdd('POST', '/backend/v1/public/submit-owner-lead', (e) => {
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+
+  // 1. Honeypot check
+  const honeypot = (body.website || body.honeypot || '').trim()
+  if (honeypot) {
+    return e.json(200, {
+      success: true,
+      protocol: '#PRIME' + Math.floor(1000 + Math.random() * 9000),
+      message: 'Indicação enviada com sucesso!',
+      lead_id: 'ok',
+    })
+  }
+
+  // 2. Rate limit por IP (máx 15 por hora)
+  const clientIp = (e.request && e.request.remoteAddr) || 'unknown'
+  const userAgent =
+    (e.request && e.request.headers && e.request.headers.get
+      ? e.request.headers.get('user-agent')
+      : '') || ''
+  if (clientIp && clientIp !== 'unknown') {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString().replace('T', ' ')
+    try {
+      const recentAttempts = $app.findRecordsByFilter(
+        'audit_logs',
+        "action = 'owner_lead_submitted' && ip_address = {:ip} && created >= {:since}",
+        '-created',
+        20,
+        0,
+        { ip: clientIp, since: oneHourAgo },
+      )
+      if (recentAttempts.length >= 15) {
+        return e.json(429, {
+          message: 'Limite de envios excedido temporariamente. Tente novamente mais tarde.',
+        })
+      }
+    } catch (_) {}
+  }
+
+  const name = (body.name || '').trim()
+  const phone = (body.phone || '').trim()
+  const email = (body.email || '').trim()
+
+  if (!name || !phone) {
+    return e.json(400, { message: 'Nome e telefone do proprietário são obrigatórios.' })
+  }
+
+  const code = (body.referral_code || body.code || '').trim()
+  const purpose = (body.purpose || 'vender').trim() // 'avaliacao' | 'vender' | 'alugar'
+  const condominiumName = (body.condominium_name || '').trim()
+  const condominiumId = (body.condominium_id || '').trim()
+  const unit = (body.unit || '').trim()
+  const address = (body.address || '').trim()
+  const neighborhood = (body.neighborhood || 'Barra da Tijuca').trim()
+  const propertyType = (body.property_type || '').trim()
+  const estimatedValue = (body.estimated_value || '').trim()
+  const notes = (body.notes || '').trim()
+  const campaignCode = (body.campaign_code || body.c || '').trim()
+  const referrerFreeText = (body.referrer_free_text || '').trim()
+  const sourceOrigin = (body.source_origin || 'link').trim() // 'link' | 'direto'
+  const whatsappOptin = !!body.whatsapp_optin
+  const consentAccepted = body.consent !== false && body.consent_declared !== false
+
+  let memberUser = null
+  let participantRec = null
+
+  if (code) {
+    try {
+      participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
+        c: code,
+      })
+      if (participantRec) {
+        memberUser = $app.findRecordById('users', participantRec.getString('user_id'))
+      }
+    } catch (_) {}
+
+    if (!memberUser) {
+      try {
+        memberUser = $app.findFirstRecordByFilter('users', 'public_slug = {:c}', { c: code })
+        if (memberUser) {
+          try {
+            participantRec = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', {
+              uid: memberUser.id,
+            })
+          } catch (_) {}
+        }
+      } catch (_) {}
+    }
+  }
+
+  // Se não achou indicador ou veio sem código (página direta /quero-vender)
+  if (!memberUser) {
+    try {
+      const adminRole = $app.findFirstRecordByFilter('user_roles', "role = 'admin'", 'created')
+      if (adminRole) {
+        memberUser = $app.findRecordById('users', adminRole.getString('user_id'))
+      }
+    } catch (_) {}
+    if (!memberUser) {
+      const allUsers = $app.findRecordsByFilter('users', '', 'created', 1, 0)
+      if (allUsers.length > 0) memberUser = allUsers[0]
+    }
+  }
+
+  if (!memberUser) {
+    return e.json(500, { message: 'Configuração de equipe não inicializada.' })
+  }
+
+  const referralsCol = $app.findCollectionByNameOrId('referrals')
+  const newRef = new Record(referralsCol)
+
+  const refTypeSelect = purpose === 'alugar' ? 'proprietario_locacao' : 'proprietario_venda'
+  newRef.set('type', refTypeSelect)
+  newRef.set('referral_type', 'proprietario')
+  newRef.set(
+    'referrer_name',
+    participantRec ? memberUser.getString('name') || 'Indicador' : referrerFreeText || 'Direto',
+  )
+  newRef.set('referrer_phone', participantRec ? memberUser.getString('phone') || '' : '')
+
+  let purposeLabel = 'Vender imóvel'
+  if (purpose === 'avaliacao') purposeLabel = 'Avaliação / Saber quanto vale o imóvel'
+  if (purpose === 'alugar') purposeLabel = 'Colocar imóvel para alugar'
+
+  const details = [
+    `Finalidade: ${purposeLabel}`,
+    condominiumName ? `Condomínio: ${condominiumName}` : '',
+    unit ? `Unidade/Bloco: ${unit}` : '',
+    address ? `Endereço: ${address}` : '',
+    neighborhood ? `Bairro: ${neighborhood}` : '',
+    propertyType ? `Tipo: ${propertyType}` : '',
+    estimatedValue ? `Expectativa de Valor: ${estimatedValue}` : '',
+    notes ? `Observações: ${notes}` : '',
+    referrerFreeText && !participantRec
+      ? `Indicação Informada (Texto Livre): ${referrerFreeText}`
+      : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
+
+  newRef.set('description', details || `Proprietário: ${name}. Contato: ${phone} / ${email}.`)
+  newRef.set('return_contact', `${email} / ${phone}`)
+  newRef.set('status', 'recebida')
+  newRef.set('channel', 'link_publico')
+  newRef.set('source_origin', sourceOrigin)
+  newRef.set('owner_name', name)
+  newRef.set('owner_phone', phone)
+  newRef.set('owner_email', email)
+  if (unit) newRef.set('unit', unit)
+  if (address) newRef.set('normalized_address', address)
+  if (neighborhood) newRef.set('target_neighborhood', neighborhood)
+  if (condominiumId) {
+    newRef.set('condominium_id', condominiumId)
+  } else if (condominiumName) {
+    try {
+      const condo = $app.findFirstRecordByFilter('condominiums', 'name ~ {:n}', {
+        n: condominiumName,
+      })
+      if (condo) newRef.set('condominium_id', condo.id)
+    } catch (_) {}
+  }
+
+  newRef.set('current_owner_id', memberUser.id)
+  newRef.set('original_owner_id', memberUser.id)
+  if (participantRec) {
+    newRef.set('participant_id', participantRec.id)
+    newRef.set('attribution_status', 'atribuida')
+  } else {
+    newRef.set('attribution_status', 'pendente')
+    if (referrerFreeText) {
+      newRef.set('attribution_hint', referrerFreeText)
+    }
+  }
+
+  newRef.set('consent_declared', consentAccepted)
+
+  // Campanha se houver
+  if (campaignCode) {
+    try {
+      const camp = $app.findFirstRecordByFilter('campaigns', 'code = {:c}', { c: campaignCode })
+      if (camp) newRef.set('campaign_id', camp.id)
+    } catch (_) {}
+  }
+
+  $app.save(newRef)
+
+  // 3. Registrar opt-in de WhatsApp se selecionado
+  if (whatsappOptin && phone) {
+    try {
+      const woCol = $app.findCollectionByNameOrId('whatsapp_optins')
+      const wo = new Record(woCol)
+      wo.set('phone', phone)
+      wo.set('person_type', 'proprietario')
+      wo.set('person_id', newRef.id)
+      wo.set('opted_in_at', new Date().toISOString())
+      wo.set('source', `lead_proprietario_${purpose}_${sourceOrigin}`)
+      $app.save(wo)
+    } catch (errOptin) {
+      console.error('[submit-owner-lead] Erro ao gravar whatsapp_optin:', errOptin)
+    }
+  }
+
+  // 4. Gravar consentimento LGPD em acceptances
+  if (consentAccepted) {
+    try {
+      const consentDoc = $app.findFirstRecordByFilter(
+        'legal_documents',
+        "slug = 'consentimento_proprietario' && is_active = true",
+        '-version',
+      )
+      if (consentDoc && memberUser) {
+        const accCol = $app.findCollectionByNameOrId('acceptances')
+        const acc = new Record(accCol)
+        acc.set('user_id', memberUser.id)
+        acc.set('document_id', consentDoc.id)
+        acc.set('ip_address', clientIp)
+        acc.set('user_agent', userAgent)
+        acc.set('accepted_at', new Date().toISOString())
+        $app.save(acc)
+      }
+    } catch (_) {}
+  }
+
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('action', 'owner_lead_submitted')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', newRef.id)
+    audit.set(
+      'details',
+      JSON.stringify({
+        member_user_id: memberUser.id,
+        participant_id: participantRec ? participantRec.id : null,
+        code,
+        purpose,
+        source_origin: sourceOrigin,
+        campaign_code: campaignCode,
+      }),
+    )
+    audit.set('ip_address', clientIp)
+    $app.save(audit)
+  } catch (_) {}
+
+  const protocol = '#' + newRef.id.substring(0, 8).toUpperCase()
+
+  return e.json(200, {
+    success: true,
+    protocol: protocol,
+    message:
+      'Indicação registrada com sucesso! Nossa equipe entrará em contato para os próximos passos.',
+    lead_id: newRef.id,
+    referral_id: newRef.id,
+  })
 
   try {
     const auditCol = $app.findCollectionByNameOrId('audit_logs')

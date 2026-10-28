@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-28T17:50:11.453Z",
+  "generatedAt": "2026-10-28T18:14:07.295Z",
   "collections": [
     {
       "name": "users",
@@ -906,12 +906,37 @@
           "type": "text",
           "required": false,
           "system": false
+        },
+        {
+          "name": "cnpj",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "role_title",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "creci",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "marketing_optin",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
         "CREATE UNIQUE INDEX idx_participants_user_id ON participants (user_id)",
         "CREATE INDEX idx_participants_category ON participants (category_id)",
-        "CREATE INDEX idx_participants_status ON participants (status)"
+        "CREATE INDEX idx_participants_status ON participants (status)",
+        "CREATE INDEX `idx_participants_referral_code` ON `participants` (referral_code)"
       ]
     },
     {
@@ -2720,7 +2745,13 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["proprietario_venda", "proprietario_locacao", "comprador", "todos"]
+          "selectValues": [
+            "proprietario_venda",
+            "proprietario_locacao",
+            "comprador",
+            "todos",
+            "inquilino"
+          ]
         },
         {
           "name": "milestone",
