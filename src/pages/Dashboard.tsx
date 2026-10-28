@@ -134,17 +134,22 @@ export default function DashboardPage() {
   const handleQuickStatusChange = async (referral: Referral, newStatus: ReferralStatus) => {
     if (!user) return
     try {
-      const updated = await updateReferralStatus(referral, newStatus, user.id, user.name)
-      setReferrals((prev) => prev.map((r) => (r.id === updated.id ? { ...r, ...updated } : r)))
+      await updateReferralStatus(referral, newStatus, user.id, user.name)
+      setReferrals((prev) =>
+        prev.map((r) => (r.id === referral.id ? { ...r, status: newStatus } : r)),
+      )
       toast({
         title: 'Status atualizado',
         description: `Indicação marcada como "${newStatus}".`,
       })
-    } catch (err) {
+      loadData(true)
+    } catch (err: unknown) {
       console.error('Erro ao atualizar status:', err)
+      const msg =
+        err instanceof Error ? err.message : 'Não foi possível atualizar o status da indicação.'
       toast({
         title: 'Erro ao atualizar',
-        description: 'Não foi possível atualizar o status da indicação.',
+        description: msg,
         variant: 'destructive',
       })
     }

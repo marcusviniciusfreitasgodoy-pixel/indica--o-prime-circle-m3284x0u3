@@ -9,6 +9,31 @@ import {
   ReferralHistoryItem,
 } from '@/types/referral'
 
+export interface ParticipantReferralItem {
+  id: string
+  protocol: string
+  type: string
+  referral_type: string
+  indicated_first_name: string
+  neighborhood: string
+  status: ReferralStatus
+  public_stage: string
+  created: string
+  updated: string
+  attended_at: string | null
+  deal_date: string | null
+  public_reason_code: string
+  status_reason: string
+  channel: string
+  description: string
+  events: Array<{
+    id: string
+    created: string
+    public_label: string
+    reason: string
+  }>
+}
+
 /**
  * Normalizes referral history whether it's stored as parsed JSON or raw string
  */
@@ -27,138 +52,159 @@ export function parseReferralHistory(history: unknown): ReferralHistoryItem[] {
 }
 
 /**
- * Get all referrals visible to the logged-in member
- * (where they are either current_owner_id or original_owner_id)
+ * Helper to convert ParticipantReferralItem to Referral format compatible with Member UI
+ */
+export function participantItemToReferral(item: ParticipantReferralItem): Referral {
+  const historyItems: ReferralHistoryItem[] = (item.events || []).map((ev) => ({
+    date: ev.created,
+    action: ev.public_label || 'atualizacao',
+    description: ev.public_label || 'Atualização de status',
+    actor: 'Equipe Godoy Prime',
+    reason: ev.reason || undefined,
+  }))
+
+  return {
+    id: item.id,
+    type: item.type as any,
+    referral_type: item.referral_type as any,
+    referrer_name: item.indicated_first_name,
+    referrer_phone: 'Protegido (LGPD)',
+    description: item.description || `Indicação em ${item.neighborhood}`,
+    return_contact: 'Canal Seguro Prime Circle',
+    status: item.status,
+    channel: (item.channel as any) || 'manual',
+    current_owner_id: pb.authStore.record?.id || '',
+    original_owner_id: pb.authStore.record?.id || '',
+    attended_at: item.attended_at || undefined,
+    deal_date: item.deal_date || undefined,
+    public_reason_code: item.public_reason_code || undefined,
+    status_reason: item.status_reason || undefined,
+    created: item.created,
+    updated: item.updated,
+    history: historyItems,
+    expand: {
+      current_owner_id: pb.authStore.record as unknown as Member,
+      original_owner_id: pb.authStore.record as unknown as Member,
+    },
+  }
+}
+
+/**
+ * Get all referrals visible to the logged-in member via secure server route
+ * /backend/v1/participant/my-referrals (LGPD compliant, no sensitive contacts exposed)
  */
 export async function getMemberReferrals(): Promise<Referral[]> {
-  const records = await pb.collection('referrals').getFullList<Referral>({
-    sort: '-created',
-    expand: 'current_owner_id,original_owner_id',
-  })
-  return records
+  const res = await pb.send<{ items: ParticipantReferralItem[] }>(
+    '/backend/v1/participant/my-referrals',
+    {
+      method: 'GET',
+    },
+  )
+  const items = res.items || []
+  return items.map(participantItemToReferral)
 }
 
 /**
- * Get a single referral by ID with owner information expanded
+ * Get raw participant referral items
+ */
+export async function getRawMemberReferrals(): Promise<ParticipantReferralItem[]> {
+  const res = await pb.send<{ items: ParticipantReferralItem[] }>(
+    '/backend/v1/participant/my-referrals',
+    {
+      method: 'GET',
+    },
+  )
+  return res.items || []
+}
+
+/**
+ * Get a single referral by ID using the secure participant route
  */
 export async function getReferralById(id: string): Promise<Referral> {
-  const record = await pb.collection('referrals').getOne<Referral>(id, {
-    expand: 'current_owner_id,original_owner_id',
-  })
-  return record
+  const res = await pb.send<{ items: ParticipantReferralItem[] }>(
+    `/backend/v1/participant/my-referrals?id=${encodeURIComponent(id)}`,
+    {
+      method: 'GET',
+    },
+  )
+  const item = (res.items || []).find((i) => i.id === id)
+  if (!item) {
+    throw new Error('Indicação não encontrada ou você não tem permissão para acessá-la.')
+  }
+  return participantItemToReferral(item)
 }
 
 /**
- * Create a referral manually by the logged in member
+ * Create a referral manually by the logged in member via secure server route
  */
 export async function createManualReferral(
   payload: CreateReferralPayload,
   currentUserId: string,
   currentUserName: string,
-): Promise<Referral> {
-  const now = new Date().toISOString()
-  const historyItem: ReferralHistoryItem = {
-    date: now,
-    action: 'criada_manual',
-    description: `Indicação cadastrada manualmente por ${currentUserName || 'Membro'}`,
-    actor: currentUserName || 'Membro',
-    to_user_id: currentUserId,
-    to_user_name: currentUserName || 'Membro',
-  }
-
-  const record = await pb.collection('referrals').create<Referral>({
-    type: payload.type,
-    referrer_name: payload.referrer_name,
-    referrer_phone: payload.referrer_phone,
-    description: payload.description,
-    return_contact: payload.return_contact,
-    status: 'nova',
-    channel: 'manual',
-    current_owner_id: currentUserId,
-    original_owner_id: currentUserId,
-    history: [historyItem],
+): Promise<{ success: boolean; message: string; id: string; memberName: string }> {
+  const res = await pb.send<{
+    success: boolean
+    message: string
+    id: string
+    memberName: string
+  }>('/backend/v1/public-referrals', {
+    method: 'POST',
+    body: {
+      memberIdentifier: currentUserId,
+      type: payload.type,
+      referrer_name: payload.referrer_name,
+      referrer_phone: payload.referrer_phone,
+      description: payload.description,
+      return_contact: payload.return_contact,
+      channel: 'manual',
+    },
   })
-
-  return record
+  return res
 }
 
 /**
- * Update referral status (e.g. em_atendimento, atendida, concluida)
+ * Update referral status via secure server endpoint (/backend/v1/referrals/change-status)
  */
 export async function updateReferralStatus(
-  referral: Referral,
+  referral: Referral | { id: string },
   newStatus: ReferralStatus,
-  currentUserId: string,
-  currentUserName: string,
+  currentUserId?: string,
+  currentUserName?: string,
   notes?: string,
-): Promise<Referral> {
-  const historyList = parseReferralHistory(referral.history)
-  const now = new Date().toISOString()
-
-  const statusLabels: Record<ReferralStatus, string> = {
-    recebida: 'Recebida',
-    em_triagem: 'Em Triagem',
-    aceita: 'Aceita',
-    em_contato: 'Em Contato',
-    qualificada: 'Qualificada',
-    em_negociacao: 'Em Negociação',
-    captacao_solicitada: 'Captação Solicitada',
-    captada: 'Captada',
-    em_divulgacao: 'Em Divulgação',
-    vendida: 'Vendida',
-    alugada: 'Alugada',
-    recusada: 'Recusada',
-    duplicada: 'Duplicada',
-    perdida: 'Perdida',
-    declinada_pela_godoy: 'Declinada pela Godoy',
-    retirada: 'Retirada',
-    cancelada: 'Cancelada',
-    em_atendimento: 'Em Atendimento',
-    visitando: 'Visitando',
-    proposta: 'Proposta',
-    comprou: 'Comprou',
-    alugou: 'Alugou',
-    nova: 'Nova',
-    atendida: 'Atendida',
-    concluida: 'Concluída',
-    repassada: 'Repassada',
-  }
-
-  const historyItem: ReferralHistoryItem = {
-    date: now,
-    action: `status_${newStatus}`,
-    description: `Status alterado para "${statusLabels[newStatus] || newStatus}" por ${currentUserName || 'Membro'}${
-      notes ? ` (${notes})` : ''
-    }`,
-    actor: currentUserName || 'Membro',
-    from_user_id: currentUserId,
-    from_user_name: currentUserName,
-    reason: notes,
-  }
-
-  const patchData: Record<string, unknown> = {
-    status: newStatus,
-    history: [...historyList, historyItem],
-  }
-
-  if (newStatus === 'atendida' || newStatus === 'em_atendimento') {
-    if (!referral.attended_at) {
-      patchData.attended_at = now
-    }
-  }
-
-  const updated = await pb.collection('referrals').update<Referral>(referral.id, patchData)
-  return updated
+): Promise<{ success: boolean; message: string; referral_id: string; status: string }> {
+  const res = await pb.send<{
+    success: boolean
+    message: string
+    referral_id: string
+    status: string
+  }>('/backend/v1/referrals/change-status', {
+    method: 'POST',
+    body: {
+      referral_id: referral.id,
+      target_status: newStatus,
+      status_reason: notes || 'Atualização via painel',
+      public_reason_code: notes ? 'outros' : undefined,
+    },
+  })
+  return res
 }
 
 /**
- * Get all members in the network (for member directory)
+ * Get network members safe helper.
+ * Since participants cannot read other users directly from users collection due to RLS,
+ * returns current user or queries users if role permits.
  */
 export async function getNetworkMembers(): Promise<Member[]> {
-  const members = await pb.collection('users').getFullList<Member>({
-    sort: 'name',
-  })
-  return members
+  try {
+    const members = await pb.collection('users').getFullList<Member>({
+      sort: 'name',
+    })
+    return members
+  } catch {
+    // If participant is restricted, return current user record only
+    const cur = pb.authStore.record as unknown as Member
+    return cur ? [cur] : []
+  }
 }
 
 /**

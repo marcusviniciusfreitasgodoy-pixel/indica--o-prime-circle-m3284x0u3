@@ -62,11 +62,18 @@ routerAdd('POST', '/backend/v1/public-referrals', (e) => {
   const referralsCol = $app.findCollectionByNameOrId('referrals')
   const record = new Record(referralsCol)
 
+  const channel = body.channel === 'manual' ? 'manual' : 'link_publico'
+  const action = channel === 'manual' ? 'criada_manual' : 'criada_link_publico'
+  const historyDesc =
+    channel === 'manual'
+      ? `Indicação cadastrada manualmente por ${targetUser.getString('name') || 'Membro'}`
+      : `Indicação enviada pelo link público de ${targetUser.getString('name') || 'Membro'}`
+
   const now = new Date().toISOString()
   const historyItem = {
     date: now,
-    action: 'criada_link_publico',
-    description: `Indicação enviada pelo link público de ${targetUser.getString('name') || 'Membro'}`,
+    action: action,
+    description: historyDesc,
     actor: referrerName,
     to_user_id: targetUser.id,
     to_user_name: targetUser.getString('name') || 'Membro',
@@ -78,7 +85,7 @@ routerAdd('POST', '/backend/v1/public-referrals', (e) => {
   record.set('description', description)
   record.set('return_contact', returnContact)
   record.set('status', 'nova')
-  record.set('channel', 'link_publico')
+  record.set('channel', channel)
   record.set('current_owner_id', targetUser.id)
   record.set('original_owner_id', targetUser.id)
   record.set('history', JSON.stringify([historyItem]))
@@ -226,6 +233,12 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
     filter += ` || participant_id = '${participantId}'`
   }
   filter += ')'
+
+  const reqInfo = e.requestInfo()
+  const queryId = (reqInfo.query && reqInfo.query.id ? reqInfo.query.id : '').trim()
+  if (queryId) {
+    filter += ` && id = '${queryId}'`
+  }
 
   const records = $app.findRecordsByFilter('referrals', filter, '-created', 500, 0)
 

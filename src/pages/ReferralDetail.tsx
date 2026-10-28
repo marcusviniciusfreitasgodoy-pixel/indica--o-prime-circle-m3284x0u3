@@ -72,19 +72,19 @@ export default function ReferralDetailPage() {
     if (!referral || !user) return
     setIsUpdatingStatus(true)
     try {
-      const updated = await updateReferralStatus(
+      await updateReferralStatus(
         referral,
         newStatus,
         user.id,
         user.name,
         statusNotes.trim() || undefined,
       )
-      setReferral(updated)
       setStatusNotes('')
       toast({
         title: 'Status atualizado',
         description: `Indicação alterada para "${newStatus}".`,
       })
+      await loadData()
     } catch (err: unknown) {
       console.error('Erro ao atualizar status:', err)
       const msg = err instanceof Error ? err.message : 'Falha ao atualizar status.'

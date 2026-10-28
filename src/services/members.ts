@@ -20,10 +20,23 @@ export async function updateMemberProfile(
     agency?: string
     phone?: string
     public_slug?: string
+    address?: string
+    pix_key?: string
+    pix_key_type?: string
+    condominium_name?: string
   },
-): Promise<Member> {
-  const updated = await pb.collection('users').update<Member>(id, data)
-  return updated
+): Promise<{ success: boolean; message: string; user?: Member }> {
+  // Use secure server endpoint to prevent direct collection manipulation
+  const res = await pb.send<{
+    success: boolean
+    message: string
+    user: Member
+    participant: unknown
+  }>('/backend/v1/participant/update-profile', {
+    method: 'POST',
+    body: data,
+  })
+  return res
 }
 
 /**
