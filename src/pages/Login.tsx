@@ -28,7 +28,8 @@ import {
 } from 'lucide-react'
 
 export default function LoginPage() {
-  const { login, signup, requestMagicLink, requestPasswordReset, isAuthenticated } = useAuth()
+  const { login, signup, requestOTP, loginWithOTP, requestPasswordReset, isAuthenticated } =
+    useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
@@ -42,10 +43,12 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [name, setName] = useState('')
   const [phone, setPhone] = useState('')
+  const [otpCode, setOtpCode] = useState('')
+  const [otpId, setOtpId] = useState<string | null>(null)
+  const [otpSent, setOtpSent] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [successMsg, setSuccessMsg] = useState<string | null>(null)
-  const [magicLinkPreview, setMagicLinkPreview] = useState<string | null>(null)
 
   // Redirect if already authenticated
   React.useEffect(() => {
@@ -80,11 +83,10 @@ export default function LoginPage() {
     }
   }
 
-  const handleMagicLinkRequest = async (e: React.FormEvent) => {
+  const handleOTPRequest = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
     setSuccessMsg(null)
-    setMagicLinkPreview(null)
 
     if (!email) {
       setErrorMsg('Por favor, informe o e-mail cadastrado.')
@@ -93,14 +95,44 @@ export default function LoginPage() {
 
     try {
       setIsLoading(true)
-      const res = await requestMagicLink(email)
-      setSuccessMsg(res.message || 'Link seguro gerado!')
-      if (res.magic_token) {
-        setMagicLinkPreview(res.magic_token)
+      const res = await requestOTP(email)
+      setSuccessMsg(res.message || 'Código de acesso enviado!')
+      if (res.otpId) {
+        setOtpId(res.otpId)
       }
+      setOtpSent(true)
+    } catch (err: any) {
+      console.error('Erro ao pedir OTP:', err)
+      setErrorMsg(err?.message || 'Não foi possível solicitar o código de acesso no momento.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleOTPVerify = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setErrorMsg(null)
+    setSuccessMsg(null)
+
+    if (!otpCode || otpCode.trim().length < 6) {
+      setErrorMsg('Por favor, digite o código de 6 dígitos recebido por e-mail.')
+      return
+    }
+
+    if (!otpId) {
+      setErrorMsg('Sessão de código expirada ou inválida. Solicite um novo código.')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      await loginWithOTP(otpId, otpCode)
+      const destination =
+        (location.state as { from?: { pathname?: string } })?.from?.pathname || '/painel'
+      navigate(destination, { replace: true })
     } catch (err: unknown) {
-      console.error('Erro link mágico:', err)
-      setErrorMsg('Não foi possível gerar o link mágico no momento.')
+      console.error('Falha na validação do OTP:', err)
+      setErrorMsg('Código incorreto ou expirado. Verifique o código e tente novamente.')
     } finally {
       setIsLoading(false)
     }
@@ -204,7 +236,7 @@ export default function LoginPage() {
                   value="magic"
                   className="rounded-none data-[state=active]:bg-amber-600 data-[state=active]:text-white"
                 >
-                  Link Mágico
+                  Código de Acesso
                 </TabsTrigger>
                 <TabsTrigger
                   value="signup"
@@ -310,71 +342,132 @@ export default function LoginPage() {
               </form>
             </TabsContent>
 
-            {/* TAB 2: LINK MÁGICO */}
+            {/* TAB 2: CÓDIGO DE ACESSO OTP */}
             <TabsContent value="magic" className="m-0 focus-visible:outline-none">
-              <form onSubmit={handleMagicLinkRequest}>
-                <CardHeader className="space-y-1 pb-3">
-                  <CardTitle className="text-xl font-serif text-white flex items-center gap-2">
-                    <Mail className="w-5 h-5 text-amber-500" />
-                    Link Mágico
-                  </CardTitle>
-                  <CardDescription className="text-stone-400 text-xs">
-                    Receba um link de acesso direto sem precisar digitar senha.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="email-magic" className="text-stone-300 text-xs">
-                      E-mail cadastrado
-                    </Label>
-                    <Input
-                      id="email-magic"
-                      type="email"
-                      placeholder="seu.email@exemplo.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                      required
-                      className="rounded-none bg-stone-900 border-stone-800 text-stone-100 placeholder:text-stone-600 focus-visible:ring-amber-500"
-                    />
-                  </div>
-
-                  {magicLinkPreview && (
-                    <div className="p-3 bg-amber-950/40 border border-amber-700/60 rounded-none text-xs space-y-2">
-                      <p className="font-semibold text-amber-300">
-                        Link mágico de acesso imediato:
-                      </p>
-                      <Button
-                        type="button"
-                        onClick={() => navigate(`/auth/confirmar?token=${magicLinkPreview}`)}
-                        className="w-full rounded-none bg-amber-500 text-stone-950 hover:bg-amber-400 h-9 text-xs"
-                      >
-                        Entrar com 1 clique (Acesso Direto)
-                      </Button>
+              {!otpSent ? (
+                <form onSubmit={handleOTPRequest}>
+                  <CardHeader className="space-y-1 pb-3">
+                    <CardTitle className="text-xl font-serif text-white flex items-center gap-2">
+                      <Mail className="w-5 h-5 text-amber-500" />
+                      Código de Acesso por E-mail
+                    </CardTitle>
+                    <CardDescription className="text-stone-400 text-xs">
+                      Receba um código de uso único (OTP) no seu e-mail para entrar com segurança
+                      sem senha.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email-otp" className="text-stone-300 text-xs">
+                        E-mail cadastrado
+                      </Label>
+                      <Input
+                        id="email-otp"
+                        type="email"
+                        placeholder="seu.email@exemplo.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isLoading}
+                        required
+                        className="rounded-none bg-stone-900 border-stone-800 text-stone-100 placeholder:text-stone-600 focus-visible:ring-amber-500"
+                      />
                     </div>
-                  )}
-                </CardContent>
+                  </CardContent>
 
-                <CardFooter className="flex flex-col space-y-4 pt-2">
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold shadow-md"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        Enviar Link Mágico
-                        <Send className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </form>
+                  <CardFooter className="flex flex-col space-y-4 pt-2">
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold shadow-md"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Enviando código...
+                        </>
+                      ) : (
+                        <>
+                          Solicitar Código de Acesso
+                          <Send className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </CardFooter>
+                </form>
+              ) : (
+                <form onSubmit={handleOTPVerify}>
+                  <CardHeader className="space-y-1 pb-3">
+                    <CardTitle className="text-xl font-serif text-white flex items-center gap-2">
+                      <KeyRound className="w-5 h-5 text-amber-500" />
+                      Digite o Código de Acesso
+                    </CardTitle>
+                    <CardDescription className="text-stone-400 text-xs">
+                      Enviamos um código de 6 dígitos para{' '}
+                      <span className="text-amber-400">{email}</span>. Válido por 15 minutos.
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="otp-code-input" className="text-stone-300 text-xs">
+                        Código de 6 dígitos
+                      </Label>
+                      <Input
+                        id="otp-code-input"
+                        type="text"
+                        maxLength={6}
+                        placeholder="123456"
+                        value={otpCode}
+                        onChange={(e) => setOtpCode(e.target.value.replace(/\s+/g, ''))}
+                        disabled={isLoading}
+                        autoFocus
+                        required
+                        className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-center tracking-widest text-lg font-mono placeholder:text-stone-600 focus-visible:ring-amber-500"
+                      />
+                    </div>
+                    <div className="flex justify-between items-center text-xs">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setOtpSent(false)
+                          setOtpCode('')
+                          setOtpId(null)
+                        }}
+                        className="text-stone-400 hover:text-stone-200 underline"
+                      >
+                        Trocar e-mail
+                      </button>
+                      <button
+                        type="button"
+                        disabled={isLoading}
+                        onClick={handleOTPRequest}
+                        className="text-amber-500 hover:text-amber-400 underline"
+                      >
+                        Reenviar código
+                      </button>
+                    </div>
+                  </CardContent>
+
+                  <CardFooter className="flex flex-col space-y-4 pt-2">
+                    <Button
+                      type="submit"
+                      disabled={isLoading}
+                      className="w-full rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold shadow-md"
+                    >
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Validando código...
+                        </>
+                      ) : (
+                        <>
+                          Entrar com Código
+                          <ArrowRight className="ml-2 h-4 w-4" />
+                        </>
+                      )}
+                    </Button>
+                  </CardFooter>
+                </form>
+              )}
             </TabsContent>
 
             {/* TAB 3: CADASTRO */}

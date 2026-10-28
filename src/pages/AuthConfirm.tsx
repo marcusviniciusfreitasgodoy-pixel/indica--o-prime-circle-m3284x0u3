@@ -10,17 +10,17 @@ import { CheckCircle2, AlertCircle, Loader2, Sparkles, ArrowRight } from 'lucide
 export default function AuthConfirmPage() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
-  const { verifyMagicLink, refreshUser } = useAuth()
+  const { refreshUser } = useAuth()
 
   const [status, setStatus] = useState<'verifying' | 'success' | 'error'>('verifying')
   const [errorMessage, setErrorMessage] = useState<string>('')
-  const [type, setType] = useState<string>('magic_link')
+  const [type, setType] = useState<string>('email_verify')
 
   useEffect(() => {
     const handleVerification = async () => {
-      // 1. Check for token in URL query
+      // Token nativo de verificação de e-mail do PocketBase
       const token = searchParams.get('token')
-      const mode = searchParams.get('type') || 'magic' // 'magic' or 'verify' or 'reset'
+      const mode = searchParams.get('type') || 'verify'
 
       if (!token) {
         setStatus('error')
@@ -28,7 +28,7 @@ export default function AuthConfirmPage() {
         return
       }
 
-      // If it's a native PocketBase email confirmation token
+      // Confirmação nativa de e-mail do PocketBase
       if (mode === 'verify') {
         setType('email_verify')
         try {
@@ -42,18 +42,15 @@ export default function AuthConfirmPage() {
         return
       }
 
-      // Otherwise, magic link flow
-      try {
-        await verifyMagicLink(token)
-        setStatus('success')
-      } catch (err: any) {
-        setStatus('error')
-        setErrorMessage(err?.message || 'Link de autenticação expirado ou inválido.')
-      }
+      // Fluxos legados descontinuados em favor do OTP nativo
+      setStatus('error')
+      setErrorMessage(
+        'Este método de autenticação por link direto foi descontinuado por motivos de segurança. Acesse a tela de login para solicitar seu código de acesso de 6 dígitos.',
+      )
     }
 
     handleVerification()
-  }, [searchParams, verifyMagicLink, refreshUser])
+  }, [searchParams, refreshUser])
 
   return (
     <div className="flex min-h-screen flex-col justify-center items-center bg-gradient-to-b from-stone-900 via-stone-950 to-black p-4">

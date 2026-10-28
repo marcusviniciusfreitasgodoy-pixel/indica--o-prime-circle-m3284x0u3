@@ -269,13 +269,13 @@ A lógica de integridade e negócio roda integralmente no servidor através de h
      - Compara condomínio + unidade ou endereço normalizado.
      - Compara dados com as bases conhecidas (`known_owner_base` / `known_buyer_base`) respeitando a janela de precedência de 180 dias.
      - Cria pendências em `duplicate_flags` para conferência do operador na triagem.
-3. **`cronAdd('auto_transfer_unattended_referrals')`**:
-   - Execução programada periódica (a cada 6 horas) que identifica indicações estagnadas no estado `nova` sem atendimento por mais de 3 dias, realizando repasse automático na rede com trilha de auditoria no histórico.
+3. **[DESCONTINUADO / REMOVIDO POR SEGURANÇA C4]**:
+   - O programa Godoy Prime Indica NÃO repassa indicações em nenhuma hipótese. A automação `auto_transfer_unattended_referrals` foi desativada e removida.
 
 ### 8.2 Endpoints Customizados de API Backend
 
-- **`POST /backend/v1/auth/request-magic-link`**: Geração de link mágico temporário (JWT 15 min) e código OTP de 6 dígitos para acesso seguro sem senha.
-- **`POST /backend/v1/auth/verify-magic-link`**: Validação de token com emissão de sessão autenticada oficial PocketBase.
+- **`POST /backend/v1/auth/request-magic-link`**: Solicitação de código de acesso OTP nativo enviado por e-mail com resposta genérica segura e rate-limiting (máx 5/hora por e-mail e por IP).
+- **`authWithOTP`**: Autenticação nativa do PocketBase via código de uso único (OTP), sem tokens manuais nem links mágicos inseguros.
 - **`GET /backend/v1/auth/my-roles`**: Resolução imediata dos papéis internos do usuário logado (`isAdmin`, `isOperator`, `isFinance`).
 - **`POST /backend/v1/referrals/change-status`**:
   - Validação da matriz de transição estrita para proprietários e compradores.
@@ -421,8 +421,8 @@ A identidade visual expressa o posicionamento de alto padrão da **Godoy Prime**
 22. Somente administradores (`role = 'admin'`) podem registrar o declínio institucional pela Godoy Prime (`POST /backend/v1/referrals/decline-by-godoy`), marcando como `declinada_pela_godoy` internamente e exibindo como "Reconhecida" para o parceiro.
 23. Somente administradores podem mover uma indicação para `vendida`, `alugada`, `comprou` ou `alugou`, sendo obrigatório o preenchimento do valor do negócio em BRL e a data de fechamento.
 24. O registro de negócios (`deals`) deve permitir vincular tanto a indicação do proprietário quanto a do comprador (quando ambos forem oriundos da rede), gerando os registros de fechamento em ambas as pontas.
-25. O repasse manual de indicação entre membros da rede deve registrar a data, ator de origem, ator de destino e justificativa no histórico auditável da indicação.
-26. O cron de auto-repasse (`auto_transfer_unattended_referrals`) deve reatribuir automaticamente indicações sem atendimento após 3 dias da criação para outro membro da rede elegível.
+25. [DESCONTINUADO - C4] O sistema NÃO realiza repasse de indicações entre usuários da rede em nenhuma hipótese.
+26. [DESCONTINUADO - C4] O sistema NÃO repassa indicações em nenhuma hipótese. Indicações pertencem ao membro indicador e à equipe interna Godoy Prime.
 27. Operadores podem registrar tentativas de contato (`contact_attempts`) detalhando canal, desfecho e agendamento de retorno.
 28. Operadores podem adicionar notas internas (`referral_notes`), garantindo que essas notas nunca sejam acessíveis via API pelos participantes comuns.
 29. Operadores podem criar e concluir tarefas vinculadas a cada indicação (`referral_tasks`).

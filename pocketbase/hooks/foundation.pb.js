@@ -47,136 +47,94 @@ onRecordCreate((e) => {
 }, 'users')
 
 /**
- * API: Request Magic Link / OTP / Password Reset
+ * API: Request OTP / Access Code
  * POST /backend/v1/auth/request-magic-link
- * Body: { email: "...", redirect_url?: "..." }
+ * Body: { email: "..." }
+ * Resposta NUNCA devolve token ou código; sempre a mesma mensagem genérica.
+ * Limita pedidos de código por e-mail e por IP: máx 5 por hora via audit_logs.
  */
 routerAdd('POST', '/backend/v1/auth/request-magic-link', (e) => {
+  const genericResponse = {
+    success: true,
+    message:
+      'Se este e-mail estiver cadastrado, você receberá um código de acesso de 6 dígitos válido por 15 minutos.',
+  }
+
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
   const email = (body.email || '').trim().toLowerCase()
+  const clientIp = (e.request && e.request.remoteAddr) || 'unknown'
 
   if (!email) {
     return e.json(400, { message: 'E-mail é obrigatório.' })
+  }
+
+  // Rate limiting usando audit_logs na última 1 hora (máx 5 por email ou por IP)
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString().replace('T', ' ')
+  try {
+    const recentEmailAttempts = $app.findRecordsByFilter(
+      'audit_logs',
+      `action = 'otp_requested' && actor_email = '${email}' && created >= '${oneHourAgo}'`,
+      '-created',
+      10,
+      0,
+    )
+    if (recentEmailAttempts.length >= 5) {
+      return e.json(429, {
+        message:
+          'Muitas solicitações de código para este e-mail. Por favor, aguarde alguns minutos antes de tentar novamente.',
+      })
+    }
+  } catch (_) {}
+
+  if (clientIp && clientIp !== 'unknown') {
+    try {
+      const recentIpAttempts = $app.findRecordsByFilter(
+        'audit_logs',
+        `action = 'otp_requested' && ip_address = '${clientIp}' && created >= '${oneHourAgo}'`,
+        '-created',
+        10,
+        0,
+      )
+      if (recentIpAttempts.length >= 5) {
+        return e.json(429, {
+          message:
+            'Muitas solicitações de código a partir deste endereço de IP. Por favor, aguarde alguns minutos.',
+        })
+      }
+    } catch (_) {}
   }
 
   let user
   try {
     user = $app.findAuthRecordByEmail('_pb_users_auth_', email)
   } catch (_) {
-    return e.json(200, {
-      success: true,
-      message:
-        'Se este e-mail estiver cadastrado, você receberá um link de acesso ou instruções de recuperação.',
-    })
+    // Retorno idêntico para e-mails inexistentes (evita enumeração)
+    return e.json(200, genericResponse)
   }
 
-  // Create an OTP / magic link token valid for 15 minutes
-  const otpCode = $security.randomString(6).toUpperCase()
-  const secretKey = $os.getenv('PB_SUPERUSER_TOKEN') || 'prime_circle_magic_secret_salt'
-  const tokenPayload = {
-    userId: user.id,
-    email: user.getString('email'),
-    otp: otpCode,
-    exp: Math.floor(Date.now() / 1000) + 15 * 60,
-  }
-  const token = $security.createJWT(tokenPayload, secretKey, 15 * 60)
-
-  // Try to also trigger PocketBase native verification/reset if desired
+  // Enviar OTP nativo do PocketBase por e-mail (gerado pelo PocketBase)
   try {
-    $app.sendAuthResetPassword(user)
-  } catch (_) {}
-
-  try {
-    const auditCol = $app.findCollectionByNameOrId('audit_logs')
-    const audit = new Record(auditCol)
-    audit.set('actor_id', user.id)
-    audit.set('actor_email', user.getString('email'))
-    audit.set('action', 'magic_link_requested')
-    audit.set('resource_type', 'auth')
-    audit.set('resource_id', user.id)
-    audit.set('details', JSON.stringify({ email, otp_generated: true }))
-    audit.set('ip_address', e.request.remoteAddr)
-    $app.save(audit)
-  } catch (_) {}
-
-  return e.json(200, {
-    success: true,
-    message: 'Link de acesso seguro gerado com sucesso. Válido por 15 minutos.',
-    magic_token: token,
-    otp_code: otpCode,
-    email: user.getString('email'),
-  })
-})
-
-/**
- * API: Verify Magic Link
- * POST /backend/v1/auth/verify-magic-link
- * Body: { token: "..." }
- */
-routerAdd('POST', '/backend/v1/auth/verify-magic-link', (e) => {
-  const reqInfo = e.requestInfo()
-  const body = reqInfo.body || {}
-  const token = (body.token || '').trim()
-
-  if (!token) {
-    return e.json(400, { message: 'Token de confirmação não informado.' })
-  }
-
-  const secretKey = $os.getenv('PB_SUPERUSER_TOKEN') || 'prime_circle_magic_secret_salt'
-  let payload
-  try {
-    payload = $security.parseJWT(token, secretKey)
+    $app.sendAuthOTP(user)
   } catch (err) {
-    return e.json(400, { message: 'Link mágico inválido ou expirado.' })
+    console.error('[request-otp] Erro ao disparar sendAuthOTP nativo:', err)
   }
-
-  if (!payload || !payload.userId) {
-    return e.json(400, { message: 'Token de acesso inválido.' })
-  }
-
-  let user
-  try {
-    user = $app.findRecordById('users', payload.userId)
-  } catch (_) {
-    return e.json(404, { message: 'Usuário não encontrado.' })
-  }
-
-  // Issue real PocketBase auth token for this record
-  const authToken = $security.createJWT(
-    {
-      id: user.id,
-      collectionId: user.collection().id,
-    },
-    $app.settings().recordAuthToken.secret,
-    $app.settings().recordAuthToken.duration,
-  )
 
   try {
     const auditCol = $app.findCollectionByNameOrId('audit_logs')
     const audit = new Record(auditCol)
     audit.set('actor_id', user.id)
     audit.set('actor_email', user.getString('email'))
-    audit.set('action', 'magic_link_login_success')
+    audit.set('action', 'otp_requested')
     audit.set('resource_type', 'auth')
     audit.set('resource_id', user.id)
-    audit.set('details', JSON.stringify({ email: user.getString('email') }))
-    audit.set('ip_address', e.request.remoteAddr)
+    audit.set('details', JSON.stringify({ email, method: 'native_otp' }))
+    audit.set('ip_address', clientIp)
     $app.save(audit)
   } catch (_) {}
 
-  return e.json(200, {
-    token: authToken,
-    record: {
-      id: user.id,
-      email: user.getString('email'),
-      name: user.getString('name'),
-      phone: user.getString('phone'),
-      public_slug: user.getString('public_slug'),
-      agency: user.getString('agency'),
-      verified: user.getBool('verified'),
-    },
-  })
+  // RESPOSTA SEGURA: NUNCA DEVOLVER magic_token, otp_code NEM QUALQUER CÓDIGO
+  return e.json(200, genericResponse)
 })
 
 /**

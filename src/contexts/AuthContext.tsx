@@ -20,10 +20,8 @@ interface AuthContextType {
     name: string
     phone?: string
   }) => Promise<void>
-  requestMagicLink: (
-    email: string,
-  ) => Promise<{ success: boolean; message: string; magic_token?: string }>
-  verifyMagicLink: (token: string) => Promise<void>
+  requestOTP: (email: string) => Promise<{ success: boolean; message: string; otpId?: string }>
+  loginWithOTP: (otpId: string, code: string) => Promise<void>
   requestPasswordReset: (email: string) => Promise<{ error: unknown }>
   confirmPasswordReset: (token: string, password: string) => Promise<{ error: unknown }>
   logout: () => void
@@ -125,36 +123,52 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }
 
-  const requestMagicLink = async (email: string) => {
+  const requestOTP = async (email: string) => {
     const cleanEmail = email.trim().toLowerCase()
+    // 1. Notifica o backend com rate limiting e auditoria
     const backendUrl = import.meta.env.VITE_POCKETBASE_URL || ''
-    const res = await fetch(`${backendUrl}/backend/v1/auth/request-magic-link`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: cleanEmail }),
-    })
-    const data = await res.json()
-    if (!res.ok) {
-      throw new Error(data.message || 'Erro ao solicitar link mágico')
-    }
-    return data
-  }
-
-  const verifyMagicLink = async (token: string) => {
-    setIsLoading(true)
+    let serverMessage =
+      'Se este e-mail estiver cadastrado, você receberá um código de acesso de 6 dígitos.'
     try {
-      const backendUrl = import.meta.env.VITE_POCKETBASE_URL || ''
-      const res = await fetch(`${backendUrl}/backend/v1/auth/verify-magic-link`, {
+      const res = await fetch(`${backendUrl}/backend/v1/auth/request-magic-link`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token }),
+        body: JSON.stringify({ email: cleanEmail }),
       })
       const data = await res.json()
-      if (!res.ok) {
-        throw new Error(data.message || 'Falha ao autenticar com o link')
+      if (data && data.message) {
+        serverMessage = data.message
       }
+      if (!res.ok) {
+        throw new Error(data.message || 'Erro ao solicitar código de acesso')
+      }
+    } catch (err: any) {
+      if (err?.message?.includes('Muitas solicitações')) {
+        throw err
+      }
+    }
 
-      pb.authStore.save(data.token, data.record)
+    // 2. Chama o método nativo do PocketBase SDK para obter o otpId necessário para authWithOTP
+    try {
+      const otpResponse = await pb.collection('users').requestOTP(cleanEmail)
+      return {
+        success: true,
+        message: serverMessage,
+        otpId: otpResponse?.otpId,
+      }
+    } catch (_) {
+      // Retorna sucesso genérico para não vazar a existência do email
+      return {
+        success: true,
+        message: serverMessage,
+      }
+    }
+  }
+
+  const loginWithOTP = async (otpId: string, code: string) => {
+    setIsLoading(true)
+    try {
+      await pb.collection('users').authWithOTP(otpId, code.trim())
       await fetchCurrentUser()
     } finally {
       setIsLoading(false)
@@ -207,8 +221,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isInternal,
         login,
         signup,
-        requestMagicLink,
-        verifyMagicLink,
+        requestOTP,
+        loginWithOTP,
         requestPasswordReset,
         confirmPasswordReset,
         logout,
