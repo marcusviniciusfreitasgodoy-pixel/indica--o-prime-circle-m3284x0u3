@@ -29,17 +29,16 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Loader2, Home, CheckCircle2, ShieldCheck, ArrowRight, UserCheck } from 'lucide-react'
-import pb from '@/lib/pocketbase/client'
-import { submitOwnerLead } from '@/services/operations'
+import { submitOwnerLead, getPublicFormData, getPublicIndicator } from '@/services/operations'
 
 interface Condominium {
   id: string
   name: string
-  neighborhood: string
+  neighborhood?: string
 }
 
 interface LegalDoc {
-  slug: string
+  id?: string
   title: string
   version: number
   content: string
@@ -88,18 +87,11 @@ export default function DirectSellPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const [condoList, docs] = await Promise.all([
-          pb.collection('condominiums').getFullList<Condominium>({
-            filter: 'active = true',
-            sort: 'name',
-          }),
-          pb.collection('legal_documents').getFullList<LegalDoc>({
-            filter: "slug = 'consentimento_proprietario' && is_active = true",
-            sort: '-version',
-          }),
-        ])
-        setCondos(condoList)
-        if (docs.length > 0) setLegalDoc(docs[0])
+        const formData = await getPublicFormData()
+        setCondos(formData.condominiums || [])
+        if (formData.consent) {
+          setLegalDoc(formData.consent)
+        }
       } catch (err) {
         console.error('Erro ao carregar dados:', err)
       } finally {
@@ -119,16 +111,9 @@ export default function DirectSellPage() {
 
     setCheckingCode(true)
     try {
-      // Tenta achar participante ativo com referral_code correspondente
-      const participant = await pb
-        .collection('participants')
-        .getFirstListItem(`referral_code = "${clean}" && status = "ativo"`, {
-          expand: 'user_id',
-        })
-      if (participant) {
-        const u = participant.expand?.user_id as any
-        const firstName = u?.name ? u.name.split(' ')[0] : 'Indicador'
-        setReferrerResolved({ code: clean, name: firstName })
+      const info = await getPublicIndicator(clean)
+      if (info && info.ativo) {
+        setReferrerResolved({ code: clean, name: info.display_name })
       } else {
         setReferrerResolved(null)
       }

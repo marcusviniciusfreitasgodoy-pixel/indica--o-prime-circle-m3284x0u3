@@ -29,11 +29,10 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog'
 import { Loader2, Search, CheckCircle2, ArrowRight } from 'lucide-react'
-import pb from '@/lib/pocketbase/client'
-import { submitBuyerLead } from '@/services/operations'
+import { submitBuyerLead, getPublicFormData, getPublicIndicator } from '@/services/operations'
 
 interface LegalDoc {
-  slug: string
+  id?: string
   title: string
   version: number
   content: string
@@ -77,11 +76,10 @@ export default function DirectBuyPage() {
   useEffect(() => {
     async function loadData() {
       try {
-        const docs = await pb.collection('legal_documents').getFullList<LegalDoc>({
-          filter: "slug = 'consentimento_proprietario' && is_active = true",
-          sort: '-version',
-        })
-        if (docs.length > 0) setLegalDoc(docs[0])
+        const formData = await getPublicFormData()
+        if (formData.consent) {
+          setLegalDoc(formData.consent)
+        }
       } catch (err) {
         console.error('Erro ao carregar documentos:', err)
       } finally {
@@ -100,15 +98,9 @@ export default function DirectBuyPage() {
 
     setCheckingCode(true)
     try {
-      const participant = await pb
-        .collection('participants')
-        .getFirstListItem(`referral_code = "${clean}" && status = "ativo"`, {
-          expand: 'user_id',
-        })
-      if (participant) {
-        const u = participant.expand?.user_id as any
-        const firstName = u?.name ? u.name.split(' ')[0] : 'Indicador'
-        setReferrerResolved({ code: clean, name: firstName })
+      const info = await getPublicIndicator(clean)
+      if (info && info.ativo) {
+        setReferrerResolved({ code: clean, name: info.display_name })
       } else {
         setReferrerResolved(null)
       }
