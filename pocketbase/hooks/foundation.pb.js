@@ -74,10 +74,11 @@ routerAdd('POST', '/backend/v1/auth/request-magic-link', (e) => {
   try {
     const recentEmailAttempts = $app.findRecordsByFilter(
       'audit_logs',
-      `action = 'otp_requested' && actor_email = '${email}' && created >= '${oneHourAgo}'`,
+      "action = 'otp_requested' && actor_email = {:email} && created >= {:since}",
       '-created',
       10,
       0,
+      { email: email, since: oneHourAgo },
     )
     if (recentEmailAttempts.length >= 5) {
       return e.json(429, {
@@ -91,10 +92,11 @@ routerAdd('POST', '/backend/v1/auth/request-magic-link', (e) => {
     try {
       const recentIpAttempts = $app.findRecordsByFilter(
         'audit_logs',
-        `action = 'otp_requested' && ip_address = '${clientIp}' && created >= '${oneHourAgo}'`,
+        "action = 'otp_requested' && ip_address = {:ip} && created >= {:since}",
         '-created',
         10,
         0,
+        { ip: clientIp, since: oneHourAgo },
       )
       if (recentIpAttempts.length >= 5) {
         return e.json(429, {

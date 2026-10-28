@@ -1189,7 +1189,9 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
   let participantRec = null
 
   try {
-    participantRec = $app.findFirstRecordByFilter('participants', `referral_code = '${code}'`)
+    participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
+      c: code,
+    })
     if (participantRec) {
       memberUser = $app.findRecordById('users', participantRec.getString('user_id'))
     }
@@ -1197,7 +1199,7 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
 
   if (!memberUser) {
     try {
-      memberUser = $app.findFirstRecordByFilter('users', `public_slug = '${code}'`)
+      memberUser = $app.findFirstRecordByFilter('users', 'public_slug = {:c}', { c: code })
     } catch (_) {}
   }
 

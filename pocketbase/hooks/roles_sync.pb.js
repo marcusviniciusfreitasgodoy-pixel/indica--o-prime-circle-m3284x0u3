@@ -100,24 +100,40 @@ onRecordAfterDeleteSuccess((e) => {
   e.next()
 }, 'user_roles')
 
-// Bloqueia qualquer alteração de is_admin, is_operador e is_financeiro que venha por requisição de API
-onRecordUpdate((e) => {
-  if (e.httpContext) {
+// (a) Bloqueia qualquer alteração de is_admin, is_operador e is_financeiro via requisição HTTP se quem chama não for superuser
+onRecordUpdateRequest((e) => {
+  const isSuperuser = e.hasSuperuserAuth ? e.hasSuperuserAuth() : false
+  if (!isSuperuser) {
     const originalRecord = e.record.original()
-    const isAdminChanged =
-      e.record.getBool('is_admin') !== (originalRecord ? originalRecord.getBool('is_admin') : false)
-    const isOperadorChanged =
-      e.record.getBool('is_operador') !==
-      (originalRecord ? originalRecord.getBool('is_operador') : false)
-    const isFinanceiroChanged =
-      e.record.getBool('is_financeiro') !==
-      (originalRecord ? originalRecord.getBool('is_financeiro') : false)
+    const origAdmin = originalRecord ? originalRecord.getBool('is_admin') : false
+    const origOperador = originalRecord ? originalRecord.getBool('is_operador') : false
+    const origFinanceiro = originalRecord ? originalRecord.getBool('is_financeiro') : false
 
-    if (isAdminChanged || isOperadorChanged || isFinanceiroChanged) {
-      throw new BadRequestError(
-        'Alteração de permissões internas (is_admin, is_operador, is_financeiro) não permitida diretamente pela API de usuários.',
+    const newAdmin = e.record.getBool('is_admin')
+    const newOperador = e.record.getBool('is_operador')
+    const newFinanceiro = e.record.getBool('is_financeiro')
+
+    if (
+      newAdmin !== origAdmin ||
+      newOperador !== origOperador ||
+      newFinanceiro !== origFinanceiro
+    ) {
+      throw new ForbiddenError(
+        'Alteração de privilégios internos (is_admin, is_operador, is_financeiro) não permitida pela API de usuários.',
       )
     }
+  }
+
+  e.next()
+}, 'users')
+
+// (b) Força is_admin, is_operador e is_financeiro = false em todo cadastro vindo da API
+onRecordCreateRequest((e) => {
+  const isSuperuser = e.hasSuperuserAuth ? e.hasSuperuserAuth() : false
+  if (!isSuperuser) {
+    e.record.set('is_admin', false)
+    e.record.set('is_operador', false)
+    e.record.set('is_financeiro', false)
   }
 
   e.next()

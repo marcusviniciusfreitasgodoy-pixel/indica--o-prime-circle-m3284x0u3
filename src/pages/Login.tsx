@@ -192,12 +192,6 @@ export default function LoginPage() {
     }
   }
 
-  // Quick fill helper for testing
-  const handleQuickFill = (testEmail: string) => {
-    setEmail(testEmail)
-    setPassword('Skip@Pass')
-  }
-
   return (
     <div className="flex min-h-screen flex-col justify-center bg-gradient-to-b from-stone-900 via-stone-950 to-black p-4 sm:p-6 lg:p-8">
       <div className="mx-auto w-full max-w-md">
@@ -617,25 +611,6 @@ export default function LoginPage() {
               </div>
             )}
           </Tabs>
-
-          {/* Quick test accounts */}
-          <div className="px-6 pb-6 pt-2">
-            <div className="rounded-none bg-stone-900/80 border border-stone-800/80 p-3 text-xs text-stone-400">
-              <div className="flex items-center gap-1.5 font-medium text-stone-300 mb-1">
-                <ShieldCheck className="h-4 w-4 text-amber-500" />
-                <span>Contas de teste semeadas:</span>
-              </div>
-              <div className="flex flex-wrap gap-2 items-center text-[11px] pt-1">
-                <button
-                  type="button"
-                  onClick={() => handleQuickFill('marcusviniciusfreitasgodoy@gmail.com')}
-                  className="text-amber-400 underline hover:text-amber-300"
-                >
-                  Marcus Godoy (Admin)
-                </button>
-              </div>
-            </div>
-          </div>
         </Card>
 
         <p className="mt-6 text-center text-xs text-stone-500 font-sans">

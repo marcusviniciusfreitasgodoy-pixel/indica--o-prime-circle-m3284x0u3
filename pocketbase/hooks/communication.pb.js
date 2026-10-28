@@ -233,14 +233,16 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
     try {
       templateRec = $app.findFirstRecordByFilter(
         'message_templates',
-        `meta_template_name = '${templateName}' && channel = 'whatsapp'`,
+        "meta_template_name = {:tpl} && channel = 'whatsapp'",
+        { tpl: templateName },
       )
     } catch (_) {}
   } else if (eventCode) {
     try {
       templateRec = $app.findFirstRecordByFilter(
         'message_templates',
-        `event_code = '${eventCode}' && channel = 'whatsapp' && active = true`,
+        "event_code = {:ev} && channel = 'whatsapp' && active = true",
+        { ev: eventCode },
       )
     } catch (_) {}
   }
@@ -279,7 +281,8 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
   try {
     const optinRec = $app.findFirstRecordByFilter(
       'whatsapp_optins',
-      `phone = '${formattedPhone}' && opted_out_at = ''`,
+      "phone = {:ph} && opted_out_at = ''",
+      { ph: formattedPhone },
     )
     if (optinRec) hasOptin = true
   } catch (_) {
@@ -319,10 +322,11 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
     try {
       const sentMarketing = $app.findRecordsByFilter(
         'notification_logs',
-        `recipient = '${formattedPhone}' && channel = 'whatsapp' && status = 'sent' && created >= '${startIso}'`,
+        "recipient = {:rcp} && channel = 'whatsapp' && status = 'sent' && created >= {:start}",
         '-created',
         50,
         0,
+        { rcp: formattedPhone, start: startIso },
       )
       if (sentMarketing.length >= monthlyLimit && !forceSend) {
         const errorMsg = `Envio bloqueado: participante atingiu o teto mensal de ${monthlyLimit} mensagens de marketing.`
@@ -553,10 +557,11 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
           try {
             const optins = $app.findRecordsByFilter(
               'whatsapp_optins',
-              `phone = '${fromNumber}' && opted_out_at = ''`,
+              "phone = {:ph} && opted_out_at = ''",
               '-created',
               10,
               0,
+              { ph: fromNumber },
             )
             for (let o = 0; o < optins.length; o++) {
               const opt = optins[o]
@@ -570,10 +575,11 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
           try {
             const recentRefs = $app.findRecordsByFilter(
               'referrals',
-              `owner_phone ~ '${fromNumber}' || buyer_phone ~ '${fromNumber}' || referrer_phone ~ '${fromNumber}'`,
+              'owner_phone ~ {:ph} || buyer_phone ~ {:ph} || referrer_phone ~ {:ph}',
               '-updated',
               1,
               0,
+              { ph: fromNumber },
             )
 
             let operatorEmail = 'contato@godoyprime.com.br'

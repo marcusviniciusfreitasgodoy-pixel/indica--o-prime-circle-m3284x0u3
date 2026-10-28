@@ -174,16 +174,140 @@ routerAdd('POST', '/backend/v1/participant/update-profile', (e) => {
   if (body.public_slug !== undefined) authRecord.set('public_slug', String(body.public_slug).trim())
   $app.save(authRecord)
 
+  // Helper to mask PIX key for audit logs and security notifications
+  function maskPixKey(key) {
+    if (!key) return ''
+    const str = String(key).trim()
+    if (str.length <= 4) return '***'
+    // CPF/CNPJ or phone or random string: keep first 3 and last 2 characters
+    const start = str.substring(0, 3)
+    const end = str.substring(str.length - 2)
+    return `${start}***${end}`
+  }
+
   // Update participant record (only personal details)
   if (participant) {
+    const oldPixKey = participant.getString('pix_key') || ''
+    const oldPixKeyType = participant.getString('pix_key_type') || ''
+    const newPixKey = body.pix_key !== undefined ? String(body.pix_key).trim() : oldPixKey
+    const newPixKeyType =
+      body.pix_key_type !== undefined ? String(body.pix_key_type).trim() : oldPixKeyType
+    const pixChanged = body.pix_key !== undefined && newPixKey !== oldPixKey
+
     if (body.phone !== undefined) participant.set('phone', String(body.phone).trim())
     if (body.address !== undefined) participant.set('address', String(body.address).trim())
-    if (body.pix_key !== undefined) participant.set('pix_key', String(body.pix_key).trim())
-    if (body.pix_key_type !== undefined)
-      participant.set('pix_key_type', String(body.pix_key_type).trim())
+    if (body.pix_key !== undefined) participant.set('pix_key', newPixKey)
+    if (body.pix_key_type !== undefined) participant.set('pix_key_type', newPixKeyType)
     if (body.condominium_name !== undefined)
       participant.set('condominium_name', String(body.condominium_name).trim())
     $app.save(participant)
+
+    // Item 6: Gravar audit_logs com o valor antigo e novo MASCARADOS e notificar por e-mail e WhatsApp
+    if (pixChanged) {
+      const maskedOld = maskPixKey(oldPixKey)
+      const maskedNew = maskPixKey(newPixKey)
+
+      try {
+        const auditCol = $app.findCollectionByNameOrId('audit_logs')
+        const audit = new Record(auditCol)
+        audit.set('actor_id', authRecord.id)
+        audit.set('actor_email', authRecord.getString('email'))
+        audit.set('action', 'pix_key_updated')
+        audit.set('resource_type', 'participants')
+        audit.set('resource_id', participant.id)
+        audit.set(
+          'details',
+          JSON.stringify({
+            participant_id: participant.id,
+            old_pix_key_masked: maskedOld,
+            new_pix_key_masked: maskedNew,
+            old_pix_key_type: oldPixKeyType,
+            new_pix_key_type: newPixKeyType,
+          }),
+        )
+        audit.set('ip_address', e.request.remoteAddr)
+        $app.save(audit)
+      } catch (errAudit) {
+        console.error('[update-profile] Erro ao gravar audit_logs para troca de PIX:', errAudit)
+      }
+
+      // Notificar o participante via e-mail e WhatsApp pelos canais existentes
+      try {
+        const participantName = authRecord.getString('name') || 'Parceiro'
+        const participantEmail = authRecord.getString('email')
+        const participantPhone = authRecord.getString('phone') || participant.getString('phone')
+
+        // 1. Notificação por Email via Resend se configurado
+        const resendKey = $os.getenv('RESEND_API_KEY')
+        if (resendKey && participantEmail) {
+          try {
+            $http.send({
+              url: 'https://api.resend.com/emails',
+              method: 'POST',
+              headers: { Authorization: `Bearer ${resendKey}`, 'Content-Type': 'application/json' },
+              data: JSON.stringify({
+                from: 'Godoy Prime Indica <contato@godoyprime.com.br>',
+                to: [participantEmail],
+                subject: 'Alerta de Segurança: Chave PIX alterada — Godoy Prime Indica',
+                text: `Olá, ${participantName}!\n\nConfirmamos que sua chave PIX de recebimento no Godoy Prime Indica foi atualizada.\n\nChave anterior: ${maskedOld || '(nenhuma)'}\nNova chave: ${maskedNew}\n\nSe você não realizou essa alteração, entre em contato imediatamente com nossa equipe de atendimento para proteger sua conta.`,
+              }),
+              timeout: 10,
+            })
+          } catch (errEmail) {
+            console.error('[update-profile] Erro ao enviar email de aviso PIX:', errEmail)
+          }
+        }
+
+        // 2. Notificação por WhatsApp via Meta Cloud API se configurado
+        const metaToken = $os.getenv('META_WA_ACCESS_TOKEN')
+        const phoneId = $os.getenv('META_WA_PHONE_NUMBER_ID')
+        if (metaToken && phoneId && participantPhone) {
+          try {
+            let digits = String(participantPhone).replace(/\D/g, '')
+            if (digits.startsWith('0')) digits = digits.substring(1)
+            if (!digits.startsWith('55')) digits = '55' + digits
+
+            $http.send({
+              url: `https://graph.facebook.com/v19.0/${phoneId}/messages`,
+              method: 'POST',
+              headers: { Authorization: `Bearer ${metaToken}`, 'Content-Type': 'application/json' },
+              data: JSON.stringify({
+                messaging_product: 'whatsapp',
+                recipient_type: 'individual',
+                to: digits,
+                type: 'text',
+                text: {
+                  body: `Olá, ${participantName}! Sua chave PIX de recebimento no Godoy Prime Indica foi alterada para a chave terminada em ${maskedNew}. Se você não reconhece esta alteração, contate o suporte imediatamente.`,
+                },
+              }),
+              timeout: 10,
+            })
+          } catch (errWa) {
+            console.error('[update-profile] Erro ao enviar WhatsApp de aviso PIX:', errWa)
+          }
+        }
+
+        // 3. Gravar log em notification_logs para rastreabilidade
+        try {
+          const notifCol = $app.findCollectionByNameOrId('notification_logs')
+          const nlog = new Record(notifCol)
+          nlog.set('channel', participantEmail ? 'email' : 'whatsapp')
+          nlog.set('recipient', participantEmail || participantPhone || '')
+          nlog.set('status', 'sent')
+          nlog.set(
+            'metadata',
+            JSON.stringify({
+              event: 'pix_key_updated_alert',
+              participant_id: participant.id,
+              masked_new: maskedNew,
+            }),
+          )
+          $app.save(nlog)
+        } catch (_) {}
+      } catch (errNotify) {
+        console.error('[update-profile] Erro no fluxo de notificação PIX:', errNotify)
+      }
+    }
   }
 
   return e.json(200, {
@@ -224,23 +348,28 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
   // Find participant record for auth user if any
   let participantId = ''
   try {
-    const partRec = $app.findFirstRecordByFilter('participants', `user_id = '${authRecord.id}'`)
+    const partRec = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', {
+      uid: authRecord.id,
+    })
     if (partRec) participantId = partRec.id
   } catch (_) {}
 
-  let filter = `(current_owner_id = '${authRecord.id}' || original_owner_id = '${authRecord.id}'`
+  const filterParams = { uid: authRecord.id }
+  let filter = '(current_owner_id = {:uid} || original_owner_id = {:uid}'
   if (participantId) {
-    filter += ` || participant_id = '${participantId}'`
+    filterParams.pid = participantId
+    filter += ' || participant_id = {:pid}'
   }
   filter += ')'
 
   const reqInfo = e.requestInfo()
   const queryId = (reqInfo.query && reqInfo.query.id ? reqInfo.query.id : '').trim()
   if (queryId) {
-    filter += ` && id = '${queryId}'`
+    filterParams.qid = queryId
+    filter += ' && id = {:qid}'
   }
 
-  const records = $app.findRecordsByFilter('referrals', filter, '-created', 500, 0)
+  const records = $app.findRecordsByFilter('referrals', filter, '-created', 500, 0, filterParams)
 
   function mapPublicStage(status, refType) {
     if (refType === 'proprietario' || refType === 'imovel') {

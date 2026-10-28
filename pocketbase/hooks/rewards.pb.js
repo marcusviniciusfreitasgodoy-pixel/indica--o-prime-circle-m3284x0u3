@@ -118,7 +118,10 @@ onRecordAfterCreateSuccess((e) => {
         grant.set('referral_id', referral.id)
         grant.set('milestone', 'captada')
         grant.set('status', 'em_analise')
-        grant.set('custom_description', rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro')
+        grant.set(
+          'custom_description',
+          rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro',
+        )
         $app.save(grant)
 
         const auditCol = $app.findCollectionByNameOrId('audit_logs')
@@ -279,7 +282,10 @@ onRecordAfterUpdateSuccess((e) => {
         grant.set('referral_id', referral.id)
         grant.set('milestone', 'captada')
         grant.set('status', 'em_analise')
-        grant.set('custom_description', rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro')
+        grant.set(
+          'custom_description',
+          rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro',
+        )
         $app.save(grant)
 
         const auditCol = $app.findCollectionByNameOrId('audit_logs')
@@ -435,7 +441,10 @@ onRecordAfterUpdateSuccess((e) => {
         grant.set('referral_id', referral.id)
         grant.set('milestone', 'declinada_pela_godoy')
         grant.set('status', 'em_analise')
-        grant.set('custom_description', rule.getString('catalog_benefit_desc') || 'Gratificação de Reconhecimento pela Indicação')
+        grant.set(
+          'custom_description',
+          rule.getString('catalog_benefit_desc') || 'Gratificação de Reconhecimento pela Indicação',
+        )
         $app.save(grant)
 
         const auditCol = $app.findCollectionByNameOrId('audit_logs')
@@ -443,7 +452,10 @@ onRecordAfterUpdateSuccess((e) => {
         audit.set('action', 'benefit_grant_created_decline')
         audit.set('resource_type', 'benefit_grants')
         audit.set('resource_id', grant.id)
-        audit.set('details', JSON.stringify({ referral_id: referral.id, status: 'em_analise', via_decline: true }))
+        audit.set(
+          'details',
+          JSON.stringify({ referral_id: referral.id, status: 'em_analise', via_decline: true }),
+        )
         $app.save(audit)
       } catch (_) {}
       return

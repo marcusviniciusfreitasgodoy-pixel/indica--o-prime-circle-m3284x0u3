@@ -39,14 +39,22 @@ function evaluatePartnerLevel(appInstance, participantId, forceNotify) {
     `participant_id = '${participantId}' && created >= '${twelveMonthsAgo}'`,
     '-created',
     500,
-    0
+    0,
   )
 
   let qualCount = 0
   let dealsCount = 0
   let vgvTotal = 0
 
-  const qualifiedStatuses = ['captada', 'em_divulgacao', 'vendida', 'alugada', 'comprou', 'alugou', 'declinada_pela_godoy']
+  const qualifiedStatuses = [
+    'captada',
+    'em_divulgacao',
+    'vendida',
+    'alugada',
+    'comprou',
+    'alugou',
+    'declinada_pela_godoy',
+  ]
   const closedStatuses = ['vendida', 'alugada', 'comprou', 'alugou']
 
   for (let i = 0; i < refs.length; i++) {
@@ -129,7 +137,7 @@ function evaluatePartnerLevel(appInstance, participantId, forceNotify) {
           new_level_id: determinedLevel.id,
           new_level_name: determinedLevel.getString('name'),
           reason,
-        })
+        }),
       )
       appInstance.save(audit)
     } catch (_) {}
@@ -187,7 +195,8 @@ function evaluatePartnerLevel(appInstance, participantId, forceNotify) {
  */
 routerAdd('POST', '/backend/v1/partners/compute-participant-level', (e) => {
   const authRecord = e.auth
-  const reqSecret = e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
+  const reqSecret =
+    e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
   const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
   let isAuthorized = envSecret && reqSecret && reqSecret === envSecret
 
@@ -223,10 +232,22 @@ routerAdd('POST', '/backend/v1/partners/compute-participant-level', (e) => {
 
   // Se não informou participant_id, recalcula todos os parceiros ativos
   try {
-    const partnerCategories = $app.findRecordsByFilter('participant_categories', "front = 'parceiros'", '', 50, 0)
+    const partnerCategories = $app.findRecordsByFilter(
+      'participant_categories',
+      "front = 'parceiros'",
+      '',
+      50,
+      0,
+    )
     const catIds = partnerCategories.map((c) => c.id)
 
-    const participants = $app.findRecordsByFilter('participants', "status = 'ativo'", '-created', 500, 0)
+    const participants = $app.findRecordsByFilter(
+      'participants',
+      "status = 'ativo'",
+      '-created',
+      500,
+      0,
+    )
     const results = []
 
     for (let i = 0; i < participants.length; i++) {
@@ -253,11 +274,25 @@ routerAdd('POST', '/backend/v1/partners/compute-participant-level', (e) => {
  */
 cronAdd('recompute_levels', '0 9 * * *', () => {
   try {
-    console.log('[cron:recompute_levels] Iniciando recálculo diário de níveis dos parceiros (6h Brasília)...')
-    const partnerCategories = $app.findRecordsByFilter('participant_categories', "front = 'parceiros'", '', 50, 0)
+    console.log(
+      '[cron:recompute_levels] Iniciando recálculo diário de níveis dos parceiros (6h Brasília)...',
+    )
+    const partnerCategories = $app.findRecordsByFilter(
+      'participant_categories',
+      "front = 'parceiros'",
+      '',
+      50,
+      0,
+    )
     const catIds = partnerCategories.map((c) => c.id)
 
-    const participants = $app.findRecordsByFilter('participants', "status = 'ativo'", '-created', 500, 0)
+    const participants = $app.findRecordsByFilter(
+      'participants',
+      "status = 'ativo'",
+      '-created',
+      500,
+      0,
+    )
     let evaluated = 0
     let changed = 0
 
@@ -269,7 +304,9 @@ cronAdd('recompute_levels', '0 9 * * *', () => {
         if (res && res.changed) changed++
       }
     }
-    console.log(`[cron:recompute_levels] Concluído. Avaliados: ${evaluated}, Promovidos/Alterados: ${changed}`)
+    console.log(
+      `[cron:recompute_levels] Concluído. Avaliados: ${evaluated}, Promovidos/Alterados: ${changed}`,
+    )
   } catch (err) {
     console.error('[cron:recompute_levels] Falha no recálculo diário:', err)
   }
@@ -287,7 +324,9 @@ routerAdd('POST', '/backend/v1/benefits/grant-benefit', (e) => {
   const isFinanceiro = authRecord.getBool('is_financeiro')
 
   if (!isAdmin && !isFinanceiro) {
-    return e.json(403, { message: 'Apenas administradores e financeiro podem conceder benefícios.' })
+    return e.json(403, {
+      message: 'Apenas administradores e financeiro podem conceder benefícios.',
+    })
   }
 
   const reqInfo = e.requestInfo()
@@ -387,7 +426,7 @@ routerAdd('POST', '/backend/v1/benefits/grant-benefit', (e) => {
         benefit_id: benefitId || null,
         description: grantRec.getString('custom_description'),
         estimated_value: grantRec.getFloat('estimated_value_brl'),
-      })
+      }),
     )
     $app.save(audit)
   } catch (_) {}
@@ -411,7 +450,9 @@ routerAdd('POST', '/backend/v1/benefits/register-delivery', (e) => {
   const isFinanceiro = authRecord.getBool('is_financeiro')
 
   if (!isAdmin && !isFinanceiro) {
-    return e.json(403, { message: 'Apenas administradores e financeiro podem registrar entrega de benefícios.' })
+    return e.json(403, {
+      message: 'Apenas administradores e financeiro podem registrar entrega de benefícios.',
+    })
   }
 
   const reqInfo = e.requestInfo()
@@ -489,7 +530,7 @@ routerAdd('POST', '/backend/v1/benefits/register-delivery', (e) => {
         estimated_value_brl: grantRec.getFloat('estimated_value_brl'),
         delivered_at: deliveredAt,
         delivery_proof: deliveryProof,
-      })
+      }),
     )
     $app.save(audit)
   } catch (_) {}
@@ -594,7 +635,10 @@ routerAdd('POST', '/backend/v1/partners/register-reciprocal-referral', (e) => {
     audit.set('action', 'reciprocal_referral_registered')
     audit.set('resource_type', 'reciprocal_referrals')
     audit.set('resource_id', rec.id)
-    audit.set('details', JSON.stringify({ participant_id: part.id, opportunity_summary: opportunitySummary }))
+    audit.set(
+      'details',
+      JSON.stringify({ participant_id: part.id, opportunity_summary: opportunitySummary }),
+    )
     $app.save(audit)
   } catch (_) {}
 
@@ -629,9 +673,23 @@ routerAdd('GET', '/backend/v1/participant/partnership-summary', (e) => {
   let closedSentCount = 0
 
   try {
-    const myRefs = $app.findRecordsByFilter('referrals', `participant_id = '${part.id}'`, '-created', 500, 0)
+    const myRefs = $app.findRecordsByFilter(
+      'referrals',
+      `participant_id = '${part.id}'`,
+      '-created',
+      500,
+      0,
+    )
     sentCount = myRefs.length
-    const qualified = ['captada', 'em_divulgacao', 'vendida', 'alugada', 'comprou', 'alugou', 'declinada_pela_godoy']
+    const qualified = [
+      'captada',
+      'em_divulgacao',
+      'vendida',
+      'alugada',
+      'comprou',
+      'alugou',
+      'declinada_pela_godoy',
+    ]
     const closed = ['vendida', 'alugada', 'comprou', 'alugou']
     for (let i = 0; i < myRefs.length; i++) {
       const st = myRefs[i].getString('status')
@@ -646,7 +704,13 @@ routerAdd('GET', '/backend/v1/participant/partnership-summary', (e) => {
   const receivedDates = []
 
   try {
-    const recs = $app.findRecordsByFilter('reciprocal_referrals', `participant_id = '${part.id}'`, '-sent_date', 500, 0)
+    const recs = $app.findRecordsByFilter(
+      'reciprocal_referrals',
+      `participant_id = '${part.id}'`,
+      '-sent_date',
+      500,
+      0,
+    )
     receivedCount = recs.length
     for (let i = 0; i < recs.length; i++) {
       receivedDates.push({
@@ -665,7 +729,7 @@ routerAdd('GET', '/backend/v1/participant/partnership-summary', (e) => {
     const doc = $app.findFirstRecordByFilter(
       'documents',
       `participant_id = '${part.id}' && bucket_type = 'partner-contracts'`,
-      '-created'
+      '-created',
     )
     if (doc) {
       contractInfo = {
@@ -731,9 +795,17 @@ routerAdd('GET', '/backend/v1/participant/level-info', (e) => {
       `participant_id = '${part.id}' && created >= '${twelveMonthsAgo}'`,
       '-created',
       500,
-      0
+      0,
     )
-    const qualifiedStatuses = ['captada', 'em_divulgacao', 'vendida', 'alugada', 'comprou', 'alugou', 'declinada_pela_godoy']
+    const qualifiedStatuses = [
+      'captada',
+      'em_divulgacao',
+      'vendida',
+      'alugada',
+      'comprou',
+      'alugou',
+      'declinada_pela_godoy',
+    ]
     const closedStatuses = ['vendida', 'alugada', 'comprou', 'alugou']
     for (let i = 0; i < refs.length; i++) {
       const st = refs[i].getString('status')
@@ -746,7 +818,7 @@ routerAdd('GET', '/backend/v1/participant/level-info', (e) => {
   } catch (_) {}
 
   // Próximo nível
-  const currentOrder = currentLevel ? (currentLevel.getInt('order') || 1) : 1
+  const currentOrder = currentLevel ? currentLevel.getInt('order') || 1 : 1
   let nextLevel = null
   for (let i = 0; i < allLevels.length; i++) {
     if ((allLevels[i].getInt('order') || 1) === currentOrder + 1) {
@@ -763,7 +835,7 @@ routerAdd('GET', '/backend/v1/participant/level-info', (e) => {
       `participant_id = '${part.id}'`,
       '-changed_at',
       20,
-      0
+      0,
     )
     for (let i = 0; i < histRecords.length; i++) {
       const h = histRecords[i]
@@ -785,7 +857,7 @@ routerAdd('GET', '/backend/v1/participant/level-info', (e) => {
       `participant_id = '${part.id}'`,
       '-created',
       50,
-      0
+      0,
     )
     for (let i = 0; i < grantRecords.length; i++) {
       const g = grantRecords[i]
@@ -803,7 +875,13 @@ routerAdd('GET', '/backend/v1/participant/level-info', (e) => {
   // Catálogo de benefícios ativos
   const catalog = []
   try {
-    const benefits = $app.findRecordsByFilter('benefit_catalog', 'is_active = true', 'min_level_order', 50, 0)
+    const benefits = $app.findRecordsByFilter(
+      'benefit_catalog',
+      'is_active = true',
+      'min_level_order',
+      50,
+      0,
+    )
     for (let i = 0; i < benefits.length; i++) {
       const b = benefits[i]
       catalog.push({
@@ -870,9 +948,10 @@ routerAdd('GET', '/backend/v1/participant/entity-summary', (e) => {
     return e.json(403, { message: 'Acesso exclusivo para perfis de Entidade Condominial.' })
   }
 
-  const queryPartId = (e.request.url.query()['participant_id'] && isInternal)
-    ? e.request.url.query()['participant_id']
-    : part.id
+  const queryPartId =
+    e.request.url.query()['participant_id'] && isInternal
+      ? String(e.request.url.query()['participant_id']).trim()
+      : part.id
 
   const stageCounts = {
     total: 0,
@@ -889,7 +968,14 @@ routerAdd('GET', '/backend/v1/participant/entity-summary', (e) => {
   let totalDealsVgv = 0
 
   try {
-    const refs = $app.findRecordsByFilter('referrals', `participant_id = '${queryPartId}'`, '-created', 1000, 0)
+    const refs = $app.findRecordsByFilter(
+      'referrals',
+      'participant_id = {:pid}',
+      '-created',
+      1000,
+      0,
+      { pid: queryPartId },
+    )
     stageCounts.total = refs.length
 
     for (let i = 0; i < refs.length; i++) {
@@ -925,7 +1011,14 @@ routerAdd('GET', '/backend/v1/participant/entity-summary', (e) => {
   let totalBenefitsValueBrl = 0
   let benefitsDeliveredCount = 0
   try {
-    const grants = $app.findRecordsByFilter('benefit_grants', `participant_id = '${queryPartId}'`, '', 100, 0)
+    const grants = $app.findRecordsByFilter(
+      'benefit_grants',
+      'participant_id = {:pid}',
+      '',
+      100,
+      0,
+      { pid: queryPartId },
+    )
     for (let i = 0; i < grants.length; i++) {
       const val = grants[i].getFloat('estimated_value_brl') || 0
       totalBenefitsValueBrl += val
@@ -934,7 +1027,9 @@ routerAdd('GET', '/backend/v1/participant/entity-summary', (e) => {
   } catch (_) {}
 
   try {
-    const rewards = $app.findRecordsByFilter('rewards', `participant_id = '${queryPartId}'`, '', 100, 0)
+    const rewards = $app.findRecordsByFilter('rewards', 'participant_id = {:pid}', '', 100, 0, {
+      pid: queryPartId,
+    })
     for (let i = 0; i < rewards.length; i++) {
       const r = rewards[i]
       if (r.getString('status') === 'paga' || r.getString('status') === 'agendada') {
