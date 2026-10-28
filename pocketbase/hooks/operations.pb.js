@@ -143,10 +143,11 @@ onRecordCreate((e) => {
       if (normPhone) {
         const knownOwners = $app.findRecordsByFilter(
           'known_owner_base',
-          `normalized_phone = '${normPhone}' && (last_real_contact_at >= '${cutoffDate}' || created >= '${cutoffDate}')`,
+          `normalized_phone = {:phone} && (last_real_contact_at >= '${cutoffDate}' || created >= '${cutoffDate}')`,
           '-created',
           5,
           0,
+          { phone: normPhone },
         )
         if (knownOwners.length > 0) {
           flags.push({
@@ -206,12 +207,28 @@ onRecordCreate((e) => {
 
       if (normPhone || email) {
         let filter = ''
-        if (normPhone && email) filter = `(normalized_phone = '${normPhone}' || email = '${email}')`
-        else if (normPhone) filter = `normalized_phone = '${normPhone}'`
-        else filter = `email = '${email}'`
+        const filterParams = {}
+        if (normPhone && email) {
+          filter = '(normalized_phone = {:phone} || email = {:email})'
+          filterParams.phone = normPhone
+          filterParams.email = email
+        } else if (normPhone) {
+          filter = 'normalized_phone = {:phone}'
+          filterParams.phone = normPhone
+        } else {
+          filter = 'email = {:email}'
+          filterParams.email = email
+        }
 
         filter += ` && (last_real_contact_at >= '${cutoffDate}' || created >= '${cutoffDate}')`
-        const knownBuyers = $app.findRecordsByFilter('known_buyer_base', filter, '-created', 5, 0)
+        const knownBuyers = $app.findRecordsByFilter(
+          'known_buyer_base',
+          filter,
+          '-created',
+          5,
+          0,
+          filterParams,
+        )
         if (knownBuyers.length > 0) {
           flags.push({
             conflicting_referral_id: null,
