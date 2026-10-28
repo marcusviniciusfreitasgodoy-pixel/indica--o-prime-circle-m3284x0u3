@@ -1283,28 +1283,33 @@ routerAdd('POST', '/backend/v1/rewards/register-payment', (e) => {
  */
 routerAdd('POST', '/backend/v1/rewards/build-payment-batch', (e) => {
   const authRecord = e.auth
-  if (authRecord) {
-    let isAuthorized = false
-    try {
-      const rolesRecords = $app.findRecordsByFilter(
-        'user_roles',
-        `user_id = '${authRecord.id}'`,
-        'created',
-        10,
-        0,
-      )
-      const roleNames = rolesRecords.map((r) => r.getString('role'))
-      isAuthorized = roleNames.includes('admin') || roleNames.includes('financeiro')
-    } catch (_) {}
-    if (!isAuthorized) return e.json(403, { message: 'Não autorizado.' })
+  const isUserAuthorized =
+    authRecord && (authRecord.getBool('is_admin') || authRecord.getBool('is_financeiro'))
+
+  const reqSecret =
+    e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
+  const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
+  const isSecretMatch = envSecret && reqSecret && reqSecret === envSecret
+
+  if (!isUserAuthorized && !isSecretMatch) {
+    return e.json(401, {
+      message:
+        'Não autorizado. Usuário logado com perfil de administrador/financeiro ou cabeçalho interno X-Internal-Secret é obrigatório.',
+    })
   }
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
   const now = new Date()
+  const rawMonthRef = (body.month_ref || '').trim()
   const monthRef =
-    (body.month_ref || '').trim() ||
-    `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+    rawMonthRef || `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`
+
+  if (!/^\d{4}-\d{2}$/.test(monthRef)) {
+    return e.json(400, {
+      message: 'Formato inválido para month_ref. Esperado AAAA-MM (ex: 2025-03).',
+    })
+  }
 
   let reckoningDay = 10
   let dueDay = 25
@@ -1323,10 +1328,11 @@ routerAdd('POST', '/backend/v1/rewards/build-payment-batch', (e) => {
   let batch = null
   const existBatches = $app.findRecordsByFilter(
     'payment_batches',
-    `month_ref = '${monthRef}'`,
+    'month_ref = {:month}',
     '',
     1,
     0,
+    { month: monthRef },
   )
 
   const reckoningDate = `${monthRef}-${String(reckoningDay).padStart(2, '0')} 00:00:00.000Z`
