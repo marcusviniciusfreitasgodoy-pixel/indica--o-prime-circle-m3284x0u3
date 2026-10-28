@@ -835,7 +835,7 @@ routerAdd('GET', '/backend/v1/participant/partnership-summary', (e) => {
 
   let part = null
   try {
-    part = $app.findFirstRecordByFilter('participants', `user_id = '${authRecord.id}'`)
+    part = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', { uid: authRecord.id })
   } catch (_) {
     return e.json(404, { message: 'Perfil de participante não encontrado.' })
   }
@@ -938,7 +938,7 @@ routerAdd('GET', '/backend/v1/participant/level-info', (e) => {
 
   let part = null
   try {
-    part = $app.findFirstRecordByFilter('participants', `user_id = '${authRecord.id}'`)
+    part = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', { uid: authRecord.id })
   } catch (_) {
     return e.json(404, { message: 'Perfil de participante não encontrado.' })
   }
@@ -1102,7 +1102,7 @@ routerAdd('GET', '/backend/v1/participant/entity-summary', (e) => {
   let part = null
   let isEntity = false
   try {
-    part = $app.findFirstRecordByFilter('participants', `user_id = '${authRecord.id}'`)
+    part = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', { uid: authRecord.id })
     if (part) {
       const cat = $app.findRecordById('participant_categories', part.getString('category_id'))
       if (cat.getString('slug') === 'entidade_condominial') isEntity = true

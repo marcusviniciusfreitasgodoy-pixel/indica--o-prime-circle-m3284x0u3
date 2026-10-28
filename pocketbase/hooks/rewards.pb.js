@@ -1438,7 +1438,9 @@ routerAdd('POST', '/backend/v1/rewards/close-batch', (e) => {
     return e.json(404, { message: 'Lote não encontrado.' })
   }
 
-  const items = $app.findRecordsByFilter('rewards', `batch_id = '${batch.id}'`, '', 500, 0)
+  const items = $app.findRecordsByFilter('rewards', 'batch_id = {:bid}', '', 500, 0, {
+    bid: batch.id,
+  })
   if (items.length === 0) {
     return e.json(400, { message: 'O lote não possui itens para fechamento.' })
   }

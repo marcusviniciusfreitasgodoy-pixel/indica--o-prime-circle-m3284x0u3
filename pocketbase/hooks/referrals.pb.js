@@ -164,7 +164,9 @@ routerAdd('POST', '/backend/v1/participant/update-profile', (e) => {
 
   let participant = null
   try {
-    participant = $app.findFirstRecordByFilter('participants', `user_id = '${authRecord.id}'`)
+    participant = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', {
+      uid: authRecord.id,
+    })
   } catch (_) {}
 
   // Update user record (phone, name, agency, public_slug)

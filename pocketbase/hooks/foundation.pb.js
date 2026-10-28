@@ -242,10 +242,10 @@ routerAdd('POST', '/backend/v1/admin/team/assign-role', (e) => {
 
   let existing
   try {
-    existing = $app.findFirstRecordByFilter(
-      'user_roles',
-      `user_id = '${targetUserId}' && role = '${role}'`,
-    )
+    existing = $app.findFirstRecordByFilter('user_roles', 'user_id = {:uid} && role = {:role}', {
+      uid: targetUserId,
+      role: role,
+    })
   } catch (_) {}
 
   if (existing) {
@@ -329,10 +329,10 @@ routerAdd('POST', '/backend/v1/admin/team/remove-role', (e) => {
 
   let roleRec
   try {
-    roleRec = $app.findFirstRecordByFilter(
-      'user_roles',
-      `user_id = '${targetUserId}' && role = '${role}'`,
-    )
+    roleRec = $app.findFirstRecordByFilter('user_roles', 'user_id = {:uid} && role = {:role}', {
+      uid: targetUserId,
+      role: role,
+    })
   } catch (_) {
     return e.json(404, { message: 'Atribuição de papel não encontrada.' })
   }
