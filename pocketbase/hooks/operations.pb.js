@@ -143,11 +143,11 @@ onRecordCreate((e) => {
       if (normPhone) {
         const knownOwners = $app.findRecordsByFilter(
           'known_owner_base',
-          `normalized_phone = {:phone} && (last_real_contact_at >= '${cutoffDate}' || created >= '${cutoffDate}')`,
+          'normalized_phone = {:phone} && (last_real_contact_at >= {:cutoff} || created >= {:cutoff})',
           '-created',
           5,
           0,
-          { phone: normPhone },
+          { phone: normPhone, cutoff: cutoffDate },
         )
         if (knownOwners.length > 0) {
           flags.push({
@@ -207,7 +207,7 @@ onRecordCreate((e) => {
 
       if (normPhone || email) {
         let filter = ''
-        const filterParams = {}
+        const filterParams = { cutoff: cutoffDate }
         if (normPhone && email) {
           filter = '(normalized_phone = {:phone} || email = {:email})'
           filterParams.phone = normPhone
@@ -220,7 +220,7 @@ onRecordCreate((e) => {
           filterParams.email = email
         }
 
-        filter += ` && (last_real_contact_at >= '${cutoffDate}' || created >= '${cutoffDate}')`
+        filter += ' && (last_real_contact_at >= {:cutoff} || created >= {:cutoff})'
         const knownBuyers = $app.findRecordsByFilter(
           'known_buyer_base',
           filter,

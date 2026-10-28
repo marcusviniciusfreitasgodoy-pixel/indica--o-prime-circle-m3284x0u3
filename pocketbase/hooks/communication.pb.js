@@ -527,10 +527,11 @@ routerAdd('POST', '/backend/v1/communication/whatsapp-webhook', (e) => {
           try {
             const logs = $app.findRecordsByFilter(
               'notification_logs',
-              `provider_message_id = '${wamid}'`,
+              'provider_message_id = {:wamid}',
               '-created',
               1,
               0,
+              { wamid: wamid },
             )
             if (logs.length > 0) {
               const logRec = logs[0]
@@ -679,10 +680,11 @@ routerAdd('POST', '/backend/v1/communication/sync-whatsapp-templates', (e) => {
       try {
         const localTpls = $app.findRecordsByFilter(
           'message_templates',
-          `meta_template_name = '${name}' && channel = 'whatsapp'`,
+          "meta_template_name = {:name} && channel = 'whatsapp'",
           '-created',
           5,
           0,
+          { name: name },
         )
         for (let j = 0; j < localTpls.length; j++) {
           const local = localTpls[j]
@@ -873,10 +875,11 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
 
   const templates = $app.findRecordsByFilter(
     'message_templates',
-    `event_code = '${eventCode}' && active = true`,
+    'event_code = {:eventCode} && active = true',
     'channel',
     20,
     0,
+    { eventCode: eventCode },
   )
   const results = []
 
@@ -937,7 +940,8 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
       try {
         const opt = $app.findFirstRecordByFilter(
           'whatsapp_optins',
-          `phone = '${formattedTo}' && opted_out_at = ''`,
+          "phone = {:formattedTo} && opted_out_at = ''",
+          { formattedTo: formattedTo },
         )
         if (opt) hasOptin = true
       } catch (_) {}
