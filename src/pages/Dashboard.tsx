@@ -4,14 +4,7 @@ import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { MemberNavbar } from '@/components/MemberNavbar'
 import { StatusBadge, TypeBadge } from '@/components/ReferralBadges'
-import { TransferModal } from '@/components/TransferModal'
-import {
-  getMemberReferrals,
-  getNetworkMembers,
-  transferReferral,
-  updateReferralStatus,
-  triggerAutoTransfersCheck,
-} from '@/services/referrals'
+import { getMemberReferrals, getNetworkMembers, updateReferralStatus } from '@/services/referrals'
 import { Referral, Member, ReferralStatus } from '@/types/referral'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -60,13 +53,7 @@ export default function DashboardPage() {
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState('')
-  const [statusFilter, setStatusFilter] = useState<
-    'all' | ReferralStatus | 'received_transfer' | 'original'
-  >('all')
-
-  // Transfer modal
-  const [selectedForTransfer, setSelectedForTransfer] = useState<Referral | null>(null)
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
+  const [statusFilter, setStatusFilter] = useState<'all' | ReferralStatus>('all')
 
   const publicLink = user?.public_slug
     ? `${window.location.origin}/indicacao/${user.public_slug}`
@@ -78,9 +65,6 @@ export default function DashboardPage() {
       else setIsRefreshing(true)
 
       try {
-        // Trigger background auto-transfers check on 3-day inactivity
-        await triggerAutoTransfersCheck()
-
         const [refs, members] = await Promise.all([getMemberReferrals(), getNetworkMembers()])
         setReferrals(refs)
         setNetworkMembers(members)
@@ -166,18 +150,6 @@ export default function DashboardPage() {
     }
   }
 
-  // Handle confirm transfer
-  const handleConfirmTransfer = async (targetMemberId: string, reason: string) => {
-    if (!selectedForTransfer) return
-    const res = await transferReferral(selectedForTransfer.id, targetMemberId, reason)
-    toast({
-      title: 'Repasse concluído',
-      description: res.message,
-    })
-    // Reload data to reflect new status and assignments
-    await loadData(true)
-  }
-
   // Format dates
   const formatDate = (dateStr?: string) => {
     if (!dateStr) return '-'
@@ -207,34 +179,19 @@ export default function DashboardPage() {
 
       // Tab / Status filter
       if (statusFilter === 'all') return true
-      if (statusFilter === 'received_transfer') {
-        // Current owner is user, but original owner is someone else
-        return r.current_owner_id === user?.id && r.original_owner_id !== user?.id
-      }
-      if (statusFilter === 'original') {
-        // User was original owner
-        return r.original_owner_id === user?.id
-      }
       return r.status === statusFilter
     })
-  }, [referrals, searchQuery, statusFilter, user?.id])
+  }, [referrals, searchQuery, statusFilter])
 
   // Metrics
   const stats = useMemo(() => {
     const total = referrals.length
-    const novas = referrals.filter(
-      (r) => r.status === 'nova' && r.current_owner_id === user?.id,
-    ).length
-    const emAtendimento = referrals.filter(
-      (r) => r.status === 'em_atendimento' && r.current_owner_id === user?.id,
-    ).length
-    const repassesRecebidos = referrals.filter(
-      (r) => r.current_owner_id === user?.id && r.original_owner_id !== user?.id,
-    ).length
+    const novas = referrals.filter((r) => r.status === 'nova').length
+    const emAtendimento = referrals.filter((r) => r.status === 'em_atendimento').length
     const concluidas = referrals.filter((r) => r.status === 'concluida').length
 
-    return { total, novas, emAtendimento, repassesRecebidos, concluidas }
-  }, [referrals, user?.id])
+    return { total, novas, emAtendimento, concluidas }
+  }, [referrals])
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 pb-16">
@@ -431,12 +388,6 @@ export default function DashboardPage() {
                 Em Atendimento ({referrals.filter((r) => r.status === 'em_atendimento').length})
               </TabsTrigger>
               <TabsTrigger
-                value="received_transfer"
-                className="text-xs data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-medium"
-              >
-                Repasses Recebidos ({stats.repassesRecebidos})
-              </TabsTrigger>
-              <TabsTrigger
                 value="atendida"
                 className="text-xs data-[state=active]:bg-amber-500 data-[state=active]:text-slate-950 font-medium"
               >
@@ -495,10 +446,6 @@ export default function DashboardPage() {
             /* Cards List */
             <div className="grid grid-cols-1 gap-3 sm:gap-4">
               {filteredReferrals.map((referral) => {
-                const isCurrentOwner = referral.current_owner_id === user?.id
-                const isOriginalOwner = referral.original_owner_id === user?.id
-                const isTransferredToMe = isCurrentOwner && !isOriginalOwner
-
                 return (
                   <Card
                     key={referral.id}
@@ -511,17 +458,6 @@ export default function DashboardPage() {
                         <div className="flex flex-wrap items-center gap-2">
                           <StatusBadge status={referral.status} />
                           <TypeBadge type={referral.type} />
-                          {isTransferredToMe && (
-                            <span className="text-[11px] font-semibold text-orange-400 bg-orange-500/15 border border-orange-500/30 px-2 py-0.5 rounded-full flex items-center gap-1">
-                              <ArrowRightLeft className="h-3 w-3" />
-                              Repasse Recebido
-                            </span>
-                          )}
-                          {!isCurrentOwner && (
-                            <span className="text-[11px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded-full">
-                              Repassada por você
-                            </span>
-                          )}
                           <span className="text-xs text-slate-500 flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
                             {formatDate(referral.created)}
@@ -552,12 +488,6 @@ export default function DashboardPage() {
                           <span className="text-slate-500">
                             Canal: {referral.channel === 'link_publico' ? 'Link Público' : 'Manual'}
                           </span>
-                          {referral.expand?.original_owner_id && !isOriginalOwner && (
-                            <span className="text-slate-400 flex items-center gap-1">
-                              <Building2 className="h-3 w-3 text-slate-500" />
-                              Origem: {referral.expand.original_owner_id.name}
-                            </span>
-                          )}
                         </div>
                       </div>
 
@@ -575,95 +505,77 @@ export default function DashboardPage() {
                           </Link>
                         </Button>
 
-                        {isCurrentOwner && (
-                          <>
-                            {/* Quick status actions */}
-                            {referral.status === 'nova' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleQuickStatusChange(referral, 'em_atendimento')}
-                                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs"
-                              >
-                                Atender
-                              </Button>
-                            )}
-
-                            {referral.status === 'em_atendimento' && (
-                              <Button
-                                size="sm"
-                                onClick={() => handleQuickStatusChange(referral, 'atendida')}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs"
-                              >
-                                Concluir Atendimento
-                              </Button>
-                            )}
-
-                            {/* Dropdown for Repasse / More */}
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
-                                >
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent
-                                className="bg-slate-900 border-slate-800 text-slate-200"
-                                align="end"
-                              >
-                                <DropdownMenuLabel className="text-xs text-slate-400">
-                                  Ações da Indicação
-                                </DropdownMenuLabel>
-                                <DropdownMenuSeparator className="bg-slate-800" />
-
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedForTransfer(referral)
-                                    setIsTransferModalOpen(true)
-                                  }}
-                                  className="text-amber-400 focus:bg-slate-800 focus:text-amber-300 cursor-pointer"
-                                >
-                                  <ArrowRightLeft className="h-4 w-4 mr-2" />
-                                  <span>Repassar para a Rede</span>
-                                </DropdownMenuItem>
-
-                                {referral.status !== 'em_atendimento' && (
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleQuickStatusChange(referral, 'em_atendimento')
-                                    }
-                                    className="focus:bg-slate-800 focus:text-white cursor-pointer"
-                                  >
-                                    <Clock className="h-4 w-4 mr-2 text-amber-500" />
-                                    <span>Marcar Em Atendimento</span>
-                                  </DropdownMenuItem>
-                                )}
-
-                                {referral.status !== 'atendida' && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleQuickStatusChange(referral, 'atendida')}
-                                    className="focus:bg-slate-800 focus:text-white cursor-pointer"
-                                  >
-                                    <UserCheck className="h-4 w-4 mr-2 text-emerald-400" />
-                                    <span>Marcar Atendida</span>
-                                  </DropdownMenuItem>
-                                )}
-
-                                {referral.status !== 'concluida' && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleQuickStatusChange(referral, 'concluida')}
-                                    className="focus:bg-slate-800 focus:text-white cursor-pointer"
-                                  >
-                                    <CheckCircle2 className="h-4 w-4 mr-2 text-purple-400" />
-                                    <span>Marcar Concluída</span>
-                                  </DropdownMenuItem>
-                                )}
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </>
+                        {/* Quick status actions */}
+                        {referral.status === 'nova' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleQuickStatusChange(referral, 'em_atendimento')}
+                            className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs"
+                          >
+                            Atender
+                          </Button>
                         )}
+
+                        {referral.status === 'em_atendimento' && (
+                          <Button
+                            size="sm"
+                            onClick={() => handleQuickStatusChange(referral, 'atendida')}
+                            className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs"
+                          >
+                            Concluir Atendimento
+                          </Button>
+                        )}
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 text-slate-400 hover:text-white hover:bg-slate-800"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent
+                            className="bg-slate-900 border-slate-800 text-slate-200"
+                            align="end"
+                          >
+                            <DropdownMenuLabel className="text-xs text-slate-400">
+                              Ações da Indicação
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-slate-800" />
+
+                            {referral.status !== 'em_atendimento' && (
+                              <DropdownMenuItem
+                                onClick={() => handleQuickStatusChange(referral, 'em_atendimento')}
+                                className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                              >
+                                <Clock className="h-4 w-4 mr-2 text-amber-500" />
+                                <span>Marcar Em Atendimento</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {referral.status !== 'atendida' && (
+                              <DropdownMenuItem
+                                onClick={() => handleQuickStatusChange(referral, 'atendida')}
+                                className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                              >
+                                <UserCheck className="h-4 w-4 mr-2 text-emerald-400" />
+                                <span>Marcar Atendida</span>
+                              </DropdownMenuItem>
+                            )}
+
+                            {referral.status !== 'concluida' && (
+                              <DropdownMenuItem
+                                onClick={() => handleQuickStatusChange(referral, 'concluida')}
+                                className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                              >
+                                <CheckCircle2 className="h-4 w-4 mr-2 text-purple-400" />
+                                <span>Marcar Concluída</span>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
                   </Card>
@@ -673,19 +585,6 @@ export default function DashboardPage() {
           )}
         </div>
       </main>
-
-      {/* Transfer modal */}
-      <TransferModal
-        referral={selectedForTransfer}
-        networkMembers={networkMembers}
-        currentUserId={user?.id || ''}
-        isOpen={isTransferModalOpen}
-        onClose={() => {
-          setIsTransferModalOpen(false)
-          setSelectedForTransfer(null)
-        }}
-        onConfirmTransfer={handleConfirmTransfer}
-      />
     </div>
   )
 }

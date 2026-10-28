@@ -152,51 +152,7 @@ export async function updateReferralStatus(
 }
 
 /**
- * Transfer referral to another network member via custom backend endpoint
- */
-export async function transferReferral(
-  referralId: string,
-  targetMemberId: string,
-  reason?: string,
-): Promise<{ success: boolean; message: string; newOwnerId?: string; newOwnerName?: string }> {
-  const res = await pb.send<{
-    success: boolean
-    message: string
-    newOwnerId: string
-    newOwnerName: string
-  }>(`/backend/v1/referrals/${referralId}/transfer`, {
-    method: 'POST',
-    body: {
-      target_member_id: targetMemberId,
-      reason: reason || '',
-    },
-  })
-  return res
-}
-
-/**
- * Check and execute auto-transfers for unattended referrals older than 3 days
- */
-export async function triggerAutoTransfersCheck(): Promise<{
-  success: boolean
-  transferredCount: number
-}> {
-  try {
-    const res = await pb.send<{ success: boolean; transferredCount: number }>(
-      '/backend/v1/referrals/check-auto-transfers',
-      {
-        method: 'POST',
-      },
-    )
-    return res
-  } catch (err) {
-    console.warn('Auto-transfers check failed or endpoint not reached:', err)
-    return { success: false, transferredCount: 0 }
-  }
-}
-
-/**
- * Get all members in the network (for the transfer dropdown and member directory)
+ * Get all members in the network (for member directory)
  */
 export async function getNetworkMembers(): Promise<Member[]> {
   const members = await pb.collection('users').getFullList<Member>({

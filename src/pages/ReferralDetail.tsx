@@ -3,11 +3,9 @@ import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '@/contexts/AuthContext'
 import { MemberNavbar } from '@/components/MemberNavbar'
 import { StatusBadge, TypeBadge } from '@/components/ReferralBadges'
-import { TransferModal } from '@/components/TransferModal'
 import {
   getReferralById,
   updateReferralStatus,
-  transferReferral,
   getNetworkMembers,
   parseReferralHistory,
 } from '@/services/referrals'
@@ -45,9 +43,6 @@ export default function ReferralDetailPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false)
   const [statusNotes, setStatusNotes] = useState('')
-
-  // Transfer modal
-  const [isTransferModalOpen, setIsTransferModalOpen] = useState(false)
 
   const loadData = useCallback(async () => {
     if (!id) return
@@ -101,16 +96,6 @@ export default function ReferralDetailPage() {
     } finally {
       setIsUpdatingStatus(false)
     }
-  }
-
-  const handleConfirmTransfer = async (targetMemberId: string, reason: string) => {
-    if (!referral) return
-    const res = await transferReferral(referral.id, targetMemberId, reason)
-    toast({
-      title: 'Repasse concluído',
-      description: res.message,
-    })
-    await loadData()
   }
 
   const formatDate = (dateStr?: string) => {
@@ -173,39 +158,7 @@ export default function ReferralDetailPage() {
               </strong>
             </p>
           </div>
-
-          {/* Transfer button for current owner */}
-          {isCurrentOwner && (
-            <Button
-              onClick={() => setIsTransferModalOpen(true)}
-              className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs shadow-md"
-            >
-              <ArrowRightLeft className="h-4 w-4 mr-1.5" />
-              Repassar para Outro Membro
-            </Button>
-          )}
         </div>
-
-        {/* Repasse Notice banner if applicable */}
-        {!isCurrentOwner && (
-          <Alert className="bg-orange-950/40 border-orange-800 text-orange-200">
-            <ShieldAlert className="h-4 w-4 text-orange-400" />
-            <AlertDescription className="text-xs">
-              Você é o autor original desta indicação, mas a responsabilidade de atendimento atual
-              foi repassada para outro membro da rede.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {referral.current_owner_id === user?.id && !isOriginalOwner && (
-          <Alert className="bg-amber-950/40 border-amber-800 text-amber-200">
-            <ArrowRightLeft className="h-4 w-4 text-amber-400" />
-            <AlertDescription className="text-xs">
-              Você recebeu esta indicação repassada em parceria por outro membro da rede Prime
-              Circle.
-            </AlertDescription>
-          </Alert>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Main content - 2 cols */}
@@ -452,30 +405,11 @@ export default function ReferralDetailPage() {
                     )}
                   </div>
                 </div>
-
-                {/* Policy alert about 3-day auto transfer */}
-                <div className="pt-2 border-t border-slate-800 text-[11px] text-slate-400 leading-relaxed">
-                  <strong className="text-slate-300 block mb-1">
-                    Regra de Parceria Prime Circle:
-                  </strong>
-                  Indicações com status "Nova" que ficarem sem atendimento por 3 dias são repassadas
-                  automaticamente para outro membro disponível na rede.
-                </div>
               </CardContent>
             </Card>
           </div>
         </div>
       </main>
-
-      {/* Transfer modal */}
-      <TransferModal
-        referral={referral}
-        networkMembers={networkMembers}
-        currentUserId={user?.id || ''}
-        isOpen={isTransferModalOpen}
-        onClose={() => setIsTransferModalOpen(false)}
-        onConfirmTransfer={handleConfirmTransfer}
-      />
     </div>
   )
 }
