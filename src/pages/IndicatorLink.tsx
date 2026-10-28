@@ -40,33 +40,23 @@ import {
   ArrowRight,
   UserCheck,
 } from 'lucide-react'
-import pb from '@/lib/pocketbase/client'
 import {
-  getParticipantByReferralCode,
+  getPublicIndicator,
+  getPublicFormData,
   submitOwnerLead,
   submitBuyerLead,
+  PublicIndicatorInfo,
 } from '@/services/operations'
 
 type ActionOptionKey = 'quanto_vale' | 'vender' | 'colocar_alugar' | 'comprar' | 'alugar_morar'
 
-interface IndicatorInfo {
-  participant_id: string
-  referral_code: string
-  display_name: string
-  first_name: string
-  category_slug: string
-  category_name: string
-  status: string
-}
-
 interface Condominium {
   id: string
   name: string
-  neighborhood: string
+  neighborhood?: string
 }
 
 interface LegalDoc {
-  slug: string
   title: string
   version: number
   content: string
@@ -78,7 +68,7 @@ export default function IndicatorLinkPage() {
   const campaignCode = searchParams.get('c') || ''
   const navigate = useNavigate()
 
-  const [indicator, setIndicator] = useState<IndicatorInfo | null>(null)
+  const [indicator, setIndicator] = useState<PublicIndicatorInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
@@ -124,22 +114,15 @@ export default function IndicatorLinkPage() {
       }
 
       try {
-        const info = await getParticipantByReferralCode(codigo)
-        setIndicator(info)
-
-        // Carregar condomínios de referência e termo de consentimento
-        const [condoList, docs] = await Promise.all([
-          pb.collection('condominiums').getFullList<Condominium>({
-            filter: 'active = true',
-            sort: 'name',
-          }),
-          pb.collection('legal_documents').getFullList<LegalDoc>({
-            filter: "slug = 'consentimento_proprietario' && is_active = true",
-            sort: '-version',
-          }),
+        const [info, formData] = await Promise.all([
+          getPublicIndicator(codigo),
+          getPublicFormData(),
         ])
-        setCondos(condoList)
-        if (docs.length > 0) setLegalDoc(docs[0])
+        setIndicator(info)
+        setCondos(formData.condominiums || [])
+        if (formData.consent) {
+          setLegalDoc(formData.consent)
+        }
       } catch (err: any) {
         console.error('Erro ao resolver indicador:', err)
         setError(err.message || 'Código de indicador inválido ou não encontrado.')
@@ -244,6 +227,7 @@ export default function IndicatorLinkPage() {
           campaign_code: campaignCode,
           source_origin: 'link',
           whatsapp_optin: whatsappOptin,
+          consent: consentDeclared,
           consent_declared: consentDeclared,
           website: honeypot,
         })
@@ -265,6 +249,7 @@ export default function IndicatorLinkPage() {
           campaign_code: campaignCode,
           source_origin: 'link',
           whatsapp_optin: whatsappOptin,
+          consent: consentDeclared,
           consent_declared: consentDeclared,
           website: honeypot,
         })

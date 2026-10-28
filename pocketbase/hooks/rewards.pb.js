@@ -637,7 +637,25 @@ onRecordAfterCreateSuccess((e) => {
 
     const ownerType = dealType === 'locacao' ? 'proprietario_locacao' : 'proprietario_venda'
     processDealSide(ownerRefId, ownerType)
-    processDealSide(buyerRefId, 'comprador')
+
+    // Usa o referral_type da indicação do lado cliente (inquilino ou comprador)
+    let buyerSideType = 'comprador'
+    if (buyerRefId) {
+      try {
+        const bRef = $app.findRecordById('referrals', buyerRefId)
+        const bType = bRef.getString('referral_type')
+        if (bType === 'inquilino' || bType === 'comprador') {
+          buyerSideType = bType
+        } else if (dealType === 'locacao') {
+          buyerSideType = 'inquilino'
+        }
+      } catch (_) {
+        if (dealType === 'locacao') buyerSideType = 'inquilino'
+      }
+    } else if (dealType === 'locacao') {
+      buyerSideType = 'inquilino'
+    }
+    processDealSide(buyerRefId, buyerSideType)
   } catch (_) {
   } finally {
     e.next()

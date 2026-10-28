@@ -270,57 +270,52 @@ export async function getDocumentDownloadUrl(documentId: string) {
   return `${BACKEND_URL}${data.url}`
 }
 
+export interface PublicIndicatorInfo {
+  ativo: boolean
+  display_name: string
+  first_name: string
+  category_slug?: string
+  category_name?: string
+  front?: string
+}
+
+export interface PublicFormData {
+  condominiums: Array<{
+    id: string
+    name: string
+    neighborhood?: string
+  }>
+  consent: {
+    id: string
+    title: string
+    content: string
+    version: number
+  } | null
+}
+
 /**
- * Get public participant info by referral code for indicator link page
+ * Rota pública para buscar indicador sem expor PII e funcionando para visitantes não autenticados
  */
-export async function getParticipantByReferralCode(code: string) {
-  const cleanCode = (code || '').trim().toUpperCase()
-  // Busca na coleção participants expandindo user_id e category_id
-  let participant: any = null
-  try {
-    participant = await pb
-      .collection('participants')
-      .getFirstListItem(`referral_code = "${cleanCode}" && status = "ativo"`, {
-        expand: 'user_id,category_id',
-      })
-  } catch (_) {
-    // fallback para case insensitive / exact match
+export async function getPublicIndicator(code: string): Promise<PublicIndicatorInfo> {
+  const cleanCode = encodeURIComponent((code || '').trim())
+  const res = await fetch(`${BACKEND_URL}/backend/v1/public/indicator/${cleanCode}`)
+  const data = await res.json()
+  if (!res.ok || !data.ativo) {
+    throw new Error(data.message || 'Código de indicador não encontrado ou inativo.')
   }
+  return data as PublicIndicatorInfo
+}
 
-  // Fallback: se não achou por referral_code, tenta buscar por public_slug na coleção users
-  if (!participant) {
-    try {
-      const user = await pb.collection('users').getFirstListItem(`public_slug = "${code.trim()}"`)
-      if (user) {
-        participant = await pb
-          .collection('participants')
-          .getFirstListItem(`user_id = "${user.id}" && status = "ativo"`, {
-            expand: 'user_id,category_id',
-          })
-      }
-    } catch {
-      /* intentionally ignored */
-    }
+/**
+ * Rota pública para obter lista de condomínios ativos e termo vigente de consentimento
+ */
+export async function getPublicFormData(): Promise<PublicFormData> {
+  const res = await fetch(`${BACKEND_URL}/backend/v1/public/form-data`)
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || 'Erro ao carregar dados do formulário.')
   }
-
-  if (!participant) {
-    throw new Error('Código de indicação não encontrado ou inativo.')
-  }
-
-  const u = participant.expand?.user_id as any
-  const cat = participant.expand?.category_id as any
-  const fullName = u?.name || 'Parceiro Prime Circle'
-  const firstName = fullName.split(' ')[0]
-
-  return {
-    participant_id: participant.id,
-    referral_code: participant.referral_code || cleanCode,
-    display_name: fullName,
-    first_name: firstName,
-    category_slug: cat?.slug || '',
-    category_name: cat?.name || 'Parceiro',
-    status: participant.status,
-  }
+  return data as PublicFormData
 }
 
 /**

@@ -458,6 +458,21 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
 
     const publicStage = mapPublicStage(status, refType)
 
+    // Monta public_summary seguro (tipo, bairro, contexto geral — sem endereço, unidade, telefone, email, CPF ou notas internas)
+    let summary = (r.getString('public_summary') || '').trim()
+    if (!summary) {
+      const typeLabel =
+        refType === 'proprietario'
+          ? type === 'proprietario_locacao'
+            ? 'Imóvel para Locação'
+            : 'Imóvel para Venda'
+          : refType === 'inquilino'
+            ? 'Interesse em Locação'
+            : 'Interesse em Compra'
+      const targetPlace = neighborhood || 'Rio de Janeiro'
+      summary = `${typeLabel} em ${targetPlace}`
+    }
+
     // Fetch visible events for this referral
     let events = []
     try {
@@ -492,7 +507,7 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
       public_reason_code: r.getString('public_reason_code') || '',
       status_reason: r.getString('public_reason_code') ? r.getString('status_reason') : '',
       channel: r.getString('channel') || 'manual',
-      description: r.getString('description') || '',
+      public_summary: summary,
       events: events,
     })
   }

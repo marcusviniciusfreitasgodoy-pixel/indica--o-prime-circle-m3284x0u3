@@ -1184,6 +1184,135 @@ routerAdd('GET', '/backend/v1/public/vitrine/{imovelId}', (e) => {
 })
 
 /**
+ * GET /backend/v1/public/indicator/{codigo}
+ * Rota pública para resolver dados do indicador para visitantes não logados.
+ * Devolve SOMENTE nome de exibição, frente/categoria e indicador de ativo.
+ * NUNCA devolve CPF, chave Pix, telefone ou e-mail.
+ */
+routerAdd('GET', '/backend/v1/public/indicator/{codigo}', (e) => {
+  const code = (e.request.pathValue('codigo') || '').trim()
+  if (!code) {
+    return e.json(400, { ativo: false, message: 'Código de indicação não fornecido.' })
+  }
+
+  let part = null
+  try {
+    part = $app.findFirstRecordByFilter('participants', 'referral_code = {:c} && status = {:st}', {
+      c: code.toUpperCase(),
+      st: 'ativo',
+    })
+  } catch (_) {}
+
+  if (!part) {
+    try {
+      part = $app.findFirstRecordByFilter(
+        'participants',
+        'referral_code = {:c} && status = {:st}',
+        { c: code, st: 'ativo' },
+      )
+    } catch (_) {}
+  }
+
+  // Fallback seguro: busca por public_slug na coleção users
+  if (!part) {
+    try {
+      const u = $app.findFirstRecordByFilter('users', 'public_slug = {:s}', { s: code })
+      if (u) {
+        part = $app.findFirstRecordByFilter('participants', 'user_id = {:uid} && status = {:st}', {
+          uid: u.id,
+          st: 'ativo',
+        })
+      }
+    } catch (_) {}
+  }
+
+  if (!part) {
+    return e.json(404, { ativo: false, message: 'Código de indicador não encontrado ou inativo.' })
+  }
+
+  let user = null
+  try {
+    user = $app.findRecordById('users', part.getString('user_id'))
+  } catch (_) {}
+
+  let category = null
+  try {
+    category = $app.findRecordById('participant_categories', part.getString('category_id'))
+  } catch (_) {}
+
+  const catSlug = category ? category.getString('slug') : ''
+  const catName = category ? category.getString('name') : 'Parceiro'
+  const front = category ? category.getString('front') : 'comunidade'
+
+  const rawName = user ? (user.getString('name') || '').trim() : ''
+  let displayName = ''
+  if (catSlug === 'entidade_condominial') {
+    const condoName = (part.getString('condominium_name') || '').trim()
+    displayName = condoName || rawName || 'Entidade Condominial'
+  } else {
+    displayName = rawName ? rawName.split(/\s+/)[0] : 'Indicador'
+  }
+
+  return e.json(200, {
+    ativo: true,
+    display_name: displayName,
+    first_name: rawName ? rawName.split(/\s+/)[0] : displayName,
+    category_slug: catSlug,
+    category_name: catName,
+    front: front,
+  })
+})
+
+/**
+ * GET /backend/v1/public/form-data
+ * Rota pública para obter lista de condomínios ativos (apenas id, nome, bairro)
+ * e o texto do termo vigente de consentimento.
+ */
+routerAdd('GET', '/backend/v1/public/form-data', (e) => {
+  let condos = []
+  try {
+    const condoRecords = $app.findRecordsByFilter(
+      'condominiums',
+      'active = {:act}',
+      'name',
+      500,
+      0,
+      { act: true },
+    )
+    condos = condoRecords.map((c) => ({
+      id: c.id,
+      name: c.getString('name'),
+      neighborhood: c.getString('neighborhood'),
+    }))
+  } catch (_) {}
+
+  let consentDoc = null
+  try {
+    const docs = $app.findRecordsByFilter(
+      'legal_documents',
+      'slug = {:s} && is_active = {:act}',
+      '-version',
+      1,
+      0,
+      { s: 'consentimento_proprietario', act: true },
+    )
+    if (docs && docs.length > 0) {
+      consentDoc = {
+        id: docs[0].id,
+        title: docs[0].getString('title'),
+        content: docs[0].getString('content'),
+        version: docs[0].getInt('version') || 1,
+      }
+    }
+  } catch (_) {}
+
+  return e.json(200, {
+    condominiums: condos,
+    consent: consentDoc,
+  })
+})
+
+/**
  * POST /backend/v1/public/submit-buyer-lead
  */
 routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
@@ -1237,6 +1366,11 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
     return e.json(400, { message: 'Nome e telefone para contato são obrigatórios.' })
   }
 
+  // Consentimento explícito obrigatório (booleano true)
+  if (body.consent !== true && body.consent_declared !== true) {
+    return e.json(400, { message: 'consentimento obrigatório' })
+  }
+
   const intent = (body.intent || 'comprar').toLowerCase().trim() // 'comprar' ou 'alugar'
   const campaignCode = (body.campaign_code || body.c || '').trim()
   const referrerFreeText = (body.referrer_free_text || '').trim()
@@ -1245,20 +1379,23 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
   const propertyType = (body.property_type || '').trim()
   const budget = (body.budget || '').trim()
   const whatsappOptin = !!body.whatsapp_optin
-  const consentAccepted = body.consent !== false && body.consent_declared !== false
+  const consentAccepted = true
 
   let memberUser = null
   let participantRec = null
-  let attributionStatus = 'pendente'
 
   if (code) {
     try {
       participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
         c: code,
       })
+      if (!participantRec) {
+        participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
+          c: code.toUpperCase(),
+        })
+      }
       if (participantRec) {
         memberUser = $app.findRecordById('users', participantRec.getString('user_id'))
-        attributionStatus = 'atribuida'
       }
     } catch (_) {}
 
@@ -1272,21 +1409,24 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
               uid: memberUser.id,
             })
           } catch (_) {}
-          attributionStatus = 'atribuida'
         }
       } catch (_) {}
     }
   }
 
-  // Se não tem código ou o código não foi encontrado, mas veio da vitrine/link com code obrigatório
+  // Se veio da vitrine com código inválido
   if (!memberUser && code && sourceOrigin === 'vitrine') {
     return e.json(404, { message: 'Código de indicação de parceiro não localizado.' })
   }
 
-  // Se não achou indicador ou veio sem código (página direta /quero-comprar)
-  if (!memberUser) {
+  // Verifica se o participante vinculado tem status ativo
+  const isPartActive = participantRec && participantRec.getString('status') === 'ativo'
+
+  // Se o participante não for ativo, NÃO atribuir o lead a ele (participant_id vazio)
+  // e direciona o lead para a equipe admin
+  if (!isPartActive) {
+    memberUser = null
     try {
-      // Atribui ao admin responsável ou primeiro admin
       const adminRole = $app.findFirstRecordByFilter('user_roles', "role = 'admin'", 'created')
       if (adminRole) {
         memberUser = $app.findRecordById('users', adminRole.getString('user_id'))
@@ -1313,13 +1453,15 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
   const referralsCol = $app.findCollectionByNameOrId('referrals')
   const newRef = new Record(referralsCol)
 
+  // 4.a: Gravar 'inquilino' quando intent = 'alugar', 'comprador' quando intent = 'comprar'
+  const leadReferralType = intent === 'alugar' ? 'inquilino' : 'comprador'
   newRef.set('type', 'cliente')
-  newRef.set('referral_type', 'comprador')
+  newRef.set('referral_type', leadReferralType)
   newRef.set(
     'referrer_name',
-    participantRec ? memberUser.getString('name') || 'Indicador' : referrerFreeText || 'Direto',
+    isPartActive ? memberUser.getString('name') || 'Indicador' : referrerFreeText || 'Direto',
   )
-  newRef.set('referrer_phone', participantRec ? memberUser.getString('phone') || '' : '')
+  newRef.set('referrer_phone', isPartActive ? memberUser.getString('phone') || '' : '')
 
   const intentLabel =
     intent === 'alugar' ? 'Interesse em Alugar (Inquilino)' : 'Interesse em Comprar'
@@ -1330,7 +1472,7 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
     targetNeighborhood ? `Bairro/Região: ${targetNeighborhood}` : '',
     budget ? `Faixa de Valor/Orçamento: ${budget}` : '',
     notes ? `Observações: ${notes}` : '',
-    referrerFreeText && !participantRec
+    referrerFreeText && !isPartActive
       ? `Indicação Informada (Texto Livre): ${referrerFreeText}`
       : '',
   ]
@@ -1348,13 +1490,23 @@ routerAdd('POST', '/backend/v1/public/submit-buyer-lead', (e) => {
   if (targetNeighborhood) newRef.set('target_neighborhood', targetNeighborhood)
   newRef.set('current_owner_id', memberUser.id)
   newRef.set('original_owner_id', memberUser.id)
-  if (participantRec) {
+
+  // 2.a: Só atribuir participant_id quando o participante vinculado tiver status = ativo
+  if (isPartActive && participantRec) {
     newRef.set('participant_id', participantRec.id)
     newRef.set('attribution_status', 'atribuida')
   } else {
+    newRef.set('participant_id', '')
     newRef.set('attribution_status', 'pendente')
-    if (referrerFreeText) {
-      newRef.set('attribution_hint', referrerFreeText)
+    const hint =
+      referrerFreeText ||
+      (participantRec
+        ? `Indicador ${participantRec.getString('referral_code')} com status '${participantRec.getString('status')}'`
+        : code
+          ? `Código informado: ${code}`
+          : '')
+    if (hint) {
+      newRef.set('attribution_hint', hint)
     }
   }
 
@@ -1493,6 +1645,11 @@ routerAdd('POST', '/backend/v1/public/submit-owner-lead', (e) => {
     return e.json(400, { message: 'Nome e telefone do proprietário são obrigatórios.' })
   }
 
+  // Consentimento explícito obrigatório (booleano true)
+  if (body.consent !== true && body.consent_declared !== true) {
+    return e.json(400, { message: 'consentimento obrigatório' })
+  }
+
   const code = (body.referral_code || body.code || '').trim()
   const purpose = (body.purpose || 'vender').trim() // 'avaliacao' | 'vender' | 'alugar'
   const condominiumName = (body.condominium_name || '').trim()
@@ -1507,7 +1664,7 @@ routerAdd('POST', '/backend/v1/public/submit-owner-lead', (e) => {
   const referrerFreeText = (body.referrer_free_text || '').trim()
   const sourceOrigin = (body.source_origin || 'link').trim() // 'link' | 'direto'
   const whatsappOptin = !!body.whatsapp_optin
-  const consentAccepted = body.consent !== false && body.consent_declared !== false
+  const consentAccepted = true
 
   let memberUser = null
   let participantRec = null
@@ -1517,6 +1674,11 @@ routerAdd('POST', '/backend/v1/public/submit-owner-lead', (e) => {
       participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
         c: code,
       })
+      if (!participantRec) {
+        participantRec = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
+          c: code.toUpperCase(),
+        })
+      }
       if (participantRec) {
         memberUser = $app.findRecordById('users', participantRec.getString('user_id'))
       }
@@ -1536,8 +1698,12 @@ routerAdd('POST', '/backend/v1/public/submit-owner-lead', (e) => {
     }
   }
 
-  // Se não achou indicador ou veio sem código (página direta /quero-vender)
-  if (!memberUser) {
+  // Verifica se o participante vinculado tem status ativo
+  const isPartActive = participantRec && participantRec.getString('status') === 'ativo'
+
+  // Se o participante não for ativo, não atribuir a ele (participant_id vazio)
+  if (!isPartActive) {
+    memberUser = null
     try {
       const adminRole = $app.findFirstRecordByFilter('user_roles', "role = 'admin'", 'created')
       if (adminRole) {
@@ -1562,9 +1728,9 @@ routerAdd('POST', '/backend/v1/public/submit-owner-lead', (e) => {
   newRef.set('referral_type', 'proprietario')
   newRef.set(
     'referrer_name',
-    participantRec ? memberUser.getString('name') || 'Indicador' : referrerFreeText || 'Direto',
+    isPartActive ? memberUser.getString('name') || 'Indicador' : referrerFreeText || 'Direto',
   )
-  newRef.set('referrer_phone', participantRec ? memberUser.getString('phone') || '' : '')
+  newRef.set('referrer_phone', isPartActive ? memberUser.getString('phone') || '' : '')
 
   let purposeLabel = 'Vender imóvel'
   if (purpose === 'avaliacao') purposeLabel = 'Avaliação / Saber quanto vale o imóvel'
@@ -1610,13 +1776,23 @@ routerAdd('POST', '/backend/v1/public/submit-owner-lead', (e) => {
 
   newRef.set('current_owner_id', memberUser.id)
   newRef.set('original_owner_id', memberUser.id)
-  if (participantRec) {
+
+  // 2.a: Só atribuir participant_id quando o participante vinculado tiver status = ativo
+  if (isPartActive && participantRec) {
     newRef.set('participant_id', participantRec.id)
     newRef.set('attribution_status', 'atribuida')
   } else {
+    newRef.set('participant_id', '')
     newRef.set('attribution_status', 'pendente')
-    if (referrerFreeText) {
-      newRef.set('attribution_hint', referrerFreeText)
+    const hint =
+      referrerFreeText ||
+      (participantRec
+        ? `Indicador ${participantRec.getString('referral_code')} com status '${participantRec.getString('status')}'`
+        : code
+          ? `Código informado: ${code}`
+          : '')
+    if (hint) {
+      newRef.set('attribution_hint', hint)
     }
   }
 
