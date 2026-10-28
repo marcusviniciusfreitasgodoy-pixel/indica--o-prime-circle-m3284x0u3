@@ -162,9 +162,34 @@ export function AdminCampaignsPage() {
     return `${origin}/indicar?c=${encodeURIComponent(camp.code)}`
   }
 
+  const [qrCodeUrls, setQrCodeUrls] = useState<Record<string, string>>({})
+
+  const fetchQrCode = async (camp: Campaign) => {
+    const targetUrl = getCampaignUrl(camp)
+    if (qrCodeUrls[camp.id]) return qrCodeUrls[camp.id]
+    try {
+      const res = await fetch(
+        `${pb.baseUrl}/backend/v1/communication/qr-code?url=${encodeURIComponent(targetUrl)}`,
+      )
+      const data = await res.json()
+      if (data?.url) {
+        setQrCodeUrls((prev) => ({ ...prev, [camp.id]: data.url }))
+        return data.url
+      }
+    } catch {
+      /* intentionally ignored */
+    }
+    const fallback = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`
+    setQrCodeUrls((prev) => ({ ...prev, [camp.id]: fallback }))
+    return fallback
+  }
+
   const getQrUrl = (camp: Campaign) => {
     const targetUrl = getCampaignUrl(camp)
-    return `${pb.baseUrl}/backend/v1/qr-code?url=${encodeURIComponent(targetUrl)}`
+    return (
+      qrCodeUrls[camp.id] ||
+      `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(targetUrl)}`
+    )
   }
 
   const filteredCampaigns = campaigns.filter((c) => {
@@ -285,6 +310,7 @@ export function AdminCampaignsPage() {
                   size="sm"
                   onClick={() => {
                     setMaterialsCamp(camp)
+                    fetchQrCode(camp)
                     setCopiedLink(false)
                     setCopiedEmail(false)
                   }}
@@ -539,7 +565,7 @@ export function AdminCampaignsPage() {
                   2. Texto para Banner Digital / Redes Sociais / WhatsApp
                 </h4>
                 <div className="p-4 bg-stone-950 border border-stone-800 space-y-2 text-stone-300 font-mono text-[11px] leading-relaxed">
-                  <p>✨ Indique imóveis de alto padrão na Godoy Prime Circle!</p>
+                  <p>✨ Indique imóveis de alto padrão na Godoy Prime Indica!</p>
                   <p>
                     Conhece alguém querendo vender ou comprar no nosso condomínio/região? Indique
                     pelo canal oficial:
@@ -563,7 +589,7 @@ export function AdminCampaignsPage() {
                     variant="ghost"
                     className="text-xs text-stone-400 hover:text-white h-6"
                     onClick={() => {
-                      const emailBody = `Assunto: Parceria Oficial ${materialsCamp.name} & Godoy Prime Circle\n\nPrezados associados,\n\nTemos o prazer de anunciar nossa parceria com a Godoy Prime Circle.\nAgora você pode indicar imóveis para venda ou locação com atendimento exclusivo e transparência absoluta.\n\nPara fazer uma indicação, utilize o link:\n${getCampaignUrl(materialsCamp)}\n\nAtenciosamente,\nEquipe ${materialsCamp.name}`
+                      const emailBody = `Assunto: Parceria Oficial ${materialsCamp.name} & Godoy Prime Indica\n\nPrezados associados,\n\nTemos o prazer de anunciar nossa parceria com a Godoy Prime Indica.\nAgora você pode indicar imóveis para venda ou locação com atendimento exclusivo e transparência absoluta.\n\nPara fazer uma indicação, utilize o link:\n${getCampaignUrl(materialsCamp)}\n\nAtenciosamente,\nEquipe ${materialsCamp.name}`
                       navigator.clipboard.writeText(emailBody)
                       setCopiedEmail(true)
                       setTimeout(() => setCopiedEmail(false), 2000)
@@ -579,12 +605,12 @@ export function AdminCampaignsPage() {
                 </div>
                 <div className="p-4 bg-stone-950 border border-stone-800 space-y-2 text-stone-300 leading-relaxed font-sans">
                   <p className="font-semibold text-white">
-                    Assunto: Parceria Oficial {materialsCamp.name} & Godoy Prime Circle
+                    Assunto: Parceria Oficial {materialsCamp.name} & Godoy Prime Indica
                   </p>
                   <p>Prezados associados e parceiros,</p>
                   <p>
                     Temos a satisfação de apresentar o programa de indicações imobiliárias em
-                    parceria com a Godoy Prime Circle. Toda indicação realizada através do nosso
+                    parceria com a Godoy Prime Indica. Toda indicação realizada através do nosso
                     link exclusivo é acompanhada em tempo real por nossa equipe.
                   </p>
                   <p>

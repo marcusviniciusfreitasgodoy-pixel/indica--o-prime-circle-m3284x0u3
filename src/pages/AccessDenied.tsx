@@ -24,7 +24,7 @@ export default function AccessDeniedPage() {
           </div>
           <CardTitle className="font-serif text-2xl text-white">Acesso Negado</CardTitle>
           <CardDescription className="text-stone-400 text-xs">
-            Esta área é restrita à equipe interna autorizada do programa Prime Circle.
+            Esta área é restrita à equipe interna autorizada do Godoy Prime Indica.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-3 text-xs text-stone-300">
@@ -38,7 +38,7 @@ export default function AccessDeniedPage() {
             </p>
           </div>
           <p className="text-stone-400 leading-relaxed">
-            Se você é membro da equipe Prime Circle e necessita de privilégios de administrador ou
+            Se você é membro da equipe interna e necessita de privilégios de administrador ou
             operador, solicite a atribuição ao administrador do sistema.
           </p>
         </CardContent>

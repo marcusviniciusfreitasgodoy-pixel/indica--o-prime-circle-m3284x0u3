@@ -30,6 +30,7 @@ import { AdminRewardsPage } from './pages/AdminRewards'
 import { AdminBatchesPage } from './pages/AdminBatches'
 import { AdminSettingsPage } from './pages/AdminSettings'
 import { MemberRewardsPage } from './pages/MemberRewards'
+import { MemberMaterialsPage } from './pages/MemberMaterials'
 import { PublicVitrinePage } from './pages/PublicVitrine'
 import AccessDeniedPage from './pages/AccessDenied'
 import NotFound from './pages/NotFound'
@@ -70,6 +71,22 @@ const App = () => (
             element={
               <ProtectedRoute>
                 <MemberRewardsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/painel/materiais"
+            element={
+              <ProtectedRoute>
+                <MemberMaterialsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/materiais"
+            element={
+              <ProtectedRoute>
+                <MemberMaterialsPage />
               </ProtectedRoute>
             }
           />

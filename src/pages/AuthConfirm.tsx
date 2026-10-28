@@ -62,7 +62,7 @@ export default function AuthConfirmPage() {
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-none bg-amber-500/10 border border-amber-500/30 text-amber-500 mb-3">
             <Sparkles className="w-6 h-6" />
           </div>
-          <h1 className="text-2xl font-serif text-white">Prime Circle Indica</h1>
+          <h1 className="text-2xl font-serif text-white">Godoy Prime Indica</h1>
         </div>
 
         <Card className="rounded-none border-stone-800 bg-stone-950/95 text-stone-100 shadow-2xl">
@@ -93,7 +93,7 @@ export default function AuthConfirmPage() {
                   <CheckCircle2 className="h-4 w-4 text-emerald-400" />
                   <AlertDescription className="text-xs">
                     {type === 'email_verify'
-                      ? 'E-mail verificado com sucesso na rede Prime Circle.'
+                      ? 'E-mail verificado com sucesso no Godoy Prime Indica.'
                       : 'Login por link mágico autenticado com sucesso!'}
                   </AlertDescription>
                 </Alert>

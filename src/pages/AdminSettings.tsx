@@ -329,7 +329,7 @@ export function AdminSettingsPage() {
             <div className="flex items-center gap-2 mb-1">
               <Settings className="w-5 h-5 text-amber-500" />
               <h1 className="text-xl font-bold tracking-tight text-white uppercase">
-                Configurações do Programa Prime Circle
+                Configurações do Godoy Prime Indica
               </h1>
             </div>
             <p className="text-xs text-stone-400">

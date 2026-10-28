@@ -18,7 +18,7 @@ import {
   LogOut,
   ExternalLink,
   Sparkles,
-  Building2,
+  QrCode,
   Menu,
   X,
 } from 'lucide-react'
@@ -40,6 +40,7 @@ export const MemberNavbar: React.FC = () => {
 
   const navItems = [
     { label: 'Painel', path: '/painel', icon: LayoutDashboard },
+    { label: 'Materiais & QR Code', path: '/painel/materiais', icon: QrCode },
     { label: 'Minhas Recompensas', path: '/painel/recompensas', icon: Sparkles },
     { label: 'Nova Indicação', path: '/nova-indicacao', icon: PlusCircle },
     { label: 'Meu Perfil & Link', path: '/perfil', icon: User },
@@ -63,12 +64,14 @@ export const MemberNavbar: React.FC = () => {
             </div>
             <div className="flex flex-col">
               <span className="font-serif font-bold text-base leading-tight tracking-tight text-white flex items-center gap-1.5">
-                Prime Circle
+                Godoy Prime
                 <span className="text-[10px] uppercase font-sans tracking-widest font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
                   Indica
                 </span>
               </span>
-              <span className="text-[11px] text-slate-400 leading-none">Rede de Indicações</span>
+              <span className="text-[11px] text-slate-400 leading-none">
+                Programa de Indicações
+              </span>
             </div>
           </Link>
 
@@ -133,12 +136,6 @@ export const MemberNavbar: React.FC = () => {
                     {user?.name || 'Membro'}
                   </p>
                   <p className="text-xs leading-none text-slate-400 truncate">{user?.email}</p>
-                  {user?.agency && (
-                    <p className="text-[11px] text-amber-400/90 pt-1 flex items-center gap-1">
-                      <Building2 className="h-3 w-3 inline" />
-                      {user.agency}
-                    </p>
-                  )}
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-slate-800" />

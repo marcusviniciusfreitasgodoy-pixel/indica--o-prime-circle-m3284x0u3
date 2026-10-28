@@ -209,16 +209,16 @@ export default function DashboardPage() {
             <div className="flex items-center gap-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-amber-500 flex items-center gap-1">
                 <Sparkles className="h-3.5 w-3.5" />
-                Painel do Membro
+                Painel do Indicador
               </span>
               <span className="text-slate-600">•</span>
-              <span className="text-xs text-slate-400">{user?.agency || 'Rede Prime Circle'}</span>
+              <span className="text-xs text-slate-400">Godoy Prime Indica</span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
-              Olá, {user?.name || 'Membro'}
+              Olá, {user?.name || 'Indicador'}
             </h1>
             <p className="text-sm text-slate-400">
-              Acompanhe suas captações por doormen, síndicos, clientes e parceiros da rede.
+              Acompanhe suas captações por doormen, síndicos, clientes e parceiros.
             </p>
           </div>
 
@@ -251,6 +251,14 @@ export default function DashboardPage() {
                     Copiar Link
                   </>
                 )}
+              </Button>
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs h-9"
+              >
+                <Link to="/painel/materiais">Materiais & QR</Link>
               </Button>
               <Button
                 asChild
@@ -413,7 +421,7 @@ export default function DashboardPage() {
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800 text-center">
               <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mb-2" />
-              <p className="text-sm text-slate-400">Carregando indicações da rede...</p>
+              <p className="text-sm text-slate-400">Carregando indicações...</p>
             </div>
           ) : filteredReferrals.length === 0 ? (
             /* Empty state */
