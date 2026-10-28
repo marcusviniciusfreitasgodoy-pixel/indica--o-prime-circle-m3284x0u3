@@ -101,6 +101,37 @@ onRecordAfterCreateSuccess((e) => {
 
     let amount = 0
     const rType = rule.getString('reward_type')
+
+    // Regra: Se a categoria for de Parceiros ou a regra for beneficio_catalogo, NUNCA gerar valor em dinheiro (rewards)
+    let isPartnerFront = false
+    try {
+      const partCat = $app.findRecordById('participant_categories', categoryId)
+      if (partCat.getString('front') === 'parceiros') isPartnerFront = true
+    } catch (_) {}
+
+    if (rType === 'beneficio_catalogo' || isPartnerFront) {
+      // Cria gratificação em benefício_grants em análise, NUNCA reward em dinheiro
+      try {
+        const grantsCol = $app.findCollectionByNameOrId('benefit_grants')
+        const grant = new Record(grantsCol)
+        grant.set('participant_id', participant.id)
+        grant.set('referral_id', referral.id)
+        grant.set('milestone', 'captada')
+        grant.set('status', 'em_analise')
+        grant.set('custom_description', rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro')
+        $app.save(grant)
+
+        const auditCol = $app.findCollectionByNameOrId('audit_logs')
+        const audit = new Record(auditCol)
+        audit.set('action', 'benefit_grant_created_capture')
+        audit.set('resource_type', 'benefit_grants')
+        audit.set('resource_id', grant.id)
+        audit.set('details', JSON.stringify({ referral_id: referral.id, status: 'em_analise' }))
+        $app.save(audit)
+      } catch (_) {}
+      return
+    }
+
     if (rType === 'valor_fixo') amount = rule.getFloat('fixed_amount_brl') || 0
 
     const hasCpfPix = !!(
@@ -233,6 +264,35 @@ onRecordAfterUpdateSuccess((e) => {
 
     let amount = 0
     const rType = rule.getString('reward_type')
+
+    let isPartnerFront = false
+    try {
+      const partCat = $app.findRecordById('participant_categories', categoryId)
+      if (partCat.getString('front') === 'parceiros') isPartnerFront = true
+    } catch (_) {}
+
+    if (rType === 'beneficio_catalogo' || isPartnerFront) {
+      try {
+        const grantsCol = $app.findCollectionByNameOrId('benefit_grants')
+        const grant = new Record(grantsCol)
+        grant.set('participant_id', participant.id)
+        grant.set('referral_id', referral.id)
+        grant.set('milestone', 'captada')
+        grant.set('status', 'em_analise')
+        grant.set('custom_description', rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro')
+        $app.save(grant)
+
+        const auditCol = $app.findCollectionByNameOrId('audit_logs')
+        const audit = new Record(auditCol)
+        audit.set('action', 'benefit_grant_created_capture')
+        audit.set('resource_type', 'benefit_grants')
+        audit.set('resource_id', grant.id)
+        audit.set('details', JSON.stringify({ referral_id: referral.id, status: 'em_analise' }))
+        $app.save(audit)
+      } catch (_) {}
+      return
+    }
+
     if (rType === 'valor_fixo') amount = rule.getFloat('fixed_amount_brl') || 0
 
     const hasCpfPix = !!(
@@ -360,6 +420,35 @@ onRecordAfterUpdateSuccess((e) => {
 
     let amount = 0
     const rType = rule.getString('reward_type')
+
+    let isPartnerFront = false
+    try {
+      const partCat = $app.findRecordById('participant_categories', categoryId)
+      if (partCat.getString('front') === 'parceiros') isPartnerFront = true
+    } catch (_) {}
+
+    if (rType === 'beneficio_catalogo' || isPartnerFront) {
+      try {
+        const grantsCol = $app.findCollectionByNameOrId('benefit_grants')
+        const grant = new Record(grantsCol)
+        grant.set('participant_id', participant.id)
+        grant.set('referral_id', referral.id)
+        grant.set('milestone', 'declinada_pela_godoy')
+        grant.set('status', 'em_analise')
+        grant.set('custom_description', rule.getString('catalog_benefit_desc') || 'Gratificação de Reconhecimento pela Indicação')
+        $app.save(grant)
+
+        const auditCol = $app.findCollectionByNameOrId('audit_logs')
+        const audit = new Record(auditCol)
+        audit.set('action', 'benefit_grant_created_decline')
+        audit.set('resource_type', 'benefit_grants')
+        audit.set('resource_id', grant.id)
+        audit.set('details', JSON.stringify({ referral_id: referral.id, status: 'em_analise', via_decline: true }))
+        $app.save(audit)
+      } catch (_) {}
+      return
+    }
+
     if (rType === 'valor_fixo') amount = rule.getFloat('fixed_amount_brl') || 0
 
     const hasCpfPix = !!(
