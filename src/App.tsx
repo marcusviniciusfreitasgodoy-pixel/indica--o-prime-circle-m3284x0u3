@@ -6,7 +6,11 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 
 // Pages
-import LoginPage from './pages/Login'
+import LoginPage, { Cadastro } from './pages/Login'
+import IndicatorLink from './pages/IndicatorLink'
+import IndicatorThankYou from './pages/IndicatorThankYou'
+import DirectSell from './pages/DirectSell'
+import DirectBuy from './pages/DirectBuy'
 import AuthConfirmPage from './pages/AuthConfirm'
 import DashboardPage from './pages/Dashboard'
 import NewReferralPage from './pages/NewReferral'
@@ -42,6 +46,13 @@ const App = () => (
         <Toaster />
         <Sonner position="top-right" />
         <Routes>
+          {/* Public Landing & Direct Leads */}
+          <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/i/:codigo" element={<IndicatorLink />} />
+          <Route path="/i/:codigo/obrigado" element={<IndicatorThankYou />} />
+          <Route path="/quero-vender" element={<DirectSell />} />
+          <Route path="/quero-comprar" element={<DirectBuy />} />
+
           {/* Public Capture Form for doormen, síndicos, clients, partners */}
           <Route path="/indicacao/:slugOrId" element={<PublicCapturePage />} />
 

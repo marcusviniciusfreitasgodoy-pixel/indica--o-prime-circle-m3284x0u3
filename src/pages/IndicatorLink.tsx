@@ -47,12 +47,7 @@ import {
   submitBuyerLead,
 } from '@/services/operations'
 
-type ActionOptionKey =
-  | 'quanto_vale'
-  | 'vender'
-  | 'colocar_alugar'
-  | 'comprar'
-  | 'alugar_morar'
+type ActionOptionKey = 'quanto_vale' | 'vender' | 'colocar_alugar' | 'comprar' | 'alugar_morar'
 
 interface IndicatorInfo {
   participant_id: string
@@ -335,7 +330,9 @@ export default function IndicatorLinkPage() {
               <UserCheck className="w-5 h-5" />
             </div>
             <div className="text-left">
-              <p className="text-xs text-neutral-400 uppercase tracking-wider font-mono">Você foi indicado por</p>
+              <p className="text-xs text-neutral-400 uppercase tracking-wider font-mono">
+                Você foi indicado por
+              </p>
               <h2 className="text-lg font-bold text-white">{indicator.display_name}</h2>
             </div>
           </div>
@@ -412,7 +409,10 @@ export default function IndicatorLinkPage() {
 
               <CardContent className="space-y-4 pt-4">
                 {formError && (
-                  <Alert variant="destructive" className="bg-red-950/50 border-red-800 text-red-200">
+                  <Alert
+                    variant="destructive"
+                    className="bg-red-950/50 border-red-800 text-red-200"
+                  >
                     <AlertDescription>{formError}</AlertDescription>
                   </Alert>
                 )}
@@ -422,7 +422,9 @@ export default function IndicatorLinkPage() {
                   <h3 className="text-sm font-semibold text-neutral-300">Seus Dados de Contato</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1 sm:col-span-2">
-                      <Label htmlFor="leadName" className="text-xs">Seu Nome Completo *</Label>
+                      <Label htmlFor="leadName" className="text-xs">
+                        Seu Nome Completo *
+                      </Label>
                       <Input
                         id="leadName"
                         value={name}
@@ -434,7 +436,9 @@ export default function IndicatorLinkPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="leadPhone" className="text-xs">Telefone / WhatsApp *</Label>
+                      <Label htmlFor="leadPhone" className="text-xs">
+                        Telefone / WhatsApp *
+                      </Label>
                       <Input
                         id="leadPhone"
                         value={phone}
@@ -446,7 +450,9 @@ export default function IndicatorLinkPage() {
                     </div>
 
                     <div className="space-y-1">
-                      <Label htmlFor="leadEmail" className="text-xs">E-mail (opcional)</Label>
+                      <Label htmlFor="leadEmail" className="text-xs">
+                        E-mail (opcional)
+                      </Label>
                       <Input
                         id="leadEmail"
                         type="email"
@@ -468,7 +474,9 @@ export default function IndicatorLinkPage() {
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1 sm:col-span-2">
-                        <Label htmlFor="condo" className="text-xs">Condomínio de Referência (se houver)</Label>
+                        <Label htmlFor="condo" className="text-xs">
+                          Condomínio de Referência (se houver)
+                        </Label>
                         <Select
                           value={condominiumId}
                           onValueChange={(val) => {
@@ -480,12 +488,19 @@ export default function IndicatorLinkPage() {
                             }
                           }}
                         >
-                          <SelectTrigger id="condo" className="bg-neutral-950 border-neutral-700 text-neutral-100">
+                          <SelectTrigger
+                            id="condo"
+                            className="bg-neutral-950 border-neutral-700 text-neutral-100"
+                          >
                             <SelectValue placeholder="Selecione um condomínio de referência..." />
                           </SelectTrigger>
                           <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-100 max-h-56">
                             {condos.map((c) => (
-                              <SelectItem key={c.id} value={c.id} className="focus:bg-neutral-800 focus:text-neutral-100">
+                              <SelectItem
+                                key={c.id}
+                                value={c.id}
+                                className="focus:bg-neutral-800 focus:text-neutral-100"
+                              >
                                 {c.name} — {c.neighborhood}
                               </SelectItem>
                             ))}
@@ -495,7 +510,9 @@ export default function IndicatorLinkPage() {
 
                       {!condominiumId && (
                         <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="condoManual" className="text-xs">Ou digite o nome do condomínio / edifício</Label>
+                          <Label htmlFor="condoManual" className="text-xs">
+                            Ou digite o nome do condomínio / edifício
+                          </Label>
                           <Input
                             id="condoManual"
                             value={condominiumName}
@@ -507,21 +524,30 @@ export default function IndicatorLinkPage() {
                       )}
 
                       <div className="space-y-1">
-                        <Label htmlFor="neighborhood" className="text-xs">Bairro</Label>
+                        <Label htmlFor="neighborhood" className="text-xs">
+                          Bairro
+                        </Label>
                         <Select value={neighborhood} onValueChange={setNeighborhood}>
-                          <SelectTrigger id="neighborhood" className="bg-neutral-950 border-neutral-700 text-neutral-100">
+                          <SelectTrigger
+                            id="neighborhood"
+                            className="bg-neutral-950 border-neutral-700 text-neutral-100"
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-100">
                             <SelectItem value="Barra da Tijuca">Barra da Tijuca</SelectItem>
-                            <SelectItem value="Recreio dos Bandeirantes">Recreio dos Bandeirantes</SelectItem>
+                            <SelectItem value="Recreio dos Bandeirantes">
+                              Recreio dos Bandeirantes
+                            </SelectItem>
                             <SelectItem value="Outro">Outro bairro no Rio</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
                       <div className="space-y-1">
-                        <Label htmlFor="unit" className="text-xs">Bloco / Apto / Unidade (opcional)</Label>
+                        <Label htmlFor="unit" className="text-xs">
+                          Bloco / Apto / Unidade (opcional)
+                        </Label>
                         <Input
                           id="unit"
                           value={unit}
@@ -532,7 +558,9 @@ export default function IndicatorLinkPage() {
                       </div>
 
                       <div className="space-y-1 sm:col-span-2">
-                        <Label htmlFor="address" className="text-xs">Endereço do Imóvel (opcional)</Label>
+                        <Label htmlFor="address" className="text-xs">
+                          Endereço do Imóvel (opcional)
+                        </Label>
                         <Input
                           id="address"
                           value={address}
@@ -544,7 +572,9 @@ export default function IndicatorLinkPage() {
 
                       {selectedOption === 'vender' && (
                         <div className="space-y-1 sm:col-span-2">
-                          <Label htmlFor="estimated" className="text-xs">Expectativa de Valor para Venda (opcional)</Label>
+                          <Label htmlFor="estimated" className="text-xs">
+                            Expectativa de Valor para Venda (opcional)
+                          </Label>
                           <Input
                             id="estimated"
                             value={estimatedValue}
@@ -561,13 +591,20 @@ export default function IndicatorLinkPage() {
                 {/* Campos de Interesse para COMPRADOR OU INQUILINO */}
                 {(selectedOption === 'comprar' || selectedOption === 'alugar_morar') && (
                   <div className="space-y-3 pt-3 border-t border-neutral-800">
-                    <h3 className="text-sm font-semibold text-neutral-300">Perfil do Imóvel Desejado</h3>
+                    <h3 className="text-sm font-semibold text-neutral-300">
+                      Perfil do Imóvel Desejado
+                    </h3>
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div className="space-y-1">
-                        <Label htmlFor="propertyType" className="text-xs">Tipo de Imóvel</Label>
+                        <Label htmlFor="propertyType" className="text-xs">
+                          Tipo de Imóvel
+                        </Label>
                         <Select value={propertyType} onValueChange={setPropertyType}>
-                          <SelectTrigger id="propertyType" className="bg-neutral-950 border-neutral-700 text-neutral-100">
+                          <SelectTrigger
+                            id="propertyType"
+                            className="bg-neutral-950 border-neutral-700 text-neutral-100"
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-100">
@@ -580,14 +617,21 @@ export default function IndicatorLinkPage() {
                       </div>
 
                       <div className="space-y-1">
-                        <Label htmlFor="targetNeighborhood" className="text-xs">Bairro de Preferência</Label>
+                        <Label htmlFor="targetNeighborhood" className="text-xs">
+                          Bairro de Preferência
+                        </Label>
                         <Select value={targetNeighborhood} onValueChange={setTargetNeighborhood}>
-                          <SelectTrigger id="targetNeighborhood" className="bg-neutral-950 border-neutral-700 text-neutral-100">
+                          <SelectTrigger
+                            id="targetNeighborhood"
+                            className="bg-neutral-950 border-neutral-700 text-neutral-100"
+                          >
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent className="bg-neutral-900 border-neutral-800 text-neutral-100">
                             <SelectItem value="Barra da Tijuca">Barra da Tijuca</SelectItem>
-                            <SelectItem value="Recreio dos Bandeirantes">Recreio dos Bandeirantes</SelectItem>
+                            <SelectItem value="Recreio dos Bandeirantes">
+                              Recreio dos Bandeirantes
+                            </SelectItem>
                             <SelectItem value="Ambos">Tanto Barra quanto Recreio</SelectItem>
                           </SelectContent>
                         </Select>
@@ -595,13 +639,19 @@ export default function IndicatorLinkPage() {
 
                       <div className="space-y-1 sm:col-span-2">
                         <Label htmlFor="budget" className="text-xs">
-                          {selectedOption === 'comprar' ? 'Orçamento Previsto (R$)' : 'Pretensão de Aluguel Mensal (R$)'}
+                          {selectedOption === 'comprar'
+                            ? 'Orçamento Previsto (R$)'
+                            : 'Pretensão de Aluguel Mensal (R$)'}
                         </Label>
                         <Input
                           id="budget"
                           value={budget}
                           onChange={(e) => setBudget(e.target.value)}
-                          placeholder={selectedOption === 'comprar' ? 'Ex: R$ 1.500.000 a R$ 3.000.000' : 'Ex: R$ 5.000 a R$ 10.000/mês'}
+                          placeholder={
+                            selectedOption === 'comprar'
+                              ? 'Ex: R$ 1.500.000 a R$ 3.000.000'
+                              : 'Ex: R$ 5.000 a R$ 10.000/mês'
+                          }
                           className="bg-neutral-950 border-neutral-700 text-neutral-100"
                         />
                       </div>
@@ -611,7 +661,9 @@ export default function IndicatorLinkPage() {
 
                 {/* Observações Livres */}
                 <div className="space-y-1 pt-2">
-                  <Label htmlFor="notes" className="text-xs">Observações adicionais (opcional)</Label>
+                  <Label htmlFor="notes" className="text-xs">
+                    Observações adicionais (opcional)
+                  </Label>
                   <Textarea
                     id="notes"
                     value={notes}
@@ -630,8 +682,12 @@ export default function IndicatorLinkPage() {
                       onCheckedChange={(c) => setConsentDeclared(!!c)}
                       className="mt-0.5"
                     />
-                    <label htmlFor="consent" className="text-xs text-neutral-300 cursor-pointer leading-tight">
-                      Autorizo o contato da equipe Godoy Prime Imóveis para os fins desta solicitação, em conformidade com o{' '}
+                    <label
+                      htmlFor="consent"
+                      className="text-xs text-neutral-300 cursor-pointer leading-tight"
+                    >
+                      Autorizo o contato da equipe Godoy Prime Imóveis para os fins desta
+                      solicitação, em conformidade com o{' '}
                       <button
                         type="button"
                         onClick={() => setShowDocModal(true)}
@@ -650,7 +706,10 @@ export default function IndicatorLinkPage() {
                       onCheckedChange={(c) => setWhatsappOptin(!!c)}
                       className="mt-0.5"
                     />
-                    <label htmlFor="optinWa" className="text-xs text-neutral-300 cursor-pointer leading-tight">
+                    <label
+                      htmlFor="optinWa"
+                      className="text-xs text-neutral-300 cursor-pointer leading-tight"
+                    >
                       Desejo ser atendido preferencialmente via WhatsApp neste número.
                     </label>
                   </div>

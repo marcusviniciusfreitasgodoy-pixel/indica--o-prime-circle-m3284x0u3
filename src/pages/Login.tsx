@@ -27,16 +27,27 @@ import {
   Send,
 } from 'lucide-react'
 
-export default function LoginPage() {
+export function Cadastro() {
+  return <LoginPage defaultTab="signup" />
+}
+
+export default function LoginPage({
+  defaultTab,
+}: {
+  defaultTab?: 'password' | 'magic' | 'signup' | 'forgot'
+}) {
   const { login, signup, requestOTP, loginWithOTP, requestPasswordReset, isAuthenticated } =
     useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
 
-  const [activeTab, setActiveTab] = useState<'password' | 'magic' | 'signup' | 'forgot'>(
-    (searchParams.get('tab') as 'password' | 'magic' | 'signup' | 'forgot') || 'password',
-  )
+  const initialTab =
+    defaultTab ||
+    (searchParams.get('tab') as 'password' | 'magic' | 'signup' | 'forgot') ||
+    'password'
+
+  const [activeTab, setActiveTab] = useState<'password' | 'magic' | 'signup' | 'forgot'>(initialTab)
 
   // Form states
   const [email, setEmail] = useState('')

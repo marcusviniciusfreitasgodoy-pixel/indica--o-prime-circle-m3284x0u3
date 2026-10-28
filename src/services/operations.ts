@@ -271,15 +271,81 @@ export async function getDocumentDownloadUrl(documentId: string) {
 }
 
 /**
- * Submit buyer lead from public vitrine
+ * Get public participant info by referral code for indicator link page
+ */
+export async function getParticipantByReferralCode(code: string) {
+  const cleanCode = (code || '').trim().toUpperCase()
+  // Busca na coleção participants expandindo user_id e category_id
+  let participant: any = null
+  try {
+    participant = await pb
+      .collection('participants')
+      .getFirstListItem(`referral_code = "${cleanCode}" && status = "ativo"`, {
+        expand: 'user_id,category_id',
+      })
+  } catch (_) {
+    // fallback para case insensitive / exact match
+  }
+
+  // Fallback: se não achou por referral_code, tenta buscar por public_slug na coleção users
+  if (!participant) {
+    try {
+      const user = await pb.collection('users').getFirstListItem(`public_slug = "${code.trim()}"`)
+      if (user) {
+        participant = await pb
+          .collection('participants')
+          .getFirstListItem(`user_id = "${user.id}" && status = "ativo"`, {
+            expand: 'user_id,category_id',
+          })
+      }
+    } catch {
+      /* intentionally ignored */
+    }
+  }
+
+  if (!participant) {
+    throw new Error('Código de indicação não encontrado ou inativo.')
+  }
+
+  const u = participant.expand?.user_id as any
+  const cat = participant.expand?.category_id as any
+  const fullName = u?.name || 'Parceiro Prime Circle'
+  const firstName = fullName.split(' ')[0]
+
+  return {
+    participant_id: participant.id,
+    referral_code: participant.referral_code || cleanCode,
+    display_name: fullName,
+    first_name: firstName,
+    category_slug: cat?.slug || '',
+    category_name: cat?.name || 'Parceiro',
+    status: participant.status,
+  }
+}
+
+/**
+ * Submit buyer lead from public vitrine, link de indicador (/i/:codigo) ou direto (/quero-comprar)
  */
 export async function submitBuyerLead(payload: {
-  referral_code: string
+  referral_code?: string
   property_referral_id?: string
   name: string
   phone: string
   email?: string
   notes?: string
+  referrer_free_text?: string
+  participant_code?: string
+  intent?: 'comprar' | 'alugar' | string
+  target_neighborhood?: string
+  property_type?: string
+  budget?: string
+  campaign_code?: string
+  source_origin?: 'link' | 'vitrine' | 'direto' | string
+  whatsapp_optin?: boolean
+  consent?: boolean
+  consent_declared?: boolean
+  website?: string
+  honeypot?: string
 }) {
   const res = await fetch(`${BACKEND_URL}/backend/v1/public/submit-buyer-lead`, {
     method: 'POST',
@@ -290,7 +356,58 @@ export async function submitBuyerLead(payload: {
   if (!res.ok) {
     throw new Error(data.message || 'Erro ao enviar interesse.')
   }
-  return data
+  return data as {
+    success: boolean
+    protocol?: string
+    message?: string
+    lead_id?: string
+    referral_id?: string
+  }
+}
+
+/**
+ * Submit owner lead from link de indicador (/i/:codigo) ou direto (/quero-vender)
+ */
+export async function submitOwnerLead(payload: {
+  referral_code?: string
+  name: string
+  phone: string
+  email?: string
+  purpose?: 'avaliacao' | 'vender' | 'alugar' | string
+  condominium_id?: string
+  condominium_name?: string
+  unit?: string
+  address?: string
+  neighborhood?: string
+  property_type?: string
+  estimated_value?: string
+  notes?: string
+  campaign_code?: string
+  referrer_free_text?: string
+  participant_code?: string
+  source_origin?: 'link' | 'direto' | string
+  whatsapp_optin?: boolean
+  consent?: boolean
+  consent_declared?: boolean
+  website?: string
+  honeypot?: string
+}) {
+  const res = await fetch(`${BACKEND_URL}/backend/v1/public/submit-owner-lead`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || 'Erro ao enviar dados do proprietário.')
+  }
+  return data as {
+    success: boolean
+    protocol?: string
+    message?: string
+    lead_id?: string
+    referral_id?: string
+  }
 }
 
 /**
