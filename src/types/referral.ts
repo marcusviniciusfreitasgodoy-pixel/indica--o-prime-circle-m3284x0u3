@@ -56,6 +56,9 @@ export interface Member {
   phone?: string
   public_slug?: string
   avatar?: string
+  is_admin?: boolean
+  is_operador?: boolean
+  is_financeiro?: boolean
   created: string
   updated: string
 }

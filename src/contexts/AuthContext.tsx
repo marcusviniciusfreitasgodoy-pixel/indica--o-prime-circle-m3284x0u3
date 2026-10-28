@@ -55,10 +55,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const mapped = rolesRecords.map((r) => r.role as InternalRole)
         setRoles(mapped)
       } catch {
-        setRoles([])
+        // Fallback para as flags nativas de users se houver
+        const fallbackRoles: InternalRole[] = []
+        if (refreshed.is_admin) fallbackRoles.push('admin')
+        if (refreshed.is_operador) fallbackRoles.push('operador')
+        if (refreshed.is_financeiro) fallbackRoles.push('financeiro')
+        setRoles(fallbackRoles)
       }
     } catch {
-      setUser(pb.authStore.record as unknown as Member)
+      // Se getOne falhar (por exemplo, token expirou ou usuário deletado), limpa a sessão
+      pb.authStore.clear()
+      setUser(null)
       setRoles([])
     } finally {
       setIsLoading(false)

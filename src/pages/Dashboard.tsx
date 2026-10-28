@@ -65,9 +65,16 @@ export default function DashboardPage() {
       else setIsRefreshing(true)
 
       try {
-        const [refs, members] = await Promise.all([getMemberReferrals(), getNetworkMembers()])
+        const refs = await getMemberReferrals()
         setReferrals(refs)
-        setNetworkMembers(members)
+
+        // Carrega membros de forma resiliente
+        try {
+          const members = await getNetworkMembers()
+          setNetworkMembers(members)
+        } catch {
+          if (user) setNetworkMembers([user])
+        }
 
         // Carrega recompensas reais do participante
         if (user) {
@@ -97,16 +104,13 @@ export default function DashboardPage() {
               setRewardsStats({ aReceber: pending, recebido: paid })
             }
           } catch {
-            /* intentionally ignored */
+            /* Se participante não tem registro ainda, métricas ficam em zero */
           }
         }
       } catch (err) {
         console.error('Erro ao carregar dados do painel:', err)
-        toast({
-          title: 'Erro ao carregar',
-          description: 'Não foi possível carregar suas indicações. Tente novamente.',
-          variant: 'destructive',
-        })
+        // Se a chamada falhou mas não há indicações, não alarma o usuário com toast destrutivo desnecessário
+        setReferrals([])
       } finally {
         setIsLoading(false)
         setIsRefreshing(false)

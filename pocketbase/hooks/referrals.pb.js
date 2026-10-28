@@ -362,6 +362,16 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
     if (partRec) participantId = partRec.id
   } catch (_) {}
 
+  const reqInfo = e.requestInfo()
+  const queryId = (reqInfo.query && reqInfo.query.id ? reqInfo.query.id : '').trim()
+
+  // Se o usuário passou queryId, valida se o formato é alfanumérico padrão do PocketBase (15 chars)
+  // Caso contenha caracteres suspeitos (aspas, operadores, injeção), rejeita ou restringe a busca de forma 100% segura
+  if (queryId && !/^[a-zA-Z0-9_-]{3,30}$/.test(queryId)) {
+    // ID inválido ou tentativa de injeção: retorna lista vazia imediatamente
+    return e.json(200, { items: [] })
+  }
+
   const filterParams = { uid: authRecord.id }
   let filter = '(current_owner_id = {:uid} || original_owner_id = {:uid}'
   if (participantId) {
@@ -370,8 +380,6 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
   }
   filter += ')'
 
-  const reqInfo = e.requestInfo()
-  const queryId = (reqInfo.query && reqInfo.query.id ? reqInfo.query.id : '').trim()
   if (queryId) {
     filterParams.qid = queryId
     filter += ' && id = {:qid}'

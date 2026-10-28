@@ -138,3 +138,14 @@ onRecordCreateRequest((e) => {
 
   e.next()
 }, 'users')
+
+// Interceptador pré-save (defesa em profundidade): garante que qualquer criação em users sem superuser resulte em false
+onRecordBeforeCreateSuccess((e) => {
+  const isSuperuser = e.hasSuperuserAuth ? e.hasSuperuserAuth() : false
+  if (!isSuperuser) {
+    e.record.set('is_admin', false)
+    e.record.set('is_operador', false)
+    e.record.set('is_financeiro', false)
+  }
+  e.next()
+}, 'users')

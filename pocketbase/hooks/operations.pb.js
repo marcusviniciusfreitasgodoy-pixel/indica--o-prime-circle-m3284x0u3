@@ -260,6 +260,9 @@ routerAdd('POST', '/backend/v1/referrals/change-status', (e) => {
   } catch (_) {
     roles = []
   }
+  if (authRecord.getBool('is_admin') && !roles.includes('admin')) roles.push('admin')
+  if (authRecord.getBool('is_operador') && !roles.includes('operador')) roles.push('operador')
+  if (authRecord.getBool('is_financeiro') && !roles.includes('financeiro')) roles.push('financeiro')
 
   if (roles.length === 0) {
     return e.json(403, {

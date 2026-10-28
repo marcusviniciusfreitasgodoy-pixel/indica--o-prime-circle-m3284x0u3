@@ -196,6 +196,16 @@ export async function updateReferralStatus(
  */
 export async function getNetworkMembers(): Promise<Member[]> {
   try {
+    const cur = pb.authStore.record as unknown as Member
+    if (!cur) return []
+
+    // Usuário comum (não admin/operador/financeiro) não pode listar todos os usuários da coleção users devido ao RLS.
+    // Retorna apenas a si mesmo sem disparar request desnecessário.
+    const isInternal = !!(cur.is_admin || cur.is_operador || cur.is_financeiro)
+    if (!isInternal) {
+      return [cur]
+    }
+
     const members = await pb.collection('users').getFullList<Member>({
       sort: 'name',
     })
