@@ -287,23 +287,31 @@ routerAdd('POST', '/backend/v1/participant/update-profile', (e) => {
           }
         }
 
-        // 3. Gravar log em notification_logs para rastreabilidade
-        try {
-          const notifCol = $app.findCollectionByNameOrId('notification_logs')
-          const nlog = new Record(notifCol)
-          nlog.set('channel', participantEmail ? 'email' : 'whatsapp')
-          nlog.set('recipient', participantEmail || participantPhone || '')
-          nlog.set('status', 'sent')
-          nlog.set(
-            'metadata',
-            JSON.stringify({
-              event: 'pix_key_updated_alert',
-              participant_id: participant.id,
-              masked_new: maskedNew,
-            }),
-          )
-          $app.save(nlog)
-        } catch (_) {}
+        // 3. Gravar logs em notification_logs para rastreabilidade
+        if (participantEmail) {
+          try {
+            const notifCol = $app.findCollectionByNameOrId('notification_logs')
+            const nlog = new Record(notifCol)
+            nlog.set('channel', 'email')
+            nlog.set('recipient', participantEmail)
+            nlog.set('event_code', 'pix_key_updated_alert')
+            nlog.set('entity_id', participant.id)
+            nlog.set('status', resendKey ? 'sent' : 'queued')
+            $app.save(nlog)
+          } catch (_) {}
+        }
+        if (participantPhone) {
+          try {
+            const notifCol = $app.findCollectionByNameOrId('notification_logs')
+            const nlogWa = new Record(notifCol)
+            nlogWa.set('channel', 'whatsapp')
+            nlogWa.set('recipient', participantPhone)
+            nlogWa.set('event_code', 'pix_key_updated_alert')
+            nlogWa.set('entity_id', participant.id)
+            nlogWa.set('status', metaToken && phoneId ? 'sent' : 'queued')
+            $app.save(nlogWa)
+          } catch (_) {}
+        }
       } catch (errNotify) {
         console.error('[update-profile] Erro no fluxo de notificação PIX:', errNotify)
       }

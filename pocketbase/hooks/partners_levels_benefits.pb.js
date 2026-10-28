@@ -10,190 +10,186 @@
 // 8. GET /backend/v1/participant/entity-summary (números agregados da entidade condominial, sem dados de moradores)
 
 /**
- * Helper interno: Calcula nível do parceiro nos últimos 12 meses
- * Critérios da Seção 2.3:
- * Nível 1: Parceiro (ordem 1) - base inicial
- * Nível 2: Parceiro Prime (ordem 2) - >= 3 indicações qualificadas (captadas/concluídas) ou >= 1 negócio fechado nos últimos 12m
- * Nível 3: Parceiro Signature (ordem 3) - >= 8 indicações qualificadas ou >= 3 negócios fechados ou VGV >= R$ 3.000.000 nos últimos 12m
- */
-function evaluatePartnerLevel(appInstance, participantId, forceNotify) {
-  const part = appInstance.findRecordById('participants', participantId)
-  if (!part) return null
-
-  // Verifica se a categoria pertence à frente 'parceiros'
-  let isPartner = false
-  try {
-    const cat = appInstance.findRecordById('participant_categories', part.getString('category_id'))
-    if (cat && cat.getString('front') === 'parceiros') isPartner = true
-  } catch (_) {}
-
-  if (!isPartner) return null
-
-  // Janela dos últimos 12 meses
-  const now = new Date()
-  const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString()
-
-  // Busca indicações do participante nos últimos 12 meses
-  const refs = appInstance.findRecordsByFilter(
-    'referrals',
-    `participant_id = '${participantId}' && created >= '${twelveMonthsAgo}'`,
-    '-created',
-    500,
-    0,
-  )
-
-  let qualCount = 0
-  let dealsCount = 0
-  let vgvTotal = 0
-
-  const qualifiedStatuses = [
-    'captada',
-    'em_divulgacao',
-    'vendida',
-    'alugada',
-    'comprou',
-    'alugou',
-    'declinada_pela_godoy',
-  ]
-  const closedStatuses = ['vendida', 'alugada', 'comprou', 'alugou']
-
-  for (let i = 0; i < refs.length; i++) {
-    const r = refs[i]
-    const st = r.getString('status')
-    if (qualifiedStatuses.includes(st)) {
-      qualCount++
-    }
-    if (closedStatuses.includes(st)) {
-      dealsCount++
-      const dealVal = r.getFloat('deal_value_brl') || 0
-      vgvTotal += dealVal
-    }
-  }
-
-  // Busca todos os níveis de parceiros ordenados por order asc
-  const allLevels = appInstance.findRecordsByFilter('program_levels', '', 'order', 10, 0)
-  if (allLevels.length === 0) return null
-
-  let lvl1 = allLevels[0]
-  let lvl2 = allLevels.length > 1 ? allLevels[1] : allLevels[0]
-  let lvl3 = allLevels.length > 2 ? allLevels[2] : lvl2
-
-  // Níveis específicos pelo slug
-  for (let i = 0; i < allLevels.length; i++) {
-    const s = allLevels[i].getString('slug')
-    if (s === 'parceiro') lvl1 = allLevels[i]
-    else if (s === 'parceiro_prime') lvl2 = allLevels[i]
-    else if (s === 'parceiro_signature') lvl3 = allLevels[i]
-  }
-
-  let determinedLevel = lvl1
-  let reason = 'Critério base de entrada de parceiro cadastrado'
-
-  // Checa Nível 3 (Signature)
-  if (qualCount >= 8 || dealsCount >= 3 || vgvTotal >= 3000000) {
-    determinedLevel = lvl3
-    reason = `Critério Signature atingido nos últimos 12m (${qualCount} captações qualificadas, ${dealsCount} fechamentos, VGV R$ ${vgvTotal.toLocaleString('pt-BR')})`
-  } else if (qualCount >= 3 || dealsCount >= 1) {
-    determinedLevel = lvl2
-    reason = `Critério Prime atingido nos últimos 12m (${qualCount} captações qualificadas, ${dealsCount} fechamentos)`
-  }
-
-  const currentLevelId = part.getString('level_id')
-  const isChanged = currentLevelId !== determinedLevel.id
-
-  if (isChanged || forceNotify) {
-    const oldLevelId = currentLevelId
-    part.set('level_id', determinedLevel.id)
-    appInstance.save(part)
-
-    // Grava histórico de nível
-    try {
-      const histCol = appInstance.findCollectionByNameOrId('participant_level_history')
-      const hist = new Record(histCol)
-      hist.set('participant_id', part.id)
-      if (oldLevelId) hist.set('previous_level_id', oldLevelId)
-      hist.set('new_level_id', determinedLevel.id)
-      hist.set('changed_at', now.toISOString())
-      hist.set('reason', reason)
-      hist.set('qualifying_referrals_count', qualCount)
-      hist.set('deals_count', dealsCount)
-      hist.set('vgv_total_brl', vgvTotal)
-      appInstance.save(hist)
-    } catch (err) {
-      console.error('[evaluatePartnerLevel] Erro ao salvar histórico:', err)
-    }
-
-    // Grava audit log
-    try {
-      const auditCol = appInstance.findCollectionByNameOrId('audit_logs')
-      const audit = new Record(auditCol)
-      audit.set('action', 'participant_level_changed')
-      audit.set('resource_type', 'participants')
-      audit.set('resource_id', part.id)
-      audit.set(
-        'details',
-        JSON.stringify({
-          previous_level_id: oldLevelId,
-          new_level_id: determinedLevel.id,
-          new_level_name: determinedLevel.getString('name'),
-          reason,
-        }),
-      )
-      appInstance.save(audit)
-    } catch (_) {}
-
-    // Notificação: WhatsApp e E-mail de mudança de nível (registrado em notification_logs)
-    try {
-      const user = appInstance.findRecordById('users', part.getString('user_id'))
-      const internalSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
-
-      $http.send({
-        url: 'http://127.0.0.1:8090/backend/v1/communication/notify-event',
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Internal-Secret': internalSecret || '',
-        },
-        data: JSON.stringify({
-          event_code: 'parceiro_mudou_nivel',
-          participant_id: part.id,
-          entity_id: part.id,
-          params: {
-            nome: user.getString('name') || 'Parceiro',
-            novo_nivel: determinedLevel.getString('name'),
-            percentual: determinedLevel.getFloat('reward_percentage') || 10,
-            recipient_email: user.getString('email'),
-            recipient_phone: user.getString('phone'),
-            link: 'https://indicacao.godoyprime.com.br/painel/nivel',
-          },
-        }),
-        timeout: 5,
-      })
-    } catch (notifErr) {
-      console.error('[evaluatePartnerLevel] Erro ao disparar notificação:', notifErr)
-    }
-  }
-
-  return {
-    participant_id: part.id,
-    previous_level_id: currentLevelId,
-    new_level_id: determinedLevel.id,
-    new_level_name: determinedLevel.getString('name'),
-    changed: isChanged,
-    reason,
-    stats: {
-      qualifying_referrals: qualCount,
-      deals_count: dealsCount,
-      vgv_total_brl: vgvTotal,
-    },
-  }
-}
-
-/**
  * 1. POST /backend/v1/partners/compute-participant-level
  * Rota para acionar manualmente ou via rotina interna
  */
 routerAdd('POST', '/backend/v1/partners/compute-participant-level', (e) => {
+  // Helper interno declarado dentro do corpo do callback (PocketBase JSVM pool compliance)
+  function evaluatePartnerLevel(appInstance, participantId, forceNotify) {
+    const part = appInstance.findRecordById('participants', participantId)
+    if (!part) return null
+
+    // Verifica se a categoria pertence à frente 'parceiros'
+    let isPartner = false
+    try {
+      const cat = appInstance.findRecordById(
+        'participant_categories',
+        part.getString('category_id'),
+      )
+      if (cat && cat.getString('front') === 'parceiros') isPartner = true
+    } catch (_) {}
+
+    if (!isPartner) return null
+
+    // Janela dos últimos 12 meses
+    const now = new Date()
+    const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString()
+
+    // Busca indicações do participante nos últimos 12 meses
+    const refs = appInstance.findRecordsByFilter(
+      'referrals',
+      `participant_id = '${participantId}' && created >= '${twelveMonthsAgo}'`,
+      '-created',
+      500,
+      0,
+    )
+
+    let qualCount = 0
+    let dealsCount = 0
+    let vgvTotal = 0
+
+    const qualifiedStatuses = [
+      'captada',
+      'em_divulgacao',
+      'vendida',
+      'alugada',
+      'comprou',
+      'alugou',
+      'declinada_pela_godoy',
+    ]
+    const closedStatuses = ['vendida', 'alugada', 'comprou', 'alugou']
+
+    for (let i = 0; i < refs.length; i++) {
+      const r = refs[i]
+      const st = r.getString('status')
+      if (qualifiedStatuses.includes(st)) {
+        qualCount++
+      }
+      if (closedStatuses.includes(st)) {
+        dealsCount++
+        const dealVal = r.getFloat('deal_value_brl') || 0
+        vgvTotal += dealVal
+      }
+    }
+
+    // Busca todos os níveis de parceiros ordenados por order asc
+    const allLevels = appInstance.findRecordsByFilter('program_levels', '', 'order', 10, 0)
+    if (allLevels.length === 0) return null
+
+    let lvl1 = allLevels[0]
+    let lvl2 = allLevels.length > 1 ? allLevels[1] : allLevels[0]
+    let lvl3 = allLevels.length > 2 ? allLevels[2] : lvl2
+
+    // Níveis específicos pelo slug
+    for (let i = 0; i < allLevels.length; i++) {
+      const s = allLevels[i].getString('slug')
+      if (s === 'parceiro') lvl1 = allLevels[i]
+      else if (s === 'parceiro_prime') lvl2 = allLevels[i]
+      else if (s === 'parceiro_signature') lvl3 = allLevels[i]
+    }
+
+    let determinedLevel = lvl1
+    let reason = 'Critério base de entrada de parceiro cadastrado'
+
+    // Checa Nível 3 (Signature)
+    if (qualCount >= 8 || dealsCount >= 3 || vgvTotal >= 3000000) {
+      determinedLevel = lvl3
+      reason = `Critério Signature atingido nos últimos 12m (${qualCount} captações qualificadas, ${dealsCount} fechamentos, VGV R$ ${vgvTotal.toLocaleString('pt-BR')})`
+    } else if (qualCount >= 3 || dealsCount >= 1) {
+      determinedLevel = lvl2
+      reason = `Critério Prime atingido nos últimos 12m (${qualCount} captações qualificadas, ${dealsCount} fechamentos)`
+    }
+
+    const currentLevelId = part.getString('level_id')
+    const isChanged = currentLevelId !== determinedLevel.id
+
+    if (isChanged || forceNotify) {
+      const oldLevelId = currentLevelId
+      part.set('level_id', determinedLevel.id)
+      appInstance.save(part)
+
+      // Grava histórico de nível
+      try {
+        const histCol = appInstance.findCollectionByNameOrId('participant_level_history')
+        const hist = new Record(histCol)
+        hist.set('participant_id', part.id)
+        if (oldLevelId) hist.set('previous_level_id', oldLevelId)
+        hist.set('new_level_id', determinedLevel.id)
+        hist.set('changed_at', now.toISOString())
+        hist.set('reason', reason)
+        hist.set('qualifying_referrals_count', qualCount)
+        hist.set('deals_count', dealsCount)
+        hist.set('vgv_total_brl', vgvTotal)
+        appInstance.save(hist)
+      } catch (err) {
+        console.error('[evaluatePartnerLevel] Erro ao salvar histórico:', err)
+      }
+
+      // Grava audit log
+      try {
+        const auditCol = appInstance.findCollectionByNameOrId('audit_logs')
+        const audit = new Record(auditCol)
+        audit.set('action', 'participant_level_changed')
+        audit.set('resource_type', 'participants')
+        audit.set('resource_id', part.id)
+        audit.set(
+          'details',
+          JSON.stringify({
+            previous_level_id: oldLevelId,
+            new_level_id: determinedLevel.id,
+            new_level_name: determinedLevel.getString('name'),
+            reason,
+          }),
+        )
+        appInstance.save(audit)
+      } catch (_) {}
+
+      // Notificação: WhatsApp e E-mail de mudança de nível (registrado em notification_logs)
+      try {
+        const user = appInstance.findRecordById('users', part.getString('user_id'))
+        const internalSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
+
+        $http.send({
+          url: 'http://127.0.0.1:8090/backend/v1/communication/notify-event',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Secret': internalSecret || '',
+          },
+          data: JSON.stringify({
+            event_code: 'parceiro_mudou_nivel',
+            participant_id: part.id,
+            entity_id: part.id,
+            params: {
+              nome: user.getString('name') || 'Parceiro',
+              novo_nivel: determinedLevel.getString('name'),
+              percentual: determinedLevel.getFloat('reward_percentage') || 10,
+              recipient_email: user.getString('email'),
+              recipient_phone: user.getString('phone'),
+              link: 'https://indicacao.godoyprime.com.br/painel/nivel',
+            },
+          }),
+          timeout: 5,
+        })
+      } catch (notifErr) {
+        console.error('[evaluatePartnerLevel] Erro ao disparar notificação:', notifErr)
+      }
+    }
+
+    return {
+      participant_id: part.id,
+      previous_level_id: currentLevelId,
+      new_level_id: determinedLevel.id,
+      new_level_name: determinedLevel.getString('name'),
+      changed: isChanged,
+      reason,
+      stats: {
+        qualifying_referrals: qualCount,
+        deals_count: dealsCount,
+        vgv_total_brl: vgvTotal,
+      },
+    }
+  }
   const authRecord = e.auth
   const reqSecret =
     e.request.header.get('X-Internal-Secret') || e.request.header.get('x-internal-secret')
@@ -273,6 +269,183 @@ routerAdd('POST', '/backend/v1/partners/compute-participant-level', (e) => {
  * 2. Tarefa agendada: recompute-levels todo dia às 6h de Brasília (09:00 UTC)
  */
 cronAdd('recompute_levels', '0 9 * * *', () => {
+  // Helper interno declarado dentro do corpo do callback do cron (PocketBase JSVM pool compliance)
+  function evaluatePartnerLevel(appInstance, participantId, forceNotify) {
+    const part = appInstance.findRecordById('participants', participantId)
+    if (!part) return null
+
+    // Verifica se a categoria pertence à frente 'parceiros'
+    let isPartner = false
+    try {
+      const cat = appInstance.findRecordById(
+        'participant_categories',
+        part.getString('category_id'),
+      )
+      if (cat && cat.getString('front') === 'parceiros') isPartner = true
+    } catch (_) {}
+
+    if (!isPartner) return null
+
+    // Janela dos últimos 12 meses
+    const now = new Date()
+    const twelveMonthsAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000).toISOString()
+
+    // Busca indicações do participante nos últimos 12 meses
+    const refs = appInstance.findRecordsByFilter(
+      'referrals',
+      `participant_id = '${participantId}' && created >= '${twelveMonthsAgo}'`,
+      '-created',
+      500,
+      0,
+    )
+
+    let qualCount = 0
+    let dealsCount = 0
+    let vgvTotal = 0
+
+    const qualifiedStatuses = [
+      'captada',
+      'em_divulgacao',
+      'vendida',
+      'alugada',
+      'comprou',
+      'alugou',
+      'declinada_pela_godoy',
+    ]
+    const closedStatuses = ['vendida', 'alugada', 'comprou', 'alugou']
+
+    for (let i = 0; i < refs.length; i++) {
+      const r = refs[i]
+      const st = r.getString('status')
+      if (qualifiedStatuses.includes(st)) {
+        qualCount++
+      }
+      if (closedStatuses.includes(st)) {
+        dealsCount++
+        const dealVal = r.getFloat('deal_value_brl') || 0
+        vgvTotal += dealVal
+      }
+    }
+
+    // Busca todos os níveis de parceiros ordenados por order asc
+    const allLevels = appInstance.findRecordsByFilter('program_levels', '', 'order', 10, 0)
+    if (allLevels.length === 0) return null
+
+    let lvl1 = allLevels[0]
+    let lvl2 = allLevels.length > 1 ? allLevels[1] : allLevels[0]
+    let lvl3 = allLevels.length > 2 ? allLevels[2] : lvl2
+
+    // Níveis específicos pelo slug
+    for (let i = 0; i < allLevels.length; i++) {
+      const s = allLevels[i].getString('slug')
+      if (s === 'parceiro') lvl1 = allLevels[i]
+      else if (s === 'parceiro_prime') lvl2 = allLevels[i]
+      else if (s === 'parceiro_signature') lvl3 = allLevels[i]
+    }
+
+    let determinedLevel = lvl1
+    let reason = 'Critério base de entrada de parceiro cadastrado'
+
+    // Checa Nível 3 (Signature)
+    if (qualCount >= 8 || dealsCount >= 3 || vgvTotal >= 3000000) {
+      determinedLevel = lvl3
+      reason = `Critério Signature atingido nos últimos 12m (${qualCount} captações qualificadas, ${dealsCount} fechamentos, VGV R$ ${vgvTotal.toLocaleString('pt-BR')})`
+    } else if (qualCount >= 3 || dealsCount >= 1) {
+      determinedLevel = lvl2
+      reason = `Critério Prime atingido nos últimos 12m (${qualCount} captações qualificadas, ${dealsCount} fechamentos)`
+    }
+
+    const currentLevelId = part.getString('level_id')
+    const isChanged = currentLevelId !== determinedLevel.id
+
+    if (isChanged || forceNotify) {
+      const oldLevelId = currentLevelId
+      part.set('level_id', determinedLevel.id)
+      appInstance.save(part)
+
+      // Grava histórico de nível
+      try {
+        const histCol = appInstance.findCollectionByNameOrId('participant_level_history')
+        const hist = new Record(histCol)
+        hist.set('participant_id', part.id)
+        if (oldLevelId) hist.set('previous_level_id', oldLevelId)
+        hist.set('new_level_id', determinedLevel.id)
+        hist.set('changed_at', now.toISOString())
+        hist.set('reason', reason)
+        hist.set('qualifying_referrals_count', qualCount)
+        hist.set('deals_count', dealsCount)
+        hist.set('vgv_total_brl', vgvTotal)
+        appInstance.save(hist)
+      } catch (err) {
+        console.error('[evaluatePartnerLevel] Erro ao salvar histórico:', err)
+      }
+
+      // Grava audit log
+      try {
+        const auditCol = appInstance.findCollectionByNameOrId('audit_logs')
+        const audit = new Record(auditCol)
+        audit.set('action', 'participant_level_changed')
+        audit.set('resource_type', 'participants')
+        audit.set('resource_id', part.id)
+        audit.set(
+          'details',
+          JSON.stringify({
+            previous_level_id: oldLevelId,
+            new_level_id: determinedLevel.id,
+            new_level_name: determinedLevel.getString('name'),
+            reason,
+          }),
+        )
+        appInstance.save(audit)
+      } catch (_) {}
+
+      // Notificação: WhatsApp e E-mail de mudança de nível (registrado em notification_logs)
+      try {
+        const user = appInstance.findRecordById('users', part.getString('user_id'))
+        const internalSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
+
+        $http.send({
+          url: 'http://127.0.0.1:8090/backend/v1/communication/notify-event',
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Internal-Secret': internalSecret || '',
+          },
+          data: JSON.stringify({
+            event_code: 'parceiro_mudou_nivel',
+            participant_id: part.id,
+            entity_id: part.id,
+            params: {
+              nome: user.getString('name') || 'Parceiro',
+              novo_nivel: determinedLevel.getString('name'),
+              percentual: determinedLevel.getFloat('reward_percentage') || 10,
+              recipient_email: user.getString('email'),
+              recipient_phone: user.getString('phone'),
+              link: 'https://indicacao.godoyprime.com.br/painel/nivel',
+            },
+          }),
+          timeout: 5,
+        })
+      } catch (notifErr) {
+        console.error('[evaluatePartnerLevel] Erro ao disparar notificação:', notifErr)
+      }
+    }
+
+    return {
+      participant_id: part.id,
+      previous_level_id: currentLevelId,
+      new_level_id: determinedLevel.id,
+      new_level_name: determinedLevel.getString('name'),
+      changed: isChanged,
+      reason,
+      stats: {
+        qualifying_referrals: qualCount,
+        deals_count: dealsCount,
+        vgv_total_brl: vgvTotal,
+      },
+    }
+  }
+
   try {
     console.log(
       '[cron:recompute_levels] Iniciando recálculo diário de níveis dos parceiros (6h Brasília)...',
