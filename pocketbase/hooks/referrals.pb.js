@@ -903,6 +903,7 @@ routerAdd('POST', '/backend/v1/referrals/submit-direct-referral', (e) => {
   newRef.set('status', 'nova')
   newRef.set('attribution_status', 'atribuida')
   newRef.set('consent_declared', true)
+  newRef.set('consent_status', 'declarado_indicador')
   newRef.set('target_neighborhood', neighborhood)
 
   if (refType === 'proprietario') {
@@ -970,8 +971,321 @@ routerAdd('POST', '/backend/v1/referrals/submit-direct-referral', (e) => {
 })
 
 /**
- * Route: POST /backend/v1/referrals/refuse-contact
- * Apaga e anonimiza os dados do indicado caso ele recuse o contato no primeiro atendimento
+ * Route: POST /backend/v1/referrals/first-contact-done
+ * C10b — Grava first_contact_at e first_contact_by na indicação e registra evento interno
+ * Exige admin ou operador e consent_status = 'declarado_indicador'
+ */
+routerAdd('POST', '/backend/v1/referrals/first-contact-done', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) {
+    return e.json(401, { message: 'Não autorizado. Faça login como operador ou administrador.' })
+  }
+
+  let isAllowed = false
+  if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+    isAllowed = true
+  } else {
+    try {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isAllowed = roles.length > 0
+    } catch (_) {
+      isAllowed = false
+    }
+  }
+
+  if (!isAllowed) {
+    return e.json(403, {
+      message: 'Acesso restrito a corretores operadores ou administradores.',
+    })
+  }
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const referralId = (body.referral_id || '').trim()
+
+  if (!referralId) {
+    return e.json(400, { message: 'ID da indicação é obrigatório.' })
+  }
+
+  let ref = null
+  try {
+    ref = $app.findRecordById('referrals', referralId)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+
+  // Validação estrita: apenas indicações com consent_status = 'declarado_indicador'
+  const consentStatus = ref.getString('consent_status')
+  if (consentStatus !== 'declarado_indicador') {
+    return e.json(400, {
+      message:
+        'Operação permitida apenas para indicações diretas com consentimento declarado pelo indicador (consent_status = declarado_indicador).',
+    })
+  }
+
+  const nowIso = new Date().toISOString()
+  ref.set('first_contact_at', nowIso)
+  ref.set('first_contact_by', authRecord.id)
+  $app.save(ref)
+
+  // Registra evento interno NÃO visível ao indicador
+  try {
+    const eventsCol = $app.findCollectionByNameOrId('referral_events')
+    const ev = new Record(eventsCol)
+    ev.set('referral_id', ref.id)
+    ev.set('from_status', ref.getString('status'))
+    ev.set('to_status', ref.getString('status'))
+    ev.set('actor_id', authRecord.id)
+    ev.set('actor_name', authRecord.getString('name') || authRecord.getString('email'))
+    ev.set(
+      'reason',
+      'Primeiro contato realizado pelo corretor com informação de origem da indicação.',
+    )
+    ev.set('public_label', 'Primeiro contato realizado')
+    ev.set('visible_to_participant', false)
+    ev.set(
+      'metadata',
+      JSON.stringify({
+        action: 'first_contact_done',
+        first_contact_at: nowIso,
+        first_contact_by: authRecord.id,
+      }),
+    )
+    $app.save(ev)
+  } catch (_) {}
+
+  // Auditoria
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('actor_id', authRecord.id)
+    audit.set('actor_email', authRecord.getString('email'))
+    audit.set('action', 'referral_first_contact_done')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', ref.id)
+    audit.set(
+      'details',
+      JSON.stringify({
+        first_contact_at: nowIso,
+        first_contact_by: authRecord.id,
+        first_contact_by_name: authRecord.getString('name'),
+      }),
+    )
+    audit.set('ip_address', e.request.remoteAddr)
+    $app.save(audit)
+  } catch (_) {}
+
+  return e.json(200, {
+    success: true,
+    message: 'Primeiro contato registrado com sucesso.',
+    referral_id: ref.id,
+    first_contact_at: nowIso,
+    first_contact_by: authRecord.id,
+  })
+})
+
+/**
+ * Route: POST /backend/v1/referrals/contact-refused
+ * C10b — Indicado não quer ser contatado.
+ * Anonimiza os dados do indicado (nome, telefone, e-mail, CPF, endereço e descrição),
+ * muda status para 'cancelada' com motivo público 'Não aproveitada',
+ * cancela recompensas/gratificações ainda não pagas dessa indicação
+ * e grava em audit_logs quem fez e quando.
+ * Exige admin ou operador e consent_status = 'declarado_indicador'
+ */
+routerAdd('POST', '/backend/v1/referrals/contact-refused', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) {
+    return e.json(401, { message: 'Não autorizado. Faça login como operador ou administrador.' })
+  }
+
+  let isAllowed = false
+  if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+    isAllowed = true
+  } else {
+    try {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isAllowed = roles.length > 0
+    } catch (_) {
+      isAllowed = false
+    }
+  }
+
+  if (!isAllowed) {
+    return e.json(403, {
+      message: 'Acesso restrito a corretores operadores ou administradores.',
+    })
+  }
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const referralId = (body.referral_id || '').trim()
+  const reason = (body.reason || 'Indicado não quer ser contatado').trim()
+
+  if (!referralId) {
+    return e.json(400, { message: 'ID da indicação é obrigatório.' })
+  }
+
+  let ref = null
+  try {
+    ref = $app.findRecordById('referrals', referralId)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+
+  // Validação estrita: apenas indicações com consent_status = 'declarado_indicador'
+  const consentStatus = ref.getString('consent_status')
+  if (consentStatus !== 'declarado_indicador') {
+    return e.json(400, {
+      message:
+        'Operação permitida apenas para indicações diretas com consentimento declarado pelo indicador (consent_status = declarado_indicador).',
+    })
+  }
+
+  const nowIso = new Date().toISOString()
+  const previousStatus = ref.getString('status')
+  const maskedLabel = '[DADOS APAGADOS - CONTATO RECUSADO]'
+
+  // 1. Anonimizar dados do indicado
+  ref.set('status', 'cancelada')
+  ref.set('status_reason', reason)
+  ref.set('public_reason_code', 'recusada')
+  ref.set('owner_name', maskedLabel)
+  ref.set('owner_phone', '')
+  ref.set('owner_email', '')
+  ref.set('owner_cpf', '')
+  ref.set('buyer_name', maskedLabel)
+  ref.set('buyer_phone', '')
+  ref.set('buyer_email', '')
+  ref.set('unit', '')
+  ref.set('normalized_address', '')
+  ref.set('description', `[Dados do indicado excluídos: ${reason}]`)
+  ref.set('anonymized_at', nowIso)
+  ref.set('anonymized_reason', reason)
+  $app.save(ref)
+
+  // 2. Cancelar recompensas e gratificações ainda não pagas
+  // (status: em_analise, pendente_dados, aprovada, em_lote não pagas, aguardando_comissao, em_revisao_admin)
+  let cancelledRewardsCount = 0
+  try {
+    const unpaidRewards = $app.findRecordsByFilter(
+      'rewards',
+      'referral_id = {:refId} && status != "paga" && status != "cancelada"',
+      'created',
+      100,
+      0,
+      { refId: ref.id },
+    )
+    for (let i = 0; i < unpaidRewards.length; i++) {
+      const rw = unpaidRewards[i]
+      rw.set('status', 'cancelada')
+      rw.set(
+        'adjustment_reason',
+        `Cancelada automaticamente por recusa de contato do indicado na indicação #${ref.id}`,
+      )
+      $app.save(rw)
+      cancelledRewardsCount++
+    }
+  } catch (errRw) {
+    console.error('[contact-refused] Erro ao cancelar recompensas:', errRw)
+  }
+
+  // Cancelar também benefit_grants (gratificações de catálogo) não entregues
+  let cancelledGrantsCount = 0
+  try {
+    const unpaidGrants = $app.findRecordsByFilter(
+      'benefit_grants',
+      'referral_id = {:refId} && status != "entregue" && status != "cancelado"',
+      'created',
+      50,
+      0,
+      { refId: ref.id },
+    )
+    for (let j = 0; j < unpaidGrants.length; j++) {
+      const bg = unpaidGrants[j]
+      bg.set('status', 'cancelado')
+      bg.set('notes', `Cancelado por recusa de contato do indicado na indicação #${ref.id}`)
+      $app.save(bg)
+      cancelledGrantsCount++
+    }
+  } catch (errBg) {
+    console.error('[contact-refused] Erro ao cancelar gratificações de catálogo:', errBg)
+  }
+
+  // 3. Registrar evento de cancelamento com rótulo público "Não aproveitada"
+  try {
+    const eventsCol = $app.findCollectionByNameOrId('referral_events')
+    const ev = new Record(eventsCol)
+    ev.set('referral_id', ref.id)
+    ev.set('from_status', previousStatus)
+    ev.set('to_status', 'cancelada')
+    ev.set('actor_id', authRecord.id)
+    ev.set('actor_name', authRecord.getString('name') || authRecord.getString('email'))
+    ev.set('reason', reason)
+    ev.set('public_reason_code', 'recusada')
+    ev.set('public_label', 'Não aproveitada')
+    ev.set('visible_to_participant', true)
+    ev.set(
+      'metadata',
+      JSON.stringify({
+        action: 'contact_refused',
+        cancelled_rewards_count: cancelledRewardsCount,
+        cancelled_grants_count: cancelledGrantsCount,
+      }),
+    )
+    $app.save(ev)
+  } catch (_) {}
+
+  // 4. Gravar em audit_logs quem fez e quando
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('actor_id', authRecord.id)
+    audit.set('actor_email', authRecord.getString('email'))
+    audit.set('action', 'referral_contact_refused')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', ref.id)
+    audit.set(
+      'details',
+      JSON.stringify({
+        reason: reason,
+        anonymized_at: nowIso,
+        cancelled_rewards_count: cancelledRewardsCount,
+        cancelled_grants_count: cancelledGrantsCount,
+        actor_name: authRecord.getString('name'),
+      }),
+    )
+    audit.set('ip_address', e.request.remoteAddr)
+    $app.save(audit)
+  } catch (errAudit) {
+    console.error('[contact-refused] Erro ao gravar audit log:', errAudit)
+  }
+
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado anonimizados e recompensas canceladas.',
+    referral_id: ref.id,
+    cancelled_rewards_count: cancelledRewardsCount,
+    cancelled_grants_count: cancelledGrantsCount,
+  })
+})
+
+/**
+ * Route: POST /backend/v1/referrals/refuse-contact (compatibilidade legada)
  */
 routerAdd('POST', '/backend/v1/referrals/refuse-contact', (e) => {
   const reqInfo = e.requestInfo()

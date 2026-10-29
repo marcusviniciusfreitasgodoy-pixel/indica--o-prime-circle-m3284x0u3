@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-29T19:13:20.309Z",
+  "generatedAt": "2026-10-29T19:45:54.480Z",
   "collections": [
     {
       "name": "users",
@@ -71,6 +71,12 @@
         {
           "name": "is_financeiro",
           "type": "bool",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "creci",
+          "type": "text",
           "required": false,
           "system": false
         }
@@ -447,6 +453,25 @@
           "type": "text",
           "required": false,
           "system": false
+        },
+        {
+          "name": "consent_status",
+          "type": "text",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "first_contact_at",
+          "type": "date",
+          "required": false,
+          "system": false
+        },
+        {
+          "name": "first_contact_by",
+          "type": "relation",
+          "required": false,
+          "system": false,
+          "collectionRef": "users"
         }
       ],
       "indexes": [

@@ -60,6 +60,7 @@ export interface Member {
   is_admin?: boolean
   is_operador?: boolean
   is_financeiro?: boolean
+  creci?: string
   created: string
   updated: string
 }
@@ -293,6 +294,9 @@ export interface Referral {
   capacidade_financeira_demonstrada?: 'sim' | 'nao' | boolean | string
   tipo_comprovacao_financeira?: string
   descricao_comprovacao_financeira?: string
+  consent_status?: string
+  first_contact_at?: string
+  first_contact_by?: string
   history?: ReferralHistoryItem[] | string
   created: string
   updated: string
@@ -301,6 +305,7 @@ export interface Referral {
     current_owner_id?: Member
     original_owner_id?: Member
     assigned_operator_id?: Member
+    first_contact_by?: Member
     condominium_id?: Condominium
     participant_id?: Participant
   }

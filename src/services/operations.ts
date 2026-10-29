@@ -690,3 +690,38 @@ export async function getCaptureRecords(referralId: string): Promise<CaptureReco
     expand: 'document_id,requested_by,approved_by',
   })
 }
+
+/**
+ * C10b — Primeiro contato da indicação direta
+ */
+export async function markFirstContactDone(referralId: string): Promise<{
+  success: boolean
+  message: string
+  referral_id: string
+  first_contact_at: string
+  first_contact_by: string
+}> {
+  return pb.send('/backend/v1/referrals/first-contact-done', {
+    method: 'POST',
+    body: { referral_id: referralId },
+  })
+}
+
+export async function markContactRefused(
+  referralId: string,
+  reason?: string,
+): Promise<{
+  success: boolean
+  message: string
+  referral_id: string
+  cancelled_rewards_count?: number
+  cancelled_grants_count?: number
+}> {
+  return pb.send('/backend/v1/referrals/contact-refused', {
+    method: 'POST',
+    body: {
+      referral_id: referralId,
+      reason: reason || 'Indicado não quer ser contatado',
+    },
+  })
+}
