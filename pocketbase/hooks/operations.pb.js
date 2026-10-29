@@ -1191,7 +1191,15 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
   delete sanitized.referral_code
 
   // Extrair campos permitidos
-  const categoryId = (sanitized.category_id || '').trim()
+  const invitationCode = (
+    sanitized.invitation_code ||
+    sanitized.convite ||
+    sanitized.invite_code ||
+    ''
+  )
+    .trim()
+    .toUpperCase()
+  let categoryId = (sanitized.category_id || '').trim()
   const name = (sanitized.nome || sanitized.name || '').trim()
   const cpf = (sanitized.cpf || sanitized.CPF || '').trim()
   const phone = (sanitized.telefone || sanitized.phone || '').trim()
@@ -1201,6 +1209,25 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
   const cnpj = (sanitized.cnpj || sanitized.CNPJ || '').trim()
   const roleTitle = (sanitized.role_title || '').trim()
   const creci = (sanitized.creci || sanitized.CRECI || '').trim()
+  const conselhoFiscalNotifiedAt = (sanitized.conselho_fiscal_notified_at || '').trim()
+  const ataFileName = (sanitized.ata_file_name || sanitized.ata_nome_arquivo || '').trim()
+  const ataBase64 = (sanitized.ata_file_base64 || sanitized.ata_base64 || '').trim()
+  const ataFileType = (sanitized.ata_file_type || 'application/pdf').trim()
+
+  // Declarações obrigatórias
+  const declarouMaioridade = !!(
+    sanitized.declarou_maioridade === true || sanitized.declarouMaioridade === true
+  )
+  const declarouVinculoEmpregador = !!(
+    sanitized.declarou_vinculo_empregador === true || sanitized.declarouVinculoEmpregador === true
+  )
+  const declarouNaoUsoSistemas = !!(
+    sanitized.declarou_nao_uso_sistemas === true || sanitized.declarouNaoUsoSistemas === true
+  )
+  const declarouEntregaEmMaos = !!(
+    sanitized.declarou_entrega_em_maos === true || sanitized.declarouEntregaEmMaos === true
+  )
+
   const whatsappOptin = !!(sanitized.whatsapp_optin !== undefined
     ? sanitized.whatsapp_optin
     : sanitized.whatsappOptin)
@@ -1213,6 +1240,47 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
       ? sanitized.documents
       : []
 
+  // 1. CADASTRO SÓ POR CONVITE: recusar com 400 sem convite válido, não usado e não vencido
+  if (!invitationCode) {
+    return e.json(400, {
+      message:
+        'Convite obrigatório. Para se cadastrar no programa é necessário um convite exclusivo da equipe Godoy Prime.',
+    })
+  }
+
+  let invitationRec = null
+  try {
+    invitationRec = $app.findFirstRecordByFilter('invitations', 'code = {:code}', {
+      code: invitationCode,
+    })
+  } catch (_) {
+    return e.json(400, {
+      message: 'Convite inválido ou não encontrado. Verifique o código informado no link.',
+    })
+  }
+
+  const usedBy = invitationRec.getString('used_by')
+  if (usedBy) {
+    return e.json(400, {
+      message: 'Este convite já foi utilizado por outro participante.',
+    })
+  }
+
+  const expiresAt = invitationRec.getString('expires_at')
+  if (expiresAt) {
+    const expDate = new Date(expiresAt).getTime()
+    if (Date.now() > expDate) {
+      return e.json(400, {
+        message: 'Este convite está expirado. Solicite um novo convite à equipe Godoy Prime.',
+      })
+    }
+  }
+
+  // Se o corpo não trouxer categoria, usar a sugerida do convite
+  if (!categoryId && invitationRec.getString('category_id')) {
+    categoryId = invitationRec.getString('category_id')
+  }
+
   // Validações básicas de entrada
   if (!name || !email || !password) {
     return e.json(400, { message: 'Nome, e-mail e senha são obrigatórios.' })
@@ -1224,6 +1292,73 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
 
   if (!categoryId) {
     return e.json(400, { message: 'Categoria de indicador é obrigatória.' })
+  }
+
+  // Buscar categoria vinculada
+  let categoryRec = null
+  try {
+    categoryRec = $app.findRecordById('participant_categories', categoryId)
+  } catch (_) {
+    return e.json(400, { message: 'Categoria informada não encontrada.' })
+  }
+
+  // Item 2: Recusar com 400 categorias com pilot_enabled = false
+  if (!categoryRec.getBool('pilot_enabled')) {
+    return e.json(400, {
+      message: `A categoria selecionada ('${categoryRec.getString('name')}') não está habilitada nesta fase do piloto.`,
+    })
+  }
+
+  // Item 4: Declaração de maioridade civil obrigatória (18 anos ou mais)
+  if (!declarouMaioridade) {
+    return e.json(400, {
+      message: 'É obrigatório declarar ter 18 anos ou mais para participar do programa.',
+    })
+  }
+
+  const catSlug = categoryRec.getString('slug')
+
+  // Item 2: Declarações obrigatórias para porteiro_zelador, prestador_residencial e sindico
+  const isPorteiroPrestadorSindico =
+    catSlug === 'porteiro_zelador' || catSlug === 'prestador_residencial' || catSlug === 'sindico'
+  if (isPorteiroPrestadorSindico) {
+    if (!declarouVinculoEmpregador) {
+      return e.json(400, {
+        message:
+          'É obrigatório declarar que seu contrato de trabalho e o regimento do condomínio ou empregador não vedam esta atividade.',
+      })
+    }
+    if (!declarouNaoUsoSistemas) {
+      return e.json(400, {
+        message:
+          'É obrigatório declarar que não usará dados, cadastros, sistemas ou câmeras do condomínio ou empregador.',
+      })
+    }
+    if (!declarouEntregaEmMaos) {
+      return e.json(400, {
+        message: 'É obrigatório declarar que apenas entregará o link de indicação em mãos.',
+      })
+    }
+  }
+
+  // Item 2: Síndico exige data de comunicação ao conselho fiscal
+  if (catSlug === 'sindico') {
+    if (!conselhoFiscalNotifiedAt) {
+      return e.json(400, {
+        message:
+          'Para a categoria síndico, é obrigatório informar a data em que comunicou a adesão ao conselho fiscal.',
+      })
+    }
+  }
+
+  // Item 2: Entidade condominial exige upload da ata de assembleia
+  if (catSlug === 'entidade_condominial') {
+    if (!ataBase64 || !ataFileName) {
+      return e.json(400, {
+        message:
+          'Para a categoria de entidade condominial ou associação, o envio da ata de assembleia é obrigatório.',
+      })
+    }
   }
 
   // 4. Validação dos 4 documentos legais obrigatórios vigentes em legal_documents
@@ -1293,16 +1428,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
     }
   }
 
-  // Buscar categoria vinculada
-  let categoryRec = null
-  try {
-    categoryRec = $app.findRecordById('participant_categories', categoryId)
-  } catch (_) {
-    return e.json(400, { message: 'Categoria informada não encontrada.' })
-  }
-
   // Validação de condomínio quando a categoria exigir condomínio
-  const catSlug = categoryRec.getString('slug')
   const requiresCondo =
     catSlug === 'porteiro_zelador' || catSlug === 'sindico' || catSlug === 'entidade_condominial'
   if (requiresCondo && !condominiumId) {
@@ -1385,11 +1511,47 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
       if (cnpj) partRec.set('cnpj', cnpj)
       if (roleTitle) partRec.set('role_title', roleTitle)
       if (creci) partRec.set('creci', creci)
+      if (conselhoFiscalNotifiedAt)
+        partRec.set('conselho_fiscal_notified_at', conselhoFiscalNotifiedAt)
+      if (invitationCode) partRec.set('invitation_code', invitationCode)
       partRec.set('marketing_optin', marketingOptin)
       if (referralCode) partRec.set('referral_code', referralCode)
 
       txApp.save(partRec)
       finalParticipantId = partRec.id
+
+      // 2.b Marcar o convite como usado DENTRO da mesma transação
+      if (invitationRec) {
+        invitationRec.set('used_by', userRec.id)
+        invitationRec.set('used_at', nowIso)
+        txApp.save(invitationRec)
+      }
+
+      // 2.c Se for entidade_condominial e veio ataBase64, gravar na coleção documents
+      if (catSlug === 'entidade_condominial' && ataBase64) {
+        const docsCol = txApp.findCollectionByNameOrId('documents')
+        const ataDoc = new Record(docsCol)
+        ataDoc.set('participant_id', partRec.id)
+        ataDoc.set('bucket_type', 'condo-assembly-records')
+        ataDoc.set('title', ataFileName || 'Ata de Assembleia Geral')
+        ataDoc.set('uploaded_by', userRec.id)
+        ataDoc.set('file_type', ataFileType || 'application/pdf')
+        ataDoc.set('verification_status', 'pendente')
+        ataDoc.set(
+          'notes',
+          `Ata de assembleia submetida no cadastro público pelo usuário ${email}.`,
+        )
+
+        // Upload do arquivo via $filesystem.fileFromBytes
+        try {
+          const rawBytes = $security.base64Decode(ataBase64)
+          const fileObj = $filesystem.fileFromBytes(rawBytes, ataFileName || 'ata_assembleia.pdf')
+          ataDoc.set('file', fileObj)
+        } catch (errAta) {
+          console.warn('[register-participant] Falha ao decodificar arquivo de ata:', errAta)
+        }
+        txApp.save(ataDoc)
+      }
 
       // 3. Vincular participante ao condomínio se informado
       if (condominiumId) {
@@ -1401,8 +1563,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
         txApp.save(pcRec)
       }
 
-      // 4. Gravar os 4 documentos obrigatórios aceitos em acceptances
-      const nowIso = new Date().toISOString()
+      // 4. Gravar os documentos obrigatórios e declarações específicas em acceptances
       const acceptancesCol = txApp.findCollectionByNameOrId('acceptances')
       for (let i = 0; i < requiredDocSlugs.length; i++) {
         const slug = requiredDocSlugs[i]
@@ -1416,6 +1577,47 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
           accRec.set('accepted_at', nowIso)
           txApp.save(accRec)
         }
+      }
+
+      // Gravar declaração de maioridade (18+ anos) em acceptances
+      try {
+        const docMaioridade = txApp.findFirstRecordByFilter('legal_documents', 'slug = {:s}', {
+          s: 'declaracao_maioridade',
+        })
+        if (docMaioridade) {
+          const accM = new Record(acceptancesCol)
+          accM.set('user_id', userRec.id)
+          accM.set('document_id', docMaioridade.id)
+          accM.set('ip_address', clientIp)
+          accM.set('user_agent', userAgent)
+          accM.set('accepted_at', nowIso)
+          txApp.save(accM)
+        }
+      } catch (_) {}
+
+      // Se porteiro, prestador ou síndico, gravar as 3 declarações em acceptances
+      if (isPorteiroPrestadorSindico) {
+        const specialSlugs = [
+          'declaracao_vinculo_empregador',
+          'declaracao_nao_uso_sistemas',
+          'declaracao_entrega_em_maos',
+        ]
+        specialSlugs.forEach((s) => {
+          try {
+            const docSpecific = txApp.findFirstRecordByFilter('legal_documents', 'slug = {:s}', {
+              s,
+            })
+            if (docSpecific) {
+              const accS = new Record(acceptancesCol)
+              accS.set('user_id', userRec.id)
+              accS.set('document_id', docSpecific.id)
+              accS.set('ip_address', clientIp)
+              accS.set('user_agent', userAgent)
+              accS.set('accepted_at', nowIso)
+              txApp.save(accS)
+            }
+          } catch (_) {}
+        })
       }
 
       // 5. Gravar o opt-in em whatsapp_optins se autorizado
@@ -1657,7 +1859,15 @@ routerAdd('GET', '/backend/v1/public/form-data', (e) => {
 
   let categories = []
   try {
-    const catRecords = $app.findRecordsByFilter('participant_categories', '', 'front,name', 100, 0)
+    // Escopo C3a-fix2d: A rota devolve apenas as categorias com pilot_enabled = true
+    const catRecords = $app.findRecordsByFilter(
+      'participant_categories',
+      'pilot_enabled = {:pe}',
+      'front,name',
+      100,
+      0,
+      { pe: true },
+    )
     categories = catRecords.map((c) => {
       const slug = c.getString('slug')
       const exigeCondominio =
@@ -1676,6 +1886,8 @@ routerAdd('GET', '/backend/v1/public/form-data', (e) => {
         exige_condominio: exigeCondominio,
         is_entidade_empresa: isEntidadeOuEmpresa,
         is_corretor: isCorretor,
+        pilot_enabled: c.getBool('pilot_enabled'),
+        allowed_channels: c.getString('allowed_channels'),
       }
     })
   } catch (_) {}

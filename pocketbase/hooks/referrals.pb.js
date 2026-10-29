@@ -193,8 +193,56 @@ routerAdd('POST', '/backend/v1/participant/update-profile', (e) => {
     const oldPixKeyType = participant.getString('pix_key_type') || ''
     const newPixKey = body.pix_key !== undefined ? String(body.pix_key).trim() : oldPixKey
     const newPixKeyType =
-      body.pix_key_type !== undefined ? String(body.pix_key_type).trim() : oldPixKeyType
+      body.pix_key_type !== undefined
+        ? String(body.pix_key_type).trim().toLowerCase()
+        : oldPixKeyType
     const pixChanged = body.pix_key !== undefined && newPixKey !== oldPixKey
+
+    const declarouTitularidade = !!(
+      body.pix_ownership_declared === true ||
+      body.declarou_titularidade === true ||
+      body.declarouTitularidade === true
+    )
+
+    // Escopo C3a-fix2d (ELEGIBILIDADE):
+    // A chave Pix precisa ser do CPF do próprio participante; se a chave for de outro tipo (e-mail, telefone, aleatória),
+    // exigir a declaração "A chave é de minha titularidade" marcada, e gravar essa declaração em audit_logs (quem declarou, quando, IP).
+    // Recusar com 400 se não vier a declaração com chave de outro tipo.
+    if (newPixKey && newPixKeyType !== 'cpf') {
+      if (!declarouTitularidade) {
+        return e.json(400, {
+          message:
+            'Para chaves Pix que não sejam CPF, é obrigatório marcar a declaração "A chave é de minha titularidade".',
+        })
+      }
+
+      // Gravar a declaração de titularidade em audit_logs
+      try {
+        const auditCol = $app.findCollectionByNameOrId('audit_logs')
+        const audit = new Record(auditCol)
+        audit.set('actor_id', authRecord.id)
+        audit.set('actor_email', authRecord.getString('email'))
+        audit.set('action', 'pix_ownership_declared')
+        audit.set('resource_type', 'participants')
+        audit.set('resource_id', participant.id)
+        audit.set(
+          'details',
+          JSON.stringify({
+            pix_key_type: newPixKeyType,
+            pix_key_masked: maskPixKey(newPixKey),
+            declaration: 'A chave é de minha titularidade',
+            declared_at: new Date().toISOString(),
+          }),
+        )
+        audit.set('ip_address', e.request.remoteAddr)
+        $app.save(audit)
+      } catch (errAuditTitular) {
+        console.error(
+          '[update-profile] Erro ao gravar audit log de titularidade Pix:',
+          errAuditTitular,
+        )
+      }
+    }
 
     if (body.phone !== undefined) participant.set('phone', String(body.phone).trim())
     if (body.address !== undefined) participant.set('address', String(body.address).trim())

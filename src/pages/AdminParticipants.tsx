@@ -33,6 +33,10 @@ import {
   Loader2,
   ShieldAlert,
   Award,
+  Ticket,
+  Copy,
+  Check,
+  Send,
 } from 'lucide-react'
 
 export function AdminParticipantsPage() {
@@ -75,6 +79,13 @@ export function AdminParticipantsPage() {
   const [contractFile, setContractFile] = useState<File | null>(null)
   const [contractTitle, setContractTitle] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // Gerar convite modal
+  const [inviteModalOpen, setInviteModalOpen] = useState(false)
+  const [inviteCategory, setInviteCategory] = useState('')
+  const [generatedInviteCode, setGeneratedInviteCode] = useState('')
+  const [copiedLink, setCopiedLink] = useState(false)
+  const [isGeneratingInvite, setIsGeneratingInvite] = useState(false)
 
   const loadData = async () => {
     try {
@@ -221,6 +232,65 @@ export function AdminParticipantsPage() {
     return true
   })
 
+  // Gerador de código de convite sem letras ambíguas (sem O, I, L, 0, 1)
+  const generateCleanCode = (len = 8) => {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+    let res = ''
+    for (let i = 0; i < len; i++) {
+      res += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return res
+  }
+
+  const handleCreateInvitation = async () => {
+    try {
+      setIsGeneratingInvite(true)
+      const code = generateCleanCode(8)
+      // Validade de 30 dias por padrão
+      const expires = new Date()
+      expires.setDate(expires.getDate() + 30)
+
+      await pb.collection('invitations').create({
+        code,
+        category_id: inviteCategory || null,
+        created_by: pb.authStore.record?.id,
+        expires_at: expires.toISOString(),
+      })
+
+      setGeneratedInviteCode(code)
+      setCopiedLink(false)
+      toast({
+        title: 'Convite Gerado!',
+        description: `Código ${code} criado com sucesso. Válido por 30 dias.`,
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao gerar convite',
+        description: err.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setIsGeneratingInvite(false)
+    }
+  }
+
+  const getInviteLink = () => {
+    if (!generatedInviteCode) return ''
+    const origin = window.location.origin
+    return `${origin}/cadastro?convite=${generatedInviteCode}`
+  }
+
+  const copyInviteLink = () => {
+    const link = getInviteLink()
+    navigator.clipboard.writeText(link)
+    setCopiedLink(true)
+    setTimeout(() => setCopiedLink(false), 2500)
+    toast({
+      title: 'Link copiado!',
+      description: 'O link de cadastro com convite foi copiado para a área de transferência.',
+    })
+  }
+
   return (
     <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
       <AdminNavbar />
@@ -236,6 +306,18 @@ export function AdminParticipantsPage() {
               desempenho.
             </p>
           </div>
+
+          <Button
+            onClick={() => {
+              setInviteModalOpen(true)
+              setGeneratedInviteCode('')
+              setInviteCategory('')
+            }}
+            className="rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold text-xs h-9"
+          >
+            <Ticket className="w-4 h-4 mr-1.5" />
+            Gerar convite
+          </Button>
         </div>
 
         {/* Filter Bar */}
@@ -565,6 +647,149 @@ export function AdminParticipantsPage() {
               className="bg-rose-700 hover:bg-rose-800 text-white rounded-none text-xs"
             >
               Confirmar Suspensão
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Gerar Convite Exclusivo */}
+      <Dialog open={inviteModalOpen} onOpenChange={(open) => setInviteModalOpen(open)}>
+        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg text-white flex items-center gap-2">
+              <Ticket className="w-5 h-5 text-amber-500" />
+              Gerar Convite de Cadastro
+            </DialogTitle>
+            <DialogDescription className="text-stone-400 text-xs">
+              Gere um link exclusivo de convite para envio por WhatsApp a novos parceiros ou
+              porteiros. O cadastro só é aceito com convite válido.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2 text-xs">
+            {!generatedInviteCode ? (
+              <div className="space-y-3">
+                <div className="space-y-1.5">
+                  <label className="text-stone-300 font-medium block">
+                    Categoria sugerida (opcional):
+                  </label>
+                  <select
+                    value={inviteCategory}
+                    onChange={(e) => setInviteCategory(e.target.value)}
+                    className="w-full h-10 px-3 text-xs bg-stone-950 border border-stone-800 text-stone-100 rounded-none focus:outline-none focus:ring-1 focus:ring-amber-500"
+                  >
+                    <option value="">Nenhuma (o participante escolhe)</option>
+                    {categoriesList
+                      .filter((c: any) => c.pilot_enabled !== false)
+                      .map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                  </select>
+                  <p className="text-[11px] text-stone-500">
+                    Se indicada, o cadastro já preenche esta categoria como padrão.
+                  </p>
+                </div>
+
+                <Button
+                  onClick={handleCreateInvitation}
+                  disabled={isGeneratingInvite}
+                  className="w-full rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold text-xs h-10"
+                >
+                  {isGeneratingInvite ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                      Gerando Código...
+                    </>
+                  ) : (
+                    'Gerar Código de Convite'
+                  )}
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="p-4 bg-stone-950 border border-amber-500/40 text-center space-y-2">
+                  <span className="text-[10px] text-amber-400 uppercase tracking-widest font-semibold block">
+                    Código do Convite
+                  </span>
+                  <div className="text-2xl font-mono font-bold tracking-wider text-white">
+                    {generatedInviteCode}
+                  </div>
+                  <span className="text-[11px] text-stone-400 block">
+                    Válido por 30 dias para 1 utilização exclusiva
+                  </span>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-stone-300 font-medium block">
+                    Link Completo de Cadastro:
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <Input
+                      readOnly
+                      value={getInviteLink()}
+                      className="bg-stone-950 border-stone-800 text-stone-200 text-xs rounded-none font-mono"
+                    />
+                    <Button
+                      size="sm"
+                      onClick={copyInviteLink}
+                      className="rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 shrink-0 text-xs px-3"
+                    >
+                      {copiedLink ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 mr-1" />
+                          Copiado
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 mr-1" />
+                          Copiar
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="pt-2 flex flex-col sm:flex-row gap-2">
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="flex-1 rounded-none border-emerald-800/80 bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 text-xs"
+                  >
+                    <a
+                      href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
+                        `Olá! Você foi convidado para o programa exclusivo de indicações da Godoy Prime. Acesse o link abaixo para concluir seu cadastro:\n\n${getInviteLink()}`,
+                      )}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Send className="w-3.5 h-3.5 mr-1.5" />
+                      Enviar pelo WhatsApp
+                    </a>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setGeneratedInviteCode('')
+                      setInviteCategory('')
+                    }}
+                    className="rounded-none text-xs text-stone-400"
+                  >
+                    Gerar outro
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setInviteModalOpen(false)}
+              className="rounded-none text-xs text-stone-400 border-stone-800"
+            >
+              Fechar
             </Button>
           </DialogFooter>
         </DialogContent>

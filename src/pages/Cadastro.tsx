@@ -42,10 +42,8 @@ export default function CadastroPage() {
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
 
-  // Param ?frente=comunidade | parceiros
-  const frenteParam = searchParams.get('frente')?.toLowerCase()
-  const validFrenteFilter =
-    frenteParam === 'comunidade' || frenteParam === 'parceiros' ? frenteParam : null
+  // Convite via query param ?convite=CODIGO
+  const conviteParam = (searchParams.get('convite') || searchParams.get('invite') || '').trim()
 
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
 
@@ -61,8 +59,18 @@ export default function CadastroPage() {
   const [cnpj, setCnpj] = useState('')
   const [roleTitle, setRoleTitle] = useState('')
   const [creci, setCreci] = useState('')
+  const [conselhoFiscalNotifiedAt, setConselhoFiscalNotifiedAt] = useState('')
 
-  // Checkboxes
+  // Arquivo da Ata para Entidade Condominial
+  const [ataFile, setAtaFile] = useState<File | null>(null)
+  const [ataBase64, setAtaBase64] = useState<string>('')
+
+  // Checkboxes gerais e de elegibilidade
+  const [declarouMaioridade, setDeclarouMaioridade] = useState(false)
+  const [declarouVinculoEmpregador, setDeclarouVinculoEmpregador] = useState(false)
+  const [declarouNaoUsoSistemas, setDeclarouNaoUsoSistemas] = useState(false)
+  const [declarouEntregaEmMaos, setDeclarouEntregaEmMaos] = useState(false)
+
   const [acceptedTerms, setAcceptedTerms] = useState(false)
   const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
   const [acceptedRegulamento, setAcceptedRegulamento] = useState(false)
@@ -124,42 +132,61 @@ export default function CadastroPage() {
     }
   }, [])
 
-  // Textos em linguagem comum por slug
+  // Textos em linguagem comum por slug com os 6 textos EXATOS da especificação C3a-fix2d
   const CATEGORY_COMMON_LABELS: Record<string, string> = {
+    cliente: 'Sou morador, proprietário ou cliente',
     porteiro_zelador: 'Trabalho em um condomínio (porteiro, zelador)',
     prestador_residencial: 'Presto serviços em residências (diarista, eletricista, jardineiro…)',
-    cliente: 'Sou morador, proprietário ou cliente',
     sindico: 'Sou síndico',
-    parceiro_profissional: 'Sou profissional liberal (advogado, arquiteto, engenheiro, contador…)',
-    empresa_parceira: 'Represento uma empresa',
-    administradora: 'Represento uma administradora de condomínios',
     entidade_condominial: 'Represento uma associação ou condomínio',
-    corretor_parceiro: 'Sou corretor de imóveis',
+    parceiro_profissional: 'Sou profissional liberal (arquiteto, engenheiro, contador…)',
   }
 
-  // Filtrar categorias pelo query param ?frente=comunidade | parceiros (se ausente, mostra todas)
-  const availableCategories = validFrenteFilter
-    ? categories.filter((c) => c.front === validFrenteFilter)
-    : categories
+  // Filtrar somente as categorias do piloto com textos mapeados
+  const availableCategories = categories.filter((c) => Boolean(CATEGORY_COMMON_LABELS[c.slug]))
 
   // Categoria atualmente selecionada
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId)
 
   // Determinar regras condicionais
-  const exigeCondominio = selectedCategory
-    ? selectedCategory.exige_condominio ||
-      selectedCategory.slug === 'porteiro_zelador' ||
-      selectedCategory.slug === 'sindico' ||
-      selectedCategory.slug === 'entidade_condominial'
-    : false
+  const selectedSlug = selectedCategory?.slug || ''
+  const exigeCondominio =
+    selectedSlug === 'porteiro_zelador' ||
+    selectedSlug === 'sindico' ||
+    selectedSlug === 'entidade_condominial'
 
-  const exigeEntidadeEmpresa = selectedCategory
-    ? selectedCategory.slug === 'entidade_condominial' ||
-      selectedCategory.slug === 'administradora' ||
-      selectedCategory.slug === 'empresa_parceira'
-    : false
+  const isPorteiroPrestadorSindico =
+    selectedSlug === 'porteiro_zelador' ||
+    selectedSlug === 'prestador_residencial' ||
+    selectedSlug === 'sindico'
 
-  const exigeCreci = selectedCategory ? selectedCategory.slug === 'corretor_parceiro' : false
+  const isSindico = selectedSlug === 'sindico'
+  const isEntidadeCondominial = selectedSlug === 'entidade_condominial'
+
+  const exigeEntidadeEmpresa =
+    selectedSlug === 'entidade_condominial' ||
+    selectedSlug === 'administradora' ||
+    selectedSlug === 'empresa_parceira'
+
+  const exigeCreci = selectedSlug === 'corretor_parceiro'
+
+  const handleAtaUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) {
+      setAtaFile(null)
+      setAtaBase64('')
+      return
+    }
+    setAtaFile(file)
+    const reader = new FileReader()
+    reader.onload = () => {
+      const result = reader.result as string
+      // Extrair base64 puro após data:...;base64,
+      const base64Clean = result.includes(',') ? result.split(',')[1] : result
+      setAtaBase64(base64Clean)
+    }
+    reader.readAsDataURL(file)
+  }
 
   // Formatar máscaras leves
   const handleCpfChange = (val: string) => {
@@ -240,6 +267,44 @@ export default function CadastroPage() {
       return
     }
 
+    // Validação de Maioridade (18+ anos)
+    if (!declarouMaioridade) {
+      setErrorMessage('É obrigatório declarar ter 18 anos ou mais.')
+      return
+    }
+
+    // Validações específicas para porteiro, prestador e síndico
+    if (isPorteiroPrestadorSindico) {
+      if (!declarouVinculoEmpregador) {
+        setErrorMessage(
+          'É obrigatório declarar que seu contrato de trabalho e o regimento do condomínio ou empregador não vedam esta atividade.',
+        )
+        return
+      }
+      if (!declarouNaoUsoSistemas) {
+        setErrorMessage(
+          'É obrigatório declarar que não usará dados, cadastros, sistemas ou câmeras do condomínio ou empregador.',
+        )
+        return
+      }
+      if (!declarouEntregaEmMaos) {
+        setErrorMessage('É obrigatório declarar que apenas entregará o link de indicação em mãos.')
+        return
+      }
+    }
+
+    // Síndico: data da comunicação ao conselho fiscal
+    if (isSindico && !conselhoFiscalNotifiedAt) {
+      setErrorMessage('Por favor, informe a data em que comunicou a adesão ao conselho fiscal.')
+      return
+    }
+
+    // Entidade condominial: upload obrigatório de ata
+    if (isEntidadeCondominial && (!ataFile || !ataBase64)) {
+      setErrorMessage('Para associação ou condomínio, o envio da ata de assembleia é obrigatório.')
+      return
+    }
+
     // Validação dos documentos legais obrigatórios
     if (!acceptedTerms) {
       setErrorMessage('É necessário aceitar os Termos de Uso da Plataforma.')
@@ -282,6 +347,7 @@ export default function CadastroPage() {
       setIsSubmitting(true)
       const res = await registerParticipant({
         category_id: selectedCategoryId,
+        invitation_code: conviteParam || undefined,
         nome: nome.trim(),
         cpf: cpf.trim(),
         telefone: telefone.trim(),
@@ -291,6 +357,14 @@ export default function CadastroPage() {
         cnpj: cnpj.trim() || undefined,
         role_title: roleTitle.trim() || undefined,
         creci: creci.trim() || undefined,
+        conselho_fiscal_notified_at: conselhoFiscalNotifiedAt || undefined,
+        declarou_maioridade: declarouMaioridade,
+        declarou_vinculo_empregador: declarouVinculoEmpregador,
+        declarou_nao_uso_sistemas: declarouNaoUsoSistemas,
+        declarou_entrega_em_maos: declarouEntregaEmMaos,
+        ata_file_name: ataFile ? ataFile.name : undefined,
+        ata_file_base64: ataBase64 || undefined,
+        ata_file_type: ataFile ? ataFile.type || 'application/pdf' : undefined,
         whatsapp_optin: whatsappOptin,
         marketing_optin: marketingOptin,
         accepted_documents: acceptedDocuments,
@@ -532,7 +606,11 @@ export default function CadastroPage() {
               </div>
 
               {/* CAMPOS CONDICIONAIS */}
-              {(exigeCondominio || exigeEntidadeEmpresa || exigeCreci) && (
+              {(exigeCondominio ||
+                exigeEntidadeEmpresa ||
+                exigeCreci ||
+                isSindico ||
+                isEntidadeCondominial) && (
                 <div className="space-y-3 pt-2 border-t border-stone-800/80">
                   <span className="text-xs uppercase tracking-wider text-amber-500 font-semibold block">
                     3. Informações da Categoria
@@ -565,6 +643,60 @@ export default function CadastroPage() {
                       <p className="text-[10px] text-stone-500">
                         Obrigatório para a categoria selecionada para correta apuração e aprovação.
                       </p>
+                    </div>
+                  )}
+
+                  {/* Síndico: Data em que comunicou a adesão ao conselho fiscal */}
+                  {isSindico && (
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="conselho-fiscal-date"
+                        className="text-xs text-stone-300 font-medium"
+                      >
+                        Data em que comunicou a adesão ao conselho fiscal{' '}
+                        <span className="text-amber-500">*</span>
+                      </Label>
+                      <Input
+                        id="conselho-fiscal-date"
+                        type="date"
+                        value={conselhoFiscalNotifiedAt}
+                        onChange={(e) => setConselhoFiscalNotifiedAt(e.target.value)}
+                        required
+                        className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm focus-visible:ring-amber-500 h-10"
+                      />
+                      <p className="text-[10px] text-stone-500">
+                        Exigido para validação de transparência e governança condominial.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Entidade Condominial: Upload da Ata de Assembleia */}
+                  {isEntidadeCondominial && (
+                    <div className="space-y-2 p-3 bg-stone-900/60 border border-stone-800">
+                      <Label
+                        htmlFor="ata-upload"
+                        className="text-xs text-stone-300 font-medium block"
+                      >
+                        Ata de Assembleia Geral <span className="text-amber-500">*</span>
+                      </Label>
+                      <Input
+                        id="ata-upload"
+                        type="file"
+                        accept=".pdf,.png,.jpg,.jpeg"
+                        onChange={handleAtaUpload}
+                        required
+                        className="rounded-none bg-stone-900 border-stone-800 text-stone-300 text-xs file:bg-stone-800 file:text-stone-200 file:border-0 file:mr-2 file:px-2 file:py-1 file:text-xs"
+                      />
+                      <p className="text-[10px] text-stone-400">
+                        Envie a ata de eleição ou ata de assembleia autorizando a representação
+                        condominial (PDF ou imagem). O registro fica pendente de verificação.
+                      </p>
+                      {ataFile && (
+                        <div className="text-[11px] text-emerald-400">
+                          Arquivo selecionado: {ataFile.name} ({(ataFile.size / 1024).toFixed(1)}{' '}
+                          KB)
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -626,11 +758,86 @@ export default function CadastroPage() {
                 </div>
               )}
 
+              {/* DECLARAÇÕES OBRIGATÓRIAS DO TERMO DE ADESÃO PARA PORTEIRO, PRESTADOR E SÍNDICO */}
+              {isPorteiroPrestadorSindico && (
+                <div className="space-y-3 pt-2 border-t border-amber-600/40 bg-amber-950/20 p-3">
+                  <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold block">
+                    Declarações do Termo de Adesão ({selectedCategory?.name})
+                  </span>
+
+                  <div className="flex items-start space-x-2.5">
+                    <Checkbox
+                      id="dec-vinculo"
+                      checked={declarouVinculoEmpregador}
+                      onCheckedChange={(c) => setDeclarouVinculoEmpregador(c === true)}
+                      className="mt-0.5 rounded-none border-amber-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                    />
+                    <label
+                      htmlFor="dec-vinculo"
+                      className="text-stone-200 text-xs cursor-pointer font-medium leading-relaxed"
+                    >
+                      Declaro que meu contrato de trabalho e o regimento do condomínio ou empregador
+                      não vedam esta atividade. <span className="text-amber-500">*</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-start space-x-2.5">
+                    <Checkbox
+                      id="dec-sistemas"
+                      checked={declarouNaoUsoSistemas}
+                      onCheckedChange={(c) => setDeclarouNaoUsoSistemas(c === true)}
+                      className="mt-0.5 rounded-none border-amber-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                    />
+                    <label
+                      htmlFor="dec-sistemas"
+                      className="text-stone-200 text-xs cursor-pointer font-medium leading-relaxed"
+                    >
+                      Declaro que não usarei dados, cadastros, sistemas ou câmeras do condomínio ou
+                      do empregador. <span className="text-amber-500">*</span>
+                    </label>
+                  </div>
+
+                  <div className="flex items-start space-x-2.5">
+                    <Checkbox
+                      id="dec-entrega"
+                      checked={declarouEntregaEmMaos}
+                      onCheckedChange={(c) => setDeclarouEntregaEmMaos(c === true)}
+                      className="mt-0.5 rounded-none border-amber-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                    />
+                    <label
+                      htmlFor="dec-entrega"
+                      className="text-stone-200 text-xs cursor-pointer font-medium leading-relaxed"
+                    >
+                      Declaro que apenas entregarei o link de indicação em mãos.{' '}
+                      <span className="text-amber-500">*</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
               {/* CAIXAS SEPARADAS DE TERMOS LEGAIS E CONSENTIMENTO */}
               <div className="space-y-3 pt-2 border-t border-stone-800/80">
                 <span className="text-xs uppercase tracking-wider text-amber-500 font-semibold block">
-                  4. Termos e Declarações Legais
+                  4. Termos e Elegibilidade
                 </span>
+
+                {/* Declaração de Maioridade Civil (Item 4) */}
+                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/60 border border-amber-500/30">
+                  <Checkbox
+                    id="maioridade-check"
+                    checked={declarouMaioridade}
+                    onCheckedChange={(c) => setDeclarouMaioridade(c === true)}
+                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                  />
+                  <div className="grid gap-1 leading-none text-xs">
+                    <label
+                      htmlFor="maioridade-check"
+                      className="text-stone-100 cursor-pointer font-medium"
+                    >
+                      Declaro ter 18 anos ou mais. <span className="text-amber-500">*</span>
+                    </label>
+                  </div>
+                </div>
 
                 {/* 1. Termos de Uso */}
                 <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/40 border border-stone-800/80">

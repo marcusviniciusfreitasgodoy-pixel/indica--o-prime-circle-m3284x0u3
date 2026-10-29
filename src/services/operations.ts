@@ -316,7 +316,8 @@ export interface PublicFormData {
 }
 
 export interface RegisterParticipantPayload {
-  category_id: string
+  category_id?: string
+  invitation_code?: string
   nome: string
   cpf?: string
   telefone?: string
@@ -326,6 +327,14 @@ export interface RegisterParticipantPayload {
   cnpj?: string
   role_title?: string
   creci?: string
+  conselho_fiscal_notified_at?: string
+  declarou_maioridade?: boolean
+  declarou_vinculo_empregador?: boolean
+  declarou_nao_uso_sistemas?: boolean
+  declarou_entrega_em_maos?: boolean
+  ata_file_name?: string
+  ata_file_base64?: string
+  ata_file_type?: string
   whatsapp_optin?: boolean
   marketing_optin?: boolean
   accepted_documents?: Array<{ id: string; slug?: string; version?: number }>
