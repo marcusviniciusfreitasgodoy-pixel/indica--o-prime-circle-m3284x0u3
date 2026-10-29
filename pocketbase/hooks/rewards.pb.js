@@ -30,17 +30,23 @@ onRecordAfterCreateSuccess((e) => {
       return
     }
 
-    // Janela de atribuição
+    // Janela de atribuição / validade da indicação (90 dias)
     let windowDays = 90
     try {
-      const st = $app.findFirstRecordByData(
-        'program_settings',
-        'key',
-        'capture_attribution_window_days',
-      )
+      const st = $app.findFirstRecordByData('program_settings', 'key', 'referral_validity_days')
       const val = JSON.parse(st.getString('value_json'))
       if (val !== undefined && val !== null) windowDays = Number(val)
-    } catch (_) {}
+    } catch (_) {
+      try {
+        const st2 = $app.findFirstRecordByData(
+          'program_settings',
+          'key',
+          'capture_attribution_window_days',
+        )
+        const val2 = JSON.parse(st2.getString('value_json'))
+        if (val2 !== undefined && val2 !== null) windowDays = Number(val2)
+      } catch (_) {}
+    }
 
     const refCreatedStr = referral.getString('created')
     if (refCreatedStr) {
@@ -50,6 +56,36 @@ onRecordAfterCreateSuccess((e) => {
         return
       }
     }
+
+    // Teto de 8 recompensas por participante por ano civil
+    let annualCap = 8
+    try {
+      const stCap = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'annual_reward_cap_per_participant',
+      )
+      const capVal = JSON.parse(stCap.getString('value_json'))
+      if (typeof capVal === 'number') annualCap = capVal
+    } catch (_) {}
+
+    const currentYear = new Date().getFullYear()
+    const yearStart = `${currentYear}-01-01 00:00:00.000Z`
+    const yearEnd = `${currentYear}-12-31 23:59:59.999Z`
+
+    let isOverAnnualCap = false
+    try {
+      const paidThisYear = $app.findRecordsByFilter(
+        'rewards',
+        `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+        '',
+        100,
+        0,
+      )
+      if (paidThisYear && paidThisYear.length >= annualCap) {
+        isOverAnnualCap = true
+      }
+    } catch (_) {}
 
     let refType = referral.getString('referral_type')
     if (!refType || refType === 'proprietario') {
@@ -140,7 +176,12 @@ onRecordAfterCreateSuccess((e) => {
     const hasCpfPix = !!(
       (participant.getString('pix_key') || '').trim() && (participant.getString('cpf') || '').trim()
     )
-    const initialStatus = amount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise'
+    let initialStatus = amount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise'
+    let adjustmentReason = ''
+    if (isOverAnnualCap) {
+      initialStatus = 'em_revisao_admin'
+      adjustmentReason = 'teto anual'
+    }
 
     const rewardsCol = $app.findCollectionByNameOrId('rewards')
     const rew = new Record(rewardsCol)
@@ -154,6 +195,9 @@ onRecordAfterCreateSuccess((e) => {
     rew.set('final_amount_brl', amount)
     rew.set('via_decline', false)
     rew.set('status', initialStatus)
+    if (adjustmentReason) {
+      rew.set('adjustment_reason', adjustmentReason)
+    }
     $app.save(rew)
 
     try {
