@@ -9,8 +9,6 @@ import {
   Briefcase,
   Building2,
   ExternalLink,
-  Copy,
-  Check,
   ArrowRight,
   ShieldCheck,
   FileText,
@@ -94,7 +92,6 @@ export default function CadastroPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
   const [successResult, setSuccessResult] = useState<RegisterParticipantResponse | null>(null)
-  const [copiedLink, setCopiedLink] = useState(false)
 
   // Carregar dados públicos
   useEffect(() => {
@@ -188,13 +185,6 @@ export default function CadastroPage() {
       )
   }
 
-  const handleCopyLink = (code: string) => {
-    const fullUrl = `${window.location.origin}/i/${code}`
-    navigator.clipboard.writeText(fullUrl)
-    setCopiedLink(true)
-    setTimeout(() => setCopiedLink(false), 2500)
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMessage(null)
@@ -204,8 +194,7 @@ export default function CadastroPage() {
       // Simula sucesso sem registrar robô
       setSuccessResult({
         success: true,
-        message: 'Cadastro recebido, aguardando aprovação.',
-        status: 'pendente_aprovacao',
+        message: 'Cadastro recebido. Você receberá a confirmação por e-mail e WhatsApp.',
       })
       return
     }
@@ -315,9 +304,6 @@ export default function CadastroPage() {
 
   // TELA DE SUCESSO
   if (successResult) {
-    const isAtivo = successResult.status === 'ativo' && !!successResult.referral_code
-    const code = successResult.referral_code || ''
-
     return (
       <div className="flex min-h-screen flex-col justify-center bg-gradient-to-b from-stone-900 via-stone-950 to-black p-4 sm:p-6 lg:p-8">
         <div className="mx-auto w-full max-w-md">
@@ -336,86 +322,20 @@ export default function CadastroPage() {
                 <CheckCircle2 className="w-6 h-6" />
               </div>
 
-              {isAtivo ? (
-                <>
-                  <h2 className="text-xl sm:text-2xl font-serif text-white">
-                    Conta Ativada com Sucesso!
-                  </h2>
-                  <p className="text-sm text-stone-300">
-                    Seu cadastro foi validado. Você já pode compartilhar seu link pessoal exclusivo
-                    para indicar proprietários e compradores.
-                  </p>
+              <h2 className="text-xl sm:text-2xl font-serif text-white">Cadastro recebido</h2>
+              <p className="text-sm text-stone-300 leading-relaxed">
+                Cadastro recebido. Você receberá a confirmação por e-mail e WhatsApp.
+              </p>
 
-                  {/* Caixa do link pessoal */}
-                  <div className="w-full bg-stone-900/90 border border-amber-500/30 p-4 rounded-none my-2 text-left">
-                    <span className="text-[11px] uppercase tracking-wider text-amber-500 font-semibold block mb-1">
-                      Seu Link Pessoal de Indicador
-                    </span>
-                    <div className="flex items-center justify-between gap-2 overflow-hidden">
-                      <span className="text-sm font-mono text-white truncate">
-                        {window.location.origin}/i/{code}
-                      </span>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        onClick={() => handleCopyLink(code)}
-                        className="rounded-none border-stone-700 bg-stone-800 hover:bg-stone-700 text-stone-200 shrink-0 h-8 px-2.5 text-xs"
-                      >
-                        {copiedLink ? (
-                          <>
-                            <Check className="w-3.5 h-3.5 text-emerald-400 mr-1" />
-                            Copiado
-                          </>
-                        ) : (
-                          <>
-                            <Copy className="w-3.5 h-3.5 mr-1" />
-                            Copiar
-                          </>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 w-full flex flex-col gap-2.5">
-                    <Button
-                      asChild
-                      className="w-full rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold shadow-md"
-                    >
-                      <Link to="/entrar">
-                        Acessar Meu Painel
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </Link>
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-xl sm:text-2xl font-serif text-white">
-                    Cadastro recebido, aguardando aprovação
-                  </h2>
-                  <p className="text-sm text-stone-300 leading-relaxed">
-                    Sua solicitação de cadastro foi registrada com sucesso pela equipe Prime Circle.
-                    Nossa equipe revisará as informações fornecidas e ativará seu acesso em breve.
-                  </p>
-                  <div className="w-full p-3.5 bg-stone-900/70 border border-stone-800 text-xs text-stone-400 text-left space-y-1">
-                    <p className="font-medium text-stone-300">Próximos passos:</p>
-                    <p>• Validação cadastral e conferência de elegibilidade;</p>
-                    <p>• Notificação por e-mail e WhatsApp assim que liberado;</p>
-                    <p>• Geração automática do seu link pessoal de indicação.</p>
-                  </div>
-
-                  <div className="pt-2 w-full">
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full rounded-none border-stone-800 bg-stone-900 hover:bg-stone-800 text-stone-200"
-                    >
-                      <Link to="/entrar">Voltar para a Página de Login</Link>
-                    </Button>
-                  </div>
-                </>
-              )}
+              <div className="pt-4 w-full">
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full rounded-none border-stone-800 bg-stone-900 hover:bg-stone-800 text-stone-200"
+                >
+                  <Link to="/entrar">Voltar para a Página de Login</Link>
+                </Button>
+              </div>
             </div>
           </Card>
         </div>

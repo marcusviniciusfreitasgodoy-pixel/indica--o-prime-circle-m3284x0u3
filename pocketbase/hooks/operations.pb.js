@@ -1138,10 +1138,11 @@ routerAdd('POST', '/backend/v1/referrals/register-deal', (e) => {
  * Cadastro público de indicador (usuário + participante) em uma única operação.
  */
 routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
-  const genericSuccess = {
+  // Resposta padronizada e unificada para novos cadastros, emails duplicados e robôs:
+  // SEM user_id, participant_id, status nem referral_code em nenhuma circunstância.
+  const standardSuccess = {
     success: true,
-    message:
-      'Cadastro realizado com sucesso! Se necessário aprovação, você será notificado assim que sua conta for ativada.',
+    message: 'Cadastro recebido. Você receberá a confirmação por e-mail e WhatsApp.',
   }
 
   const reqInfo = e.requestInfo()
@@ -1150,7 +1151,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
   // 1. Honeypot check contra robôs
   const honeypot = (rawBody.website || rawBody.honeypot || rawBody.url || '').trim()
   if (honeypot) {
-    return e.json(200, genericSuccess)
+    return e.json(200, standardSuccess)
   }
 
   // 2. Limite de 5 cadastros por IP por hora
@@ -1225,6 +1226,73 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
     return e.json(400, { message: 'Categoria de indicador é obrigatória.' })
   }
 
+  // 4. Validação dos 4 documentos legais obrigatórios vigentes em legal_documents
+  const requiredDocSlugs = [
+    'termos_de_uso',
+    'politica_de_privacidade',
+    'regulamento_do_programa',
+    'declaracao_ausencia_impedimento',
+  ]
+
+  const activeLegalDocs = {}
+  for (let i = 0; i < requiredDocSlugs.length; i++) {
+    const slug = requiredDocSlugs[i]
+    try {
+      const docRec = $app.findFirstRecordByFilter(
+        'legal_documents',
+        'slug = {:s} && is_active = true',
+        { s: slug },
+      )
+      if (docRec) {
+        activeLegalDocs[slug] = docRec
+      }
+    } catch (_) {}
+  }
+
+  for (let i = 0; i < requiredDocSlugs.length; i++) {
+    const slug = requiredDocSlugs[i]
+    const activeDoc = activeLegalDocs[slug]
+    if (!activeDoc) {
+      return e.json(500, {
+        message: `Configuração do sistema incompleta: documento obrigatório '${slug}' ativo não encontrado.`,
+      })
+    }
+
+    const matchedItem = acceptedDocuments.find((d) => {
+      if (!d) return false
+      const docId = (d.id || d.document_id || '').trim()
+      const docSlug = (d.slug || '').trim()
+      return docId === activeDoc.id || docSlug === slug
+    })
+
+    if (!matchedItem) {
+      return e.json(400, {
+        message: `É obrigatório ler e aceitar o documento: ${activeDoc.getString('title') || slug}.`,
+      })
+    }
+
+    const sentDocId = (matchedItem.id || matchedItem.document_id || '').trim()
+    if (sentDocId && sentDocId !== activeDoc.id) {
+      return e.json(400, {
+        message: `A versão informada do documento '${slug}' não é a versão vigente.`,
+      })
+    }
+
+    if (
+      matchedItem.version !== undefined &&
+      matchedItem.version !== null &&
+      matchedItem.version !== ''
+    ) {
+      const sentVer = Number(matchedItem.version)
+      const currentVer = Number(activeDoc.getInt('version') || activeDoc.getFloat('version') || 1)
+      if (sentVer !== currentVer) {
+        return e.json(400, {
+          message: `A versão informada (${sentVer}) do documento '${slug}' não é a versão vigente (${currentVer}).`,
+        })
+      }
+    }
+  }
+
   // Buscar categoria vinculada
   let categoryRec = null
   try {
@@ -1253,7 +1321,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
   try {
     const existingUser = $app.findAuthRecordByEmail('_pb_users_auth_', email)
     if (existingUser) {
-      return e.json(200, genericSuccess)
+      return e.json(200, standardSuccess)
     }
   } catch (_) {}
 
@@ -1287,146 +1355,131 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
     }
   }
 
-  // Criação do usuário e participante numa única operação com rollback caso falhe
-  let createdUser = null
+  // 3. Transação Atômica: envolver criação de usuário, participante, condomínio, aceites e opt-in em $app.runInTransaction
+  let finalUserId = null
+  let finalParticipantId = null
+
   try {
-    // 1. Criar Auth Record (users) nativo do PocketBase com senha
-    const usersCol = $app.findCollectionByNameOrId('_pb_users_auth_')
-    const userRec = new Record(usersCol)
-    userRec.setEmail(email)
-    userRec.setPassword(password)
-    userRec.setVerified(true)
-    userRec.set('name', name)
-    if (phone) userRec.set('phone', phone)
-    userRec.set('is_admin', false)
-    userRec.set('is_operador', false)
-    userRec.set('is_financeiro', false)
-    $app.save(userRec)
-    createdUser = userRec
+    $app.runInTransaction((txApp) => {
+      // 1. Criar Auth Record (users) nativo do PocketBase com email não verificado (setVerified(false))
+      const usersCol = txApp.findCollectionByNameOrId('_pb_users_auth_')
+      const userRec = new Record(usersCol)
+      userRec.setEmail(email)
+      userRec.setPassword(password)
+      userRec.setVerified(false)
+      userRec.set('name', name)
+      if (phone) userRec.set('phone', phone)
+      userRec.set('is_admin', false)
+      userRec.set('is_operador', false)
+      userRec.set('is_financeiro', false)
+      txApp.save(userRec)
+      finalUserId = userRec.id
 
-    // 2. Criar Participante
-    const partCol = $app.findCollectionByNameOrId('participants')
-    const partRec = new Record(partCol)
-    partRec.set('user_id', createdUser.id)
-    partRec.set('category_id', categoryRec.id)
-    partRec.set('status', initialStatus)
-    if (cpf) partRec.set('cpf', cpf)
-    if (cnpj) partRec.set('cnpj', cnpj)
-    if (roleTitle) partRec.set('role_title', roleTitle)
-    if (creci) partRec.set('creci', creci)
-    partRec.set('marketing_optin', marketingOptin)
-    if (referralCode) partRec.set('referral_code', referralCode)
+      // 2. Criar Participante
+      const partCol = txApp.findCollectionByNameOrId('participants')
+      const partRec = new Record(partCol)
+      partRec.set('user_id', userRec.id)
+      partRec.set('category_id', categoryRec.id)
+      partRec.set('status', initialStatus)
+      if (cpf) partRec.set('cpf', cpf)
+      if (cnpj) partRec.set('cnpj', cnpj)
+      if (roleTitle) partRec.set('role_title', roleTitle)
+      if (creci) partRec.set('creci', creci)
+      partRec.set('marketing_optin', marketingOptin)
+      if (referralCode) partRec.set('referral_code', referralCode)
 
-    $app.save(partRec)
+      txApp.save(partRec)
+      finalParticipantId = partRec.id
 
-    // 3. Vincular participante ao condomínio se informado
-    if (condominiumId) {
-      try {
-        const pcCol = $app.findCollectionByNameOrId('participant_condominiums')
+      // 3. Vincular participante ao condomínio se informado
+      if (condominiumId) {
+        const pcCol = txApp.findCollectionByNameOrId('participant_condominiums')
         const pcRec = new Record(pcCol)
         pcRec.set('participant_id', partRec.id)
         pcRec.set('condominium_id', condominiumId)
         if (roleTitle) pcRec.set('role_description', roleTitle)
-        $app.save(pcRec)
-      } catch (errPc) {
-        console.error('[register-participant] Erro ao associar condomínio:', errPc)
+        txApp.save(pcRec)
       }
-    }
 
-    // 4. Gravar em acceptances cada documento aceito (com versão, data, IP e navegador)
-    const nowIso = new Date().toISOString()
-    const acceptancesCol = $app.findCollectionByNameOrId('acceptances')
-    for (let i = 0; i < acceptedDocuments.length; i++) {
-      const docItem = acceptedDocuments[i] || {}
-      const docId = (docItem.id || docItem.document_id || '').trim()
-      if (docId) {
-        try {
-          // Verificar se o documento existe
-          const docRec = $app.findRecordById('legal_documents', docId)
-          if (docRec) {
-            const accRec = new Record(acceptancesCol)
-            accRec.set('user_id', createdUser.id)
-            accRec.set('document_id', docRec.id)
-            accRec.set('ip_address', clientIp)
-            accRec.set('user_agent', userAgent)
-            accRec.set('accepted_at', nowIso)
-            $app.save(accRec)
-          }
-        } catch (errDoc) {
-          console.warn(
-            '[register-participant] Aviso ao gravar aceitação de documento:',
-            docId,
-            errDoc,
-          )
+      // 4. Gravar os 4 documentos obrigatórios aceitos em acceptances
+      const nowIso = new Date().toISOString()
+      const acceptancesCol = txApp.findCollectionByNameOrId('acceptances')
+      for (let i = 0; i < requiredDocSlugs.length; i++) {
+        const slug = requiredDocSlugs[i]
+        const docRec = activeLegalDocs[slug]
+        if (docRec) {
+          const accRec = new Record(acceptancesCol)
+          accRec.set('user_id', userRec.id)
+          accRec.set('document_id', docRec.id)
+          accRec.set('ip_address', clientIp)
+          accRec.set('user_agent', userAgent)
+          accRec.set('accepted_at', nowIso)
+          txApp.save(accRec)
         }
       }
-    }
 
-    // 5. Gravar o opt-in em whatsapp_optins
-    if (whatsappOptin && phone) {
-      try {
-        const woCol = $app.findCollectionByNameOrId('whatsapp_optins')
+      // 5. Gravar o opt-in em whatsapp_optins se autorizado
+      if (whatsappOptin && phone) {
+        const woCol = txApp.findCollectionByNameOrId('whatsapp_optins')
         const woRec = new Record(woCol)
         woRec.set('phone', phone)
         woRec.set('person_type', 'participante')
         woRec.set('person_id', partRec.id)
         woRec.set('opted_in_at', nowIso)
         woRec.set('source', 'public_registration')
-        $app.save(woRec)
-      } catch (errWo) {
-        console.error('[register-participant] Erro ao gravar whatsapp_optin:', errWo)
+        txApp.save(woRec)
       }
-    }
-
-    // 6. Gravar audit_log da tentativa bem-sucedida para controle de rate limiting e auditoria
-    try {
-      const auditCol = $app.findCollectionByNameOrId('audit_logs')
-      const auditRec = new Record(auditCol)
-      auditRec.set('actor_id', createdUser.id)
-      auditRec.set('actor_email', email)
-      auditRec.set('action', 'participant_registered')
-      auditRec.set('resource_type', 'participants')
-      auditRec.set('resource_id', partRec.id)
-      auditRec.set(
-        'details',
-        JSON.stringify({
-          category_id: categoryRec.id,
-          category_slug: catSlug,
-          status: initialStatus,
-          referral_code: referralCode || null,
-          has_condo: !!condominiumId,
-          docs_accepted_count: acceptedDocuments.length,
-        }),
-      )
-      auditRec.set('ip_address', clientIp)
-      $app.save(auditRec)
-    } catch (_) {}
-
-    return e.json(200, {
-      success: true,
-      message:
-        initialStatus === 'ativo'
-          ? 'Cadastro realizado com sucesso! Sua conta está ativa.'
-          : 'Cadastro realizado com sucesso! Seu acesso está pendente de aprovação pela equipe Prime Circle.',
-      user_id: createdUser.id,
-      participant_id: partRec.id,
-      status: initialStatus,
-      referral_code: referralCode || null,
     })
-  } catch (err) {
-    console.error('[register-participant] Erro durante o cadastro:', err)
-    // Se algo falhar depois de criar o usuário, desfaz/apaga o usuário para não deixar usuário sem participante
-    if (createdUser) {
-      try {
-        $app.delete(createdUser)
-      } catch (errDelete) {
-        console.error('[register-participant] Erro no rollback do usuário:', errDelete)
-      }
-    }
+  } catch (errTx) {
+    console.error('[register-participant] Erro na transação de cadastro:', errTx)
     return e.json(500, {
       message: 'Não foi possível concluir o cadastro neste momento. Por favor, tente novamente.',
     })
   }
+
+  // Disparar o e-mail de verificação nativo do PocketBase (após sucesso da transação)
+  try {
+    const createdUserRec = $app.findRecordById('_pb_users_auth_', finalUserId)
+    if (typeof $app.sendRecordVerification === 'function') {
+      $app.sendRecordVerification(createdUserRec)
+    } else if (typeof $app.sendAuthVerification === 'function') {
+      $app.sendAuthVerification(createdUserRec)
+    } else if (typeof $app.sendVerification === 'function') {
+      $app.sendVerification(createdUserRec)
+    } else {
+      console.warn('[register-participant] Método nativo de verificação não disponível em $app')
+    }
+  } catch (errVerif) {
+    console.error(
+      '[register-participant] Aviso ao disparar e-mail de verificação nativo:',
+      errVerif,
+    )
+  }
+
+  // Gravar audit_log da tentativa bem-sucedida
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const auditRec = new Record(auditCol)
+    auditRec.set('actor_id', finalUserId)
+    auditRec.set('actor_email', email)
+    auditRec.set('action', 'participant_registered')
+    auditRec.set('resource_type', 'participants')
+    auditRec.set('resource_id', finalParticipantId)
+    auditRec.set(
+      'details',
+      JSON.stringify({
+        category_id: categoryRec.id,
+        category_slug: catSlug,
+        status: initialStatus,
+        has_condo: !!condominiumId,
+        docs_accepted_count: 4,
+      }),
+    )
+    auditRec.set('ip_address', clientIp)
+    $app.save(auditRec)
+  } catch (_) {}
+
+  return e.json(200, standardSuccess)
 })
 
 /**
@@ -2411,7 +2464,8 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
   part.set('approved_by', authRecord.id)
 
   // Gerar e gravar referral_code no momento da aprovação caso o participante ainda não tenha um
-  if (!part.getString('referral_code')) {
+  let finalReferralCode = part.getString('referral_code')
+  if (!finalReferralCode) {
     const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
     let uniqueCode = ''
     let attempts = 0
@@ -2435,11 +2489,48 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
       }
     }
     if (uniqueCode) {
+      finalReferralCode = uniqueCode
       part.set('referral_code', uniqueCode)
     }
   }
 
   $app.save(part)
+
+  // Enviar e-mail e WhatsApp de boas-vindas com o link pessoal /i/CODIGO
+  try {
+    const internalSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
+    const userRec = $app.findRecordById('users', part.getString('user_id'))
+    const userEmail = userRec.getString('email')
+    const userPhone = userRec.getString('phone')
+    const userName = userRec.getString('name') || 'Parceiro'
+    const personalLink = finalReferralCode
+      ? `https://indicacao.godoyprime.com.br/i/${finalReferralCode}`
+      : 'https://indicacao.godoyprime.com.br'
+
+    $http.send({
+      url: 'http://127.0.0.1:8090/backend/v1/communication/notify-event',
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Internal-Secret': internalSecret || '',
+      },
+      data: JSON.stringify({
+        event_code: 'cadastro_aprovado',
+        participant_id: part.id,
+        entity_id: part.id,
+        params: {
+          nome: userName,
+          referral_code: finalReferralCode || '',
+          codigo: finalReferralCode || '',
+          link: personalLink,
+          button_url_param: personalLink,
+        },
+      }),
+      timeout: 5,
+    })
+  } catch (errNotif) {
+    console.error('[approve-participant] Erro ao disparar notificação com link pessoal:', errNotif)
+  }
 
   try {
     const auditCol = $app.findCollectionByNameOrId('audit_logs')
@@ -2449,7 +2540,13 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
     audit.set('action', 'participant_approved')
     audit.set('resource_type', 'participants')
     audit.set('resource_id', part.id)
-    audit.set('details', JSON.stringify({ user_id: part.getString('user_id') }))
+    audit.set(
+      'details',
+      JSON.stringify({
+        user_id: part.getString('user_id'),
+        referral_code: finalReferralCode || null,
+      }),
+    )
     audit.set('ip_address', e.request.remoteAddr)
     $app.save(audit)
   } catch (_) {}

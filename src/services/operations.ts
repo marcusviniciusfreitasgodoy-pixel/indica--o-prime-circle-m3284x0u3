@@ -336,10 +336,6 @@ export interface RegisterParticipantPayload {
 export interface RegisterParticipantResponse {
   success: boolean
   message: string
-  user_id?: string
-  participant_id?: string
-  status?: 'ativo' | 'pendente_aprovacao' | string
-  referral_code?: string | null
 }
 
 /**
