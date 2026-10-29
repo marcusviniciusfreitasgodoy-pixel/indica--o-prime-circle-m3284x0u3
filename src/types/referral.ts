@@ -52,6 +52,7 @@ export interface Member {
   id: string
   name: string
   email: string
+  verified?: boolean
   agency?: string
   phone?: string
   public_slug?: string
@@ -288,6 +289,10 @@ export interface Referral {
   deal_date?: string
   deal_property_description?: string
   attended_at?: string
+  primeira_visita_at?: string
+  capacidade_financeira_demonstrada?: 'sim' | 'nao' | boolean | string
+  tipo_comprovacao_financeira?: string
+  descricao_comprovacao_financeira?: string
   history?: ReferralHistoryItem[] | string
   created: string
   updated: string

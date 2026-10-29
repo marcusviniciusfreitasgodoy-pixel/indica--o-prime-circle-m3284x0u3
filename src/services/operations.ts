@@ -216,6 +216,37 @@ export async function confirmConsent(referralId: string) {
 }
 
 /**
+ * Register first visit / atendimento for buyer referral
+ */
+export async function registerFirstVisit(params: {
+  referral_id: string
+  data: string
+  capacidade_financeira_demonstrada: 'sim' | 'nao' | string
+  tipo_comprovacao?: string
+  descricao?: string
+}) {
+  const res = await fetch(`${BACKEND_URL}/backend/v1/referrals/register-first-visit`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: pb.authStore.token,
+    },
+    body: JSON.stringify(params),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || 'Erro ao registrar primeira visita.')
+  }
+  return data as {
+    success: boolean
+    message: string
+    referral_id?: string
+    reward_created?: boolean
+    reward_info?: string
+  }
+}
+
+/**
  * Assign operator via server endpoint
  */
 export async function assignOperator(referralId: string, operatorId: string | null) {
