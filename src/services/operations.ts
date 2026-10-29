@@ -471,14 +471,25 @@ export async function submitOwnerLead(payload: {
 /**
  * Approve participant
  */
-export async function approveParticipant(participantId: string) {
+export async function approveParticipant(
+  participantId: string,
+  options?: { newCategoryId?: string; changeReason?: string },
+) {
+  const payload: Record<string, any> = { participant_id: participantId }
+  if (options?.newCategoryId) {
+    payload.new_category_id = options.newCategoryId
+  }
+  if (options?.changeReason) {
+    payload.change_reason = options.changeReason
+  }
+
   const res = await fetch(`${BACKEND_URL}/backend/v1/admin/participants/approve`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
       Authorization: pb.authStore.token,
     },
-    body: JSON.stringify({ participant_id: participantId }),
+    body: JSON.stringify(payload),
   })
   const data = await res.json()
   if (!res.ok) {

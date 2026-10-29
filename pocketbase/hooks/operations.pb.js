@@ -2449,6 +2449,8 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
   const participantId = (body.participant_id || '').trim()
+  const newCategoryId = (body.new_category_id || '').trim()
+  const changeReason = (body.change_reason || '').trim()
 
   if (!participantId) return e.json(400, { message: 'ID do participante é obrigatório.' })
 
@@ -2457,6 +2459,35 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
     part = $app.findRecordById('participants', participantId)
   } catch (_) {
     return e.json(404, { message: 'Participante não encontrado.' })
+  }
+
+  const oldCategoryId = part.getString('category_id')
+  let categoryChanged = false
+  let oldCategorySlug = ''
+  let newCategorySlug = ''
+
+  if (newCategoryId && newCategoryId !== oldCategoryId) {
+    if (!changeReason) {
+      return e.json(400, {
+        message: 'O motivo da alteração de categoria é obrigatório ao trocar a categoria.',
+      })
+    }
+
+    let newCat
+    try {
+      newCat = $app.findRecordById('participant_categories', newCategoryId)
+    } catch (_) {
+      return e.json(400, { message: 'Nova categoria informada não existe ou é inválida.' })
+    }
+
+    try {
+      const oldCat = $app.findRecordById('participant_categories', oldCategoryId)
+      oldCategorySlug = oldCat.getString('slug')
+    } catch (_) {}
+
+    newCategorySlug = newCat.getString('slug')
+    part.set('category_id', newCat.id)
+    categoryChanged = true
   }
 
   part.set('status', 'ativo')
@@ -2537,16 +2568,25 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
     const audit = new Record(auditCol)
     audit.set('actor_id', authRecord.id)
     audit.set('actor_email', authRecord.getString('email'))
-    audit.set('action', 'participant_approved')
+    audit.set(
+      'action',
+      categoryChanged ? 'participant_approved_with_category_change' : 'participant_approved',
+    )
     audit.set('resource_type', 'participants')
     audit.set('resource_id', part.id)
-    audit.set(
-      'details',
-      JSON.stringify({
-        user_id: part.getString('user_id'),
-        referral_code: finalReferralCode || null,
-      }),
-    )
+    const auditDetails = {
+      user_id: part.getString('user_id'),
+      referral_code: finalReferralCode || null,
+    }
+    if (categoryChanged) {
+      auditDetails.category_changed = true
+      auditDetails.old_category = oldCategoryId
+      auditDetails.old_category_slug = oldCategorySlug
+      auditDetails.new_category = newCategoryId
+      auditDetails.new_category_slug = newCategorySlug
+      auditDetails.change_reason = changeReason
+    }
+    audit.set('details', JSON.stringify(auditDetails))
     audit.set('ip_address', e.request.remoteAddr)
     $app.save(audit)
   } catch (_) {}

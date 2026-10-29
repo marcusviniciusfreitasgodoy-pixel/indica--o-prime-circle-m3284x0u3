@@ -5,12 +5,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
-  Users,
-  Briefcase,
   Building2,
   ExternalLink,
   ArrowRight,
-  ShieldCheck,
   FileText,
 } from 'lucide-react'
 import {
@@ -47,9 +44,9 @@ export default function CadastroPage() {
 
   // Param ?frente=comunidade | parceiros
   const frenteParam = searchParams.get('frente')?.toLowerCase()
-  const initialFrente = frenteParam === 'parceiros' ? 'parceiros' : 'comunidade'
+  const validFrenteFilter =
+    frenteParam === 'comunidade' || frenteParam === 'parceiros' ? frenteParam : null
 
-  const [frente, setFrente] = useState<'comunidade' | 'parceiros'>(initialFrente)
   const [selectedCategoryId, setSelectedCategoryId] = useState<string>('')
 
   // Form fields
@@ -127,15 +124,23 @@ export default function CadastroPage() {
     }
   }, [])
 
-  // Sincronizar query param se usuário trocar a frente
-  const handleFrenteChange = (novaFrente: 'comunidade' | 'parceiros') => {
-    setFrente(novaFrente)
-    setSelectedCategoryId('')
-    setSearchParams({ frente: novaFrente })
+  // Textos em linguagem comum por slug
+  const CATEGORY_COMMON_LABELS: Record<string, string> = {
+    porteiro_zelador: 'Trabalho em um condomínio (porteiro, zelador)',
+    prestador_residencial: 'Presto serviços em residências (diarista, eletricista, jardineiro…)',
+    cliente: 'Sou morador, proprietário ou cliente',
+    sindico: 'Sou síndico',
+    parceiro_profissional: 'Sou profissional liberal (advogado, arquiteto, engenheiro, contador…)',
+    empresa_parceira: 'Represento uma empresa',
+    administradora: 'Represento uma administradora de condomínios',
+    entidade_condominial: 'Represento uma associação ou condomínio',
+    corretor_parceiro: 'Sou corretor de imóveis',
   }
 
-  // Filtrar categorias da frente selecionada
-  const filteredCategories = categories.filter((c) => c.front === frente)
+  // Filtrar categorias pelo query param ?frente=comunidade | parceiros (se ausente, mostra todas)
+  const availableCategories = validFrenteFilter
+    ? categories.filter((c) => c.front === validFrenteFilter)
+    : categories
 
   // Categoria atualmente selecionada
   const selectedCategory = categories.find((c) => c.id === selectedCategoryId)
@@ -377,44 +382,54 @@ export default function CadastroPage() {
               />
             </div>
 
-            {/* SELEÇÃO DE FRENTE: Comunidade x Parceiros */}
-            <div className="p-4 sm:p-5 border-b border-stone-800 bg-stone-900/50">
-              <Label className="text-xs uppercase tracking-wider text-amber-500 font-semibold block mb-2">
-                1. Escolha sua Frente de Atuação
-              </Label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleFrenteChange('comunidade')}
-                  className={`flex flex-col items-center justify-center p-3 text-center border transition-all rounded-none ${
-                    frente === 'comunidade'
-                      ? 'bg-amber-600/15 border-amber-500 text-white shadow-sm'
-                      : 'bg-stone-900/60 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-stone-200'
-                  }`}
+            {/* PERGUNTA ÚNICA DE CATEGORIA EM LINGUAGEM COMUM */}
+            <div className="p-4 sm:p-5 border-b border-stone-800 bg-stone-900/50 space-y-3">
+              <div className="flex items-center justify-between">
+                <Label
+                  htmlFor="category-select"
+                  className="text-xs uppercase tracking-wider text-amber-500 font-semibold block"
                 >
-                  <Users className="w-5 h-5 mb-1 text-amber-400" />
-                  <span className="text-xs sm:text-sm font-semibold">Comunidade</span>
-                  <span className="text-[10px] text-stone-400 mt-0.5 line-clamp-1">
-                    Porteiros, síndicos e clientes
+                  1. Como você conhece os imóveis que vai indicar?{' '}
+                  <span className="text-amber-400">*</span>
+                </Label>
+                {isLoadingData && (
+                  <span className="text-[11px] text-stone-500 flex items-center shrink-0">
+                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                    Carregando...
                   </span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleFrenteChange('parceiros')}
-                  className={`flex flex-col items-center justify-center p-3 text-center border transition-all rounded-none ${
-                    frente === 'parceiros'
-                      ? 'bg-amber-600/15 border-amber-500 text-white shadow-sm'
-                      : 'bg-stone-900/60 border-stone-800 text-stone-400 hover:border-stone-700 hover:text-stone-200'
-                  }`}
-                >
-                  <Briefcase className="w-5 h-5 mb-1 text-amber-400" />
-                  <span className="text-xs sm:text-sm font-semibold">Parceiros</span>
-                  <span className="text-[10px] text-stone-400 mt-0.5 line-clamp-1">
-                    Corretores, empresas e profissionais
-                  </span>
-                </button>
+                )}
               </div>
+
+              <select
+                id="category-select"
+                value={selectedCategoryId}
+                onChange={(e) => setSelectedCategoryId(e.target.value)}
+                disabled={isLoadingData}
+                className="w-full h-11 px-3 text-xs sm:text-sm bg-stone-900 border border-stone-800 text-stone-100 rounded-none focus:outline-none focus:ring-1 focus:ring-amber-500"
+              >
+                <option value="">Selecione uma opção...</option>
+                {availableCategories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {CATEGORY_COMMON_LABELS[cat.slug] || cat.name}
+                  </option>
+                ))}
+              </select>
+
+              {/* Linha explicando a recompensa da categoria escolhida */}
+              {selectedCategory && (
+                <div className="p-3 bg-stone-950/80 border-l-2 border-amber-500 text-xs text-stone-200">
+                  <div className="font-medium text-amber-400">
+                    {selectedCategory.front === 'comunidade'
+                      ? 'Você recebe em dinheiro por captação'
+                      : 'Você recebe benefícios e reciprocidade'}
+                  </div>
+                  {selectedCategory.description && (
+                    <div className="text-[11px] text-stone-400 mt-1">
+                      {selectedCategory.description}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Alerta de erro se houver */}
@@ -431,43 +446,6 @@ export default function CadastroPage() {
             )}
 
             <CardContent className="space-y-5 p-4 sm:p-6">
-              {/* SELEÇÃO DA CATEGORIA */}
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="category-select" className="text-xs text-stone-300 font-medium">
-                    Categoria <span className="text-amber-500">*</span>
-                  </Label>
-                  {isLoadingData && (
-                    <span className="text-[11px] text-stone-500 flex items-center">
-                      <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                      Carregando...
-                    </span>
-                  )}
-                </div>
-
-                <select
-                  id="category-select"
-                  value={selectedCategoryId}
-                  onChange={(e) => setSelectedCategoryId(e.target.value)}
-                  disabled={isLoadingData}
-                  className="w-full h-10 px-3 text-xs sm:text-sm bg-stone-900 border border-stone-800 text-stone-100 rounded-none focus:outline-none focus:ring-1 focus:ring-amber-500"
-                >
-                  <option value="">Selecione sua categoria...</option>
-                  {filteredCategories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                      {cat.requires_approval ? ' (Sujeito a aprovação)' : ''}
-                    </option>
-                  ))}
-                </select>
-
-                {selectedCategory?.description && (
-                  <p className="text-[11px] text-stone-400 italic bg-stone-900/40 p-2 border-l-2 border-amber-500/50">
-                    {selectedCategory.description}
-                  </p>
-                )}
-              </div>
-
               {/* DADOS BÁSICOS */}
               <div className="space-y-3 pt-2 border-t border-stone-800/80">
                 <span className="text-xs uppercase tracking-wider text-amber-500 font-semibold block">

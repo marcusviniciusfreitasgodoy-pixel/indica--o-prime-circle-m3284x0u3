@@ -48,6 +48,17 @@ export function AdminParticipantsPage() {
   const [metrics, setMetrics] = useState<Record<string, { totalRefs: number; dealsCount: number }>>(
     {},
   )
+  const [categoriesList, setCategoriesList] = useState<
+    Array<{ id: string; name: string; slug: string; front: string }>
+  >([])
+
+  // Approve modal
+  const [approveModal, setApproveModal] = useState<{ open: boolean; part: Participant | null }>({
+    open: false,
+    part: null,
+  })
+  const [selectedCategoryId, setSelectedCategoryId] = useState('')
+  const [categoryChangeReason, setCategoryChangeReason] = useState('')
 
   // Suspend modal
   const [suspendModal, setSuspendModal] = useState<{ open: boolean; part: Participant | null }>({
@@ -68,11 +79,17 @@ export function AdminParticipantsPage() {
   const loadData = async () => {
     try {
       setLoading(true)
-      const res = await pb.collection('participants').getFullList<Participant>({
-        sort: '-created',
-        expand: 'user_id,category_id,level_id,approved_by',
-      })
+      const [res, cats] = await Promise.all([
+        pb.collection('participants').getFullList<Participant>({
+          sort: '-created',
+          expand: 'user_id,category_id,level_id,approved_by',
+        }),
+        pb.collection('participant_categories').getFullList<any>({
+          sort: 'front,slug',
+        }),
+      ])
       setParticipants(res)
+      setCategoriesList(cats)
 
       // Calculate real counts from referrals
       const allRefs = await pb.collection('referrals').getFullList({
@@ -105,14 +122,37 @@ export function AdminParticipantsPage() {
     loadData()
   }, [])
 
-  const handleApprove = async (part: Participant) => {
+  const openApproveModal = (part: Participant) => {
+    setApproveModal({ open: true, part })
+    setSelectedCategoryId(part.category_id || '')
+    setCategoryChangeReason('')
+  }
+
+  const handleConfirmApprove = async () => {
+    if (!approveModal.part) return
+    const isCategoryChanged =
+      selectedCategoryId && selectedCategoryId !== approveModal.part.category_id
+
+    if (isCategoryChanged && !categoryChangeReason.trim()) {
+      toast({
+        title: 'Motivo obrigatório',
+        description: 'Informe o motivo da alteração de categoria para registro em auditoria.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     try {
       setSubmitting(true)
-      await approveParticipant(part.id)
+      await approveParticipant(approveModal.part.id, {
+        newCategoryId: isCategoryChanged ? selectedCategoryId : undefined,
+        changeReason: isCategoryChanged ? categoryChangeReason.trim() : undefined,
+      })
       toast({
         title: 'Participante Aprovado!',
-        description: `Cadastro de ${part.expand?.user_id?.name || 'Parceiro'} está agora ativo.`,
+        description: `Cadastro de ${approveModal.part.expand?.user_id?.name || 'Parceiro'} está agora ativo.`,
       })
+      setApproveModal({ open: false, part: null })
       loadData()
     } catch (err: any) {
       toast({ title: 'Erro ao aprovar', description: err.message, variant: 'destructive' })
@@ -343,12 +383,12 @@ export function AdminParticipantsPage() {
                           {p.status === 'pendente_aprovacao' && (
                             <Button
                               size="sm"
-                              onClick={() => handleApprove(p)}
+                              onClick={() => openApproveModal(p)}
                               disabled={submitting}
                               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-xs"
                             >
                               <CheckCircle2 className="w-3 h-3 mr-1" />
-                              Aprovar
+                              Revisar / Aprovar
                             </Button>
                           )}
 
@@ -383,6 +423,109 @@ export function AdminParticipantsPage() {
           </div>
         )}
       </main>
+
+      {/* Modal: Aprovar Participante (com revisão/troca de categoria) */}
+      <Dialog
+        open={approveModal.open}
+        onOpenChange={(open) => !open && setApproveModal({ open: false, part: null })}
+      >
+        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg text-white">
+              Aprovação de Participante
+            </DialogTitle>
+            <DialogDescription className="text-stone-400 text-xs">
+              Revise a categoria escolhida pelo participante no cadastro antes de confirmar a
+              aprovação.
+            </DialogDescription>
+          </DialogHeader>
+
+          {approveModal.part && (
+            <div className="space-y-4 py-2 text-xs">
+              <div className="p-3 bg-stone-950 border border-stone-800 space-y-1.5">
+                <div className="text-stone-200 font-medium">
+                  {approveModal.part.expand?.user_id?.name || 'Sem nome'}
+                </div>
+                <div className="text-[11px] text-stone-400 font-mono">
+                  {approveModal.part.expand?.user_id?.email} •{' '}
+                  {approveModal.part.expand?.user_id?.phone || 'Sem telefone'}
+                </div>
+                <div className="text-[11px] text-stone-300 pt-1 border-t border-stone-800/80">
+                  <span className="text-stone-500">Categoria escolhida no cadastro: </span>
+                  <span className="font-semibold text-amber-400">
+                    {approveModal.part.expand?.category_id?.name || 'Não informada'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-stone-300 font-medium block">
+                  Categoria para Aprovação:
+                </label>
+                <select
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  className="w-full h-10 px-3 text-xs bg-stone-950 border border-stone-800 text-stone-100 rounded-none focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  {categoriesList.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({c.front === 'comunidade' ? 'Comunidade' : 'Parceiros'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {selectedCategoryId && selectedCategoryId !== approveModal.part.category_id && (
+                <div className="space-y-1.5 p-3 bg-amber-950/20 border border-amber-900/50">
+                  <label className="text-amber-400 font-medium block">
+                    Motivo da Troca de Categoria (obrigatório para auditoria):
+                  </label>
+                  <Textarea
+                    placeholder="Ex: Solicitante atua como síndico profissional e atende ao perfil da categoria..."
+                    value={categoryChangeReason}
+                    onChange={(e) => setCategoryChangeReason(e.target.value)}
+                    className="bg-stone-950 border-stone-800 text-xs rounded-none h-20 placeholder:text-stone-600"
+                  />
+                  <p className="text-[10px] text-stone-400">
+                    Esta alteração e o motivo serão registrados permanentemente em audit_logs.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setApproveModal({ open: false, part: null })}
+              className="rounded-none text-xs text-stone-400"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={
+                submitting ||
+                (selectedCategoryId !== approveModal.part?.category_id &&
+                  !categoryChangeReason.trim())
+              }
+              onClick={handleConfirmApprove}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-xs"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  Aprovando...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="w-3 h-3 mr-1" />
+                  Confirmar Aprovação
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Modal: Suspender Participante */}
       <Dialog
