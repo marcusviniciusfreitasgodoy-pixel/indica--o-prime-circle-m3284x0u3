@@ -15,7 +15,6 @@ import { Label } from '@/components/ui/label'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import {
-  ShieldCheck,
   ArrowRight,
   Loader2,
   Sparkles,
@@ -23,37 +22,32 @@ import {
   Mail,
   KeyRound,
   CheckCircle2,
-  UserPlus,
   Send,
 } from 'lucide-react'
-
-export function Cadastro() {
-  return <LoginPage defaultTab="signup" />
-}
 
 export default function LoginPage({
   defaultTab,
 }: {
-  defaultTab?: 'password' | 'magic' | 'signup' | 'forgot'
+  defaultTab?: 'password' | 'magic' | 'forgot'
 }) {
-  const { login, signup, requestOTP, loginWithOTP, requestPasswordReset, isAuthenticated } =
-    useAuth()
+  const { login, requestOTP, loginWithOTP, requestPasswordReset, isAuthenticated } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
   const [searchParams] = useSearchParams()
 
-  const initialTab =
-    defaultTab ||
-    (searchParams.get('tab') as 'password' | 'magic' | 'signup' | 'forgot') ||
-    'password'
+  const initialTabParam = searchParams.get('tab')
+  const initialTab: 'password' | 'magic' | 'forgot' =
+    defaultTab === 'password' || defaultTab === 'magic' || defaultTab === 'forgot'
+      ? defaultTab
+      : initialTabParam === 'magic' || initialTabParam === 'forgot'
+        ? initialTabParam
+        : 'password'
 
-  const [activeTab, setActiveTab] = useState<'password' | 'magic' | 'signup' | 'forgot'>(initialTab)
+  const [activeTab, setActiveTab] = useState<'password' | 'magic' | 'forgot'>(initialTab)
 
   // Form states
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [name, setName] = useState('')
-  const [phone, setPhone] = useState('')
   const [otpCode, setOtpCode] = useState('')
   const [otpId, setOtpId] = useState<string | null>(null)
   const [otpSent, setOtpSent] = useState(false)
@@ -149,36 +143,6 @@ export default function LoginPage({
     }
   }
 
-  const handleSignup = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setErrorMsg(null)
-    setSuccessMsg(null)
-
-    if (!name || !email || !password) {
-      setErrorMsg('Nome, e-mail e senha são obrigatórios.')
-      return
-    }
-
-    if (password.length < 8) {
-      setErrorMsg('A senha deve conter no mínimo 8 caracteres.')
-      return
-    }
-
-    try {
-      setIsLoading(true)
-      await signup({ email, password, name, phone })
-      setSuccessMsg('Cadastro realizado com sucesso! Perfil criado.')
-      setTimeout(() => {
-        navigate('/painel', { replace: true })
-      }, 1000)
-    } catch (err: unknown) {
-      console.error('Erro no cadastro:', err)
-      setErrorMsg('Não foi possível criar a conta. Este e-mail já pode estar cadastrado.')
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleForgotPassword = async (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg(null)
@@ -230,7 +194,7 @@ export default function LoginPage({
             className="w-full"
           >
             <div className="p-4 border-b border-stone-800">
-              <TabsList className="grid grid-cols-3 bg-stone-900 border border-stone-800 rounded-none h-10 text-xs">
+              <TabsList className="grid grid-cols-2 bg-stone-900 border border-stone-800 rounded-none h-10 text-xs">
                 <TabsTrigger
                   value="password"
                   className="rounded-none data-[state=active]:bg-amber-600 data-[state=active]:text-white"
@@ -242,12 +206,6 @@ export default function LoginPage({
                   className="rounded-none data-[state=active]:bg-amber-600 data-[state=active]:text-white"
                 >
                   Código de Acesso
-                </TabsTrigger>
-                <TabsTrigger
-                  value="signup"
-                  className="rounded-none data-[state=active]:bg-amber-600 data-[state=active]:text-white"
-                >
-                  Cadastro
                 </TabsTrigger>
               </TabsList>
             </div>
@@ -475,105 +433,6 @@ export default function LoginPage({
               )}
             </TabsContent>
 
-            {/* TAB 3: CADASTRO */}
-            <TabsContent value="signup" className="m-0 focus-visible:outline-none">
-              <form onSubmit={handleSignup}>
-                <CardHeader className="space-y-1 pb-3">
-                  <CardTitle className="text-xl font-serif text-white flex items-center gap-2">
-                    <UserPlus className="w-5 h-5 text-amber-500" />
-                    Criar Conta
-                  </CardTitle>
-                  <CardDescription className="text-stone-400 text-xs">
-                    Cadastre-se para participar da rede Prime Circle.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-name" className="text-stone-300 text-xs">
-                      Nome completo
-                    </Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Seu Nome"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      disabled={isLoading}
-                      required
-                      className="rounded-none bg-stone-900 border-stone-800 text-stone-100 placeholder:text-stone-600"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-email" className="text-stone-300 text-xs">
-                      E-mail
-                    </Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="seu.email@exemplo.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      disabled={isLoading}
-                      required
-                      className="rounded-none bg-stone-900 border-stone-800 text-stone-100 placeholder:text-stone-600"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-phone" className="text-stone-300 text-xs">
-                      Telefone / WhatsApp (opcional)
-                    </Label>
-                    <Input
-                      id="signup-phone"
-                      type="tel"
-                      placeholder="(21) 99999-9999"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      disabled={isLoading}
-                      className="rounded-none bg-stone-900 border-stone-800 text-stone-100 placeholder:text-stone-600"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="signup-pass" className="text-stone-300 text-xs">
-                      Senha (mínimo 8 dígitos)
-                    </Label>
-                    <Input
-                      id="signup-pass"
-                      type="password"
-                      placeholder="••••••••"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={isLoading}
-                      required
-                      className="rounded-none bg-stone-900 border-stone-800 text-stone-100 placeholder:text-stone-600"
-                    />
-                  </div>
-                </CardContent>
-
-                <CardFooter className="flex flex-col space-y-4 pt-2">
-                  <Button
-                    type="submit"
-                    disabled={isLoading}
-                    className="w-full rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold shadow-md"
-                  >
-                    {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Cadastrando...
-                      </>
-                    ) : (
-                      <>
-                        Criar Conta
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </>
-                    )}
-                  </Button>
-                </CardFooter>
-              </form>
-            </TabsContent>
-
             {/* ESQUECEU A SENHA */}
             {activeTab === 'forgot' && (
               <div className="p-6 pt-0 space-y-4">
@@ -623,6 +482,19 @@ export default function LoginPage({
             )}
           </Tabs>
         </Card>
+
+        {/* Link para novo fluxo de cadastro em /cadastro */}
+        <div className="mt-6 text-center">
+          <p className="text-sm text-stone-400">
+            Ainda não tem acesso?{' '}
+            <Link
+              to="/cadastro"
+              className="text-amber-500 hover:text-amber-400 font-medium underline underline-offset-4 transition-colors"
+            >
+              Cadastre-se
+            </Link>
+          </p>
+        </div>
 
         <p className="mt-6 text-center text-xs text-stone-500 font-sans">
           Prime Circle • Barra da Tijuca & Recreio dos Bandeirantes
