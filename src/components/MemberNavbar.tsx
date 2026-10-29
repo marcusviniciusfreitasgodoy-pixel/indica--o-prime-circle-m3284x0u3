@@ -34,16 +34,15 @@ export const MemberNavbar: React.FC = () => {
     navigate('/entrar')
   }
 
-  const publicLink = user?.public_slug
-    ? `/indicacao/${user.public_slug}`
-    : `/indicacao/${user?.id || ''}`
+  const publicLink = user?.public_slug ? `/i/${user.public_slug}` : `/i/${user?.id || ''}`
 
   const navItems = [
     { label: 'Painel', path: '/painel', icon: LayoutDashboard },
     { label: 'Materiais & QR Code', path: '/painel/materiais', icon: QrCode },
-    { label: 'Minhas Recompensas', path: '/painel/recompensas', icon: Sparkles },
+    { label: 'Recompensas', path: '/painel/recompensas', icon: Sparkles },
     { label: 'Nova Indicação', path: '/nova-indicacao', icon: PlusCircle },
-    { label: 'Meu Perfil & Link', path: '/perfil', icon: User },
+    { label: 'Regulamento', path: '/regulamento', icon: FileText },
+    { label: 'Meu Perfil', path: '/perfil', icon: User },
   ]
 
   const getInitials = (name?: string) => {
@@ -107,7 +106,7 @@ export const MemberNavbar: React.FC = () => {
             rel="noopener noreferrer"
             className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-colors"
           >
-            <span>Ver Minha Página Pública</span>
+            <span>Ver Meu Link Oficial</span>
             <ExternalLink className="h-3.5 w-3.5" />
           </Link>
 
@@ -159,7 +158,7 @@ export const MemberNavbar: React.FC = () => {
                   className="flex items-center gap-2"
                 >
                   <ExternalLink className="h-4 w-4 text-slate-400" />
-                  <span>Página de Captação</span>
+                  <span>Meu Link de Indicação</span>
                 </Link>
               </DropdownMenuItem>
               {isInternal && (
@@ -229,7 +228,7 @@ export const MemberNavbar: React.FC = () => {
               onClick={() => setMobileMenuOpen(false)}
               className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-amber-400 bg-amber-500/10 font-medium"
             >
-              <span>Minha Página Pública</span>
+              <span>Ver Meu Link de Indicação</span>
               <ExternalLink className="h-4 w-4" />
             </Link>
           </div>

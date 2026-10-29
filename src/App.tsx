@@ -37,6 +37,7 @@ import { AdminSettingsPage } from './pages/AdminSettings'
 import { MemberRewardsPage } from './pages/MemberRewards'
 import { MemberMaterialsPage } from './pages/MemberMaterials'
 import { PublicVitrinePage } from './pages/PublicVitrine'
+import { RegulamentoPage, TermosPage, PrivacidadePage } from './pages/LegalDocumentPage'
 import AccessDeniedPage from './pages/AccessDenied'
 import NotFound from './pages/NotFound'
 
@@ -54,8 +55,13 @@ const App = () => (
           <Route path="/quero-vender" element={<DirectSell />} />
           <Route path="/quero-comprar" element={<DirectBuy />} />
 
-          {/* Public Capture Form for doormen, síndicos, clients, partners */}
+          {/* Public Capture Form for doormen, síndicos, clients, partners - redirects to /i/:codigo */}
           <Route path="/indicacao/:slugOrId" element={<PublicCapturePage />} />
+
+          {/* Legal Pages for program participants/invited users */}
+          <Route path="/regulamento" element={<RegulamentoPage />} />
+          <Route path="/termos" element={<TermosPage />} />
+          <Route path="/privacidade" element={<PrivacidadePage />} />
 
           {/* Public Vitrine Route for shared properties */}
           <Route path="/v/:codigo/:imovel" element={<PublicVitrinePage />} />

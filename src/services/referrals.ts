@@ -18,20 +18,34 @@ export interface ParticipantReferralItem {
   neighborhood: string
   status: ReferralStatus
   public_stage: string
+  timeline_stage?: string
   created: string
   updated: string
   attended_at: string | null
+  primeira_visita_at?: string | null
   deal_date: string | null
   public_reason_code: string
   status_reason: string
   channel: string
-  description: string
+  description?: string
+  public_summary?: string
   events: Array<{
     id: string
     created: string
     public_label: string
     reason: string
   }>
+}
+
+export interface DirectReferralPayload {
+  referral_type: 'proprietario' | 'comprador' | 'proprietario_locacao'
+  indicated_name: string
+  indicated_phone: string
+  indicated_email?: string
+  target_neighborhood?: string
+  notes?: string
+  consent_declared: boolean
+  consent_status: 'declarado_indicador'
 }
 
 /**
@@ -95,9 +109,10 @@ export function participantItemToReferral(item: ParticipantReferralItem): Referr
  */
 export async function getMemberReferrals(): Promise<Referral[]> {
   const res = await pb.send<{ items: ParticipantReferralItem[] }>(
-    '/backend/v1/participant/my-referrals',
+    '/backend/v1/referrals/my-referrals',
     {
-      method: 'GET',
+      method: 'POST',
+      body: {},
     },
   )
   const items = res.items || []
@@ -109,12 +124,31 @@ export async function getMemberReferrals(): Promise<Referral[]> {
  */
 export async function getRawMemberReferrals(): Promise<ParticipantReferralItem[]> {
   const res = await pb.send<{ items: ParticipantReferralItem[] }>(
-    '/backend/v1/participant/my-referrals',
+    '/backend/v1/referrals/my-referrals',
     {
-      method: 'GET',
+      method: 'POST',
+      body: {},
     },
   )
   return res.items || []
+}
+
+/**
+ * Submit direct referral from panel (allowed only for categories without link_only)
+ */
+export async function submitDirectReferral(
+  payload: DirectReferralPayload,
+): Promise<{ success: boolean; message: string; id: string; protocol: string }> {
+  const res = await pb.send<{
+    success: boolean
+    message: string
+    id: string
+    protocol: string
+  }>('/backend/v1/referrals/submit-direct-referral', {
+    method: 'POST',
+    body: payload,
+  })
+  return res
 }
 
 /**

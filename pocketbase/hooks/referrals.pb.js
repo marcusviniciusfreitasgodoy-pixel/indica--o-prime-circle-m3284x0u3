@@ -562,3 +562,406 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
 
   return e.json(200, { items })
 })
+
+/**
+ * Route: POST or GET /backend/v1/referrals/my-referrals
+ * Standard endpoint as required by C3b
+ */
+function handleMyReferrals(e) {
+  const authRecord = e.auth
+  if (!authRecord) {
+    return e.json(401, { message: 'Não autorizado.' })
+  }
+
+  let participantId = ''
+  let participantRec = null
+  try {
+    participantRec = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', {
+      uid: authRecord.id,
+    })
+    if (participantRec) participantId = participantRec.id
+  } catch (_) {}
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const query = reqInfo.query || {}
+  const queryId = (body.id || query.id || '').trim()
+
+  if (queryId && !/^[a-zA-Z0-9_-]{3,30}$/.test(queryId)) {
+    return e.json(200, { items: [], participant: null })
+  }
+
+  const filterParams = { uid: authRecord.id }
+  let filter = '(current_owner_id = {:uid} || original_owner_id = {:uid}'
+  if (participantId) {
+    filterParams.pid = participantId
+    filter += ' || participant_id = {:pid}'
+  }
+  filter += ')'
+
+  if (queryId) {
+    filterParams.qid = queryId
+    filter += ' && id = {:qid}'
+  }
+
+  const records = $app.findRecordsByFilter('referrals', filter, '-created', 500, 0, filterParams)
+
+  function mapTimelineStage(status, refType, primeiraVisitaAt) {
+    if (primeiraVisitaAt) {
+      if (status === 'comprou' || status === 'alugou' || status === 'concluida') return 'Concluída'
+      return 'Atendimento realizado'
+    }
+    if (status === 'recebida' || status === 'nova') return 'Nova'
+    if (status === 'em_triagem' || status === 'aceita') return 'Em análise'
+    if (
+      status === 'em_atendimento' ||
+      status === 'em_contato' ||
+      status === 'qualificada' ||
+      status === 'visitando' ||
+      status === 'proposta' ||
+      status === 'em_negociacao' ||
+      status === 'captacao_solicitada'
+    ) {
+      return 'Em atendimento'
+    }
+    if (status === 'captada' || status === 'em_divulgacao') return 'Imóvel disponível'
+    if (
+      status === 'vendida' ||
+      status === 'alugada' ||
+      status === 'comprou' ||
+      status === 'concluida'
+    ) {
+      return 'Concluída'
+    }
+    if (status === 'declinada_pela_godoy') return 'Reconhecida'
+    if (
+      status === 'recusada' ||
+      status === 'duplicada' ||
+      status === 'perdida' ||
+      status === 'retirada' ||
+      status === 'cancelada'
+    ) {
+      return 'Não aproveitada'
+    }
+    return 'Em atendimento'
+  }
+
+  const items = []
+  for (let i = 0; i < records.length; i++) {
+    const r = records[i]
+    const status = r.getString('status') || 'nova'
+    const type = r.getString('type')
+    let refType = r.getString('referral_type')
+    if (!refType) {
+      refType = type === 'cliente' ? 'comprador' : 'proprietario'
+    }
+
+    const rawFullName =
+      r.getString('owner_name') || r.getString('buyer_name') || r.getString('referrer_name') || ''
+    const indicatedFirstName = rawFullName.trim().split(/\s+/)[0] || 'Indicado'
+
+    let neighborhood = r.getString('target_neighborhood') || ''
+    const condoId = r.getString('condominium_id')
+    if (condoId && !neighborhood) {
+      try {
+        const c = $app.findRecordById('condominiums', condoId)
+        if (c) neighborhood = c.getString('neighborhood') || ''
+      } catch (_) {}
+    }
+
+    const primeiraVisitaAt = r.getString('primeira_visita_at') || null
+    const timelineStage = mapTimelineStage(status, refType, primeiraVisitaAt)
+
+    let summary = (r.getString('public_summary') || '').trim()
+    if (!summary) {
+      const typeLabel =
+        refType === 'proprietario'
+          ? type === 'proprietario_locacao'
+            ? 'Imóvel para Locação'
+            : 'Imóvel para Venda'
+          : 'Interesse em Compra'
+      summary = `${typeLabel} em ${neighborhood || 'Barra da Tijuca / Recreio'}`
+    }
+
+    let events = []
+    try {
+      const evRecords = $app.findRecordsByFilter(
+        'referral_events',
+        `referral_id = '${r.id}' && visible_to_participant = true`,
+        'created',
+        50,
+        0,
+      )
+      events = evRecords.map((ev) => ({
+        id: ev.id,
+        created: ev.getString('created'),
+        public_label: ev.getString('public_label') || ev.getString('to_status'),
+        reason: ev.getString('public_reason_code') || '',
+      }))
+    } catch (_) {}
+
+    items.push({
+      id: r.id,
+      protocol: '#' + r.id.substring(0, 8).toUpperCase(),
+      type: type,
+      referral_type: refType,
+      indicated_first_name: indicatedFirstName,
+      neighborhood: neighborhood || 'Barra da Tijuca / Recreio',
+      status: status,
+      timeline_stage: timelineStage,
+      public_stage: timelineStage,
+      created: r.getString('created'),
+      updated: r.getString('updated'),
+      attended_at: r.getString('attended_at') || null,
+      primeira_visita_at: primeiraVisitaAt,
+      deal_date: r.getString('deal_date') || null,
+      public_reason_code: r.getString('public_reason_code') || '',
+      status_reason: r.getString('public_reason_code') ? r.getString('status_reason') : '',
+      channel: r.getString('channel') || 'painel_direto',
+      public_summary: summary,
+      events: events,
+    })
+  }
+
+  return e.json(200, {
+    items,
+    participant: participantRec
+      ? {
+          id: participantRec.id,
+          referral_code: participantRec.getString('referral_code'),
+          status: participantRec.getString('status'),
+        }
+      : null,
+  })
+}
+
+routerAdd('GET', '/backend/v1/referrals/my-referrals', handleMyReferrals)
+routerAdd('POST', '/backend/v1/referrals/my-referrals', handleMyReferrals)
+
+/**
+ * Route: POST /backend/v1/referrals/submit-direct-referral
+ * Authorized only for categories that allow direct panel submissions (allowed_channels != 'link_only')
+ */
+routerAdd('POST', '/backend/v1/referrals/submit-direct-referral', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) {
+    return e.json(401, { message: 'Não autorizado. Faça login para enviar indicação.' })
+  }
+
+  // 1. Obter o participante do usuário logado
+  let participantRec = null
+  try {
+    participantRec = $app.findFirstRecordByFilter('participants', 'user_id = {:uid}', {
+      uid: authRecord.id,
+    })
+  } catch (_) {
+    return e.json(400, {
+      message:
+        'Cadastro de participante não encontrado para este usuário. Complete seu cadastro primeiro.',
+    })
+  }
+
+  if (participantRec.getString('status') !== 'ativo') {
+    return e.json(403, {
+      message: 'Seu cadastro de indicador ainda não está ativo. Aguarde a aprovação.',
+    })
+  }
+
+  // 2. Verificar se a categoria permite indicação direta pelo painel (allowed_channels != 'link_only')
+  const categoryId = participantRec.getString('category_id')
+  if (!categoryId) {
+    return e.json(400, { message: 'Categoria do participante não definida.' })
+  }
+
+  let catRec = null
+  try {
+    catRec = $app.findRecordById('participant_categories', categoryId)
+  } catch (_) {
+    return e.json(400, { message: 'Categoria inválida.' })
+  }
+
+  const allowedChannels = catRec.getString('allowed_channels') || 'link_only'
+  if (allowedChannels === 'link_only') {
+    return e.json(403, {
+      message: `A sua categoria (${catRec.getString('name')}) permite indicações exclusivamente pelo seu link pessoal ou cartão com QR entregue em mãos ao indicado. Não é permitido envio direto pelo painel.`,
+    })
+  }
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+
+  // 3. Validação dos campos da indicação
+  const indicatedType = (body.referral_type || body.type || 'proprietario').trim()
+  const indicatedName = (body.indicated_name || body.name || '').trim()
+  const indicatedPhone = (body.indicated_phone || body.phone || '').trim()
+  const indicatedEmail = (body.indicated_email || body.email || '').trim()
+  const neighborhood = (
+    body.target_neighborhood ||
+    body.neighborhood ||
+    'Barra da Tijuca / Recreio'
+  ).trim()
+  const notes = (body.notes || body.description || '').trim()
+
+  if (!indicatedName) {
+    return e.json(400, { message: 'Nome da pessoa indicada é obrigatório.' })
+  }
+  if (!indicatedPhone) {
+    return e.json(400, { message: 'Telefone da pessoa indicada é obrigatório.' })
+  }
+
+  // Declaração de consentimento obrigatória
+  if (body.consent_declared !== true && body.consent_status !== 'declarado_indicador') {
+    return e.json(400, {
+      message:
+        'Você deve declarar que a pessoa indicada concordou previamente em ser contatada pela Godoy Prime Realty.',
+    })
+  }
+
+  // Normalização do tipo
+  let refType = 'proprietario'
+  let dbType = 'proprietario_venda'
+  if (indicatedType === 'comprador' || indicatedType === 'cliente') {
+    refType = 'comprador'
+    dbType = 'cliente'
+  } else if (indicatedType === 'proprietario_locacao') {
+    refType = 'proprietario'
+    dbType = 'proprietario_locacao'
+  }
+
+  const referralsCol = $app.findCollectionByNameOrId('referrals')
+  const newRef = new Record(referralsCol)
+
+  newRef.set('channel', 'manual')
+  newRef.set('type', dbType)
+  newRef.set('referral_type', refType)
+  newRef.set('participant_id', participantRec.id)
+  newRef.set('current_owner_id', authRecord.id)
+  newRef.set('original_owner_id', authRecord.id)
+  newRef.set('status', 'nova')
+  newRef.set('attribution_status', 'atribuida')
+  newRef.set('consent_declared', true)
+  newRef.set('target_neighborhood', neighborhood)
+
+  if (refType === 'proprietario') {
+    newRef.set('owner_name', indicatedName)
+    newRef.set('owner_phone', indicatedPhone)
+    if (indicatedEmail) newRef.set('owner_email', indicatedEmail)
+  } else {
+    newRef.set('buyer_name', indicatedName)
+    newRef.set('buyer_phone', indicatedPhone)
+    if (indicatedEmail) newRef.set('buyer_email', indicatedEmail)
+  }
+
+  newRef.set('referrer_name', authRecord.getString('name') || 'Indicador')
+  newRef.set('referrer_phone', authRecord.getString('phone') || '')
+  newRef.set('return_contact', 'Painel do Indicador')
+  newRef.set('description', notes || `Indicação direta registrada pelo indicador.`)
+  newRef.set(
+    'public_summary',
+    `${refType === 'proprietario' ? 'Proprietário' : 'Comprador'} em ${neighborhood}`,
+  )
+
+  $app.save(newRef)
+
+  // Registrar evento inicial visível
+  try {
+    const eventsCol = $app.findCollectionByNameOrId('referral_events')
+    const ev = new Record(eventsCol)
+    ev.set('referral_id', newRef.id)
+    ev.set('from_status', '')
+    ev.set('to_status', 'nova')
+    ev.set('actor_id', authRecord.id)
+    ev.set('actor_name', authRecord.getString('name') || 'Indicador')
+    ev.set('public_label', 'Indicação recebida pelo painel')
+    ev.set('visible_to_participant', true)
+    $app.save(ev)
+  } catch (_) {}
+
+  // Auditoria
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('actor_id', authRecord.id)
+    audit.set('actor_email', authRecord.getString('email'))
+    audit.set('action', 'direct_referral_submitted')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', newRef.id)
+    audit.set(
+      'details',
+      JSON.stringify({
+        participant_id: participantRec.id,
+        category: catRec.getString('name'),
+        consent_status: 'declarado_indicador',
+      }),
+    )
+    audit.set('ip_address', e.request.remoteAddr)
+    $app.save(audit)
+  } catch (_) {}
+
+  return e.json(200, {
+    success: true,
+    message: 'Indicação enviada com sucesso! Acompanhe o andamento pelo seu painel.',
+    id: newRef.id,
+    protocol: '#' + newRef.id.substring(0, 8).toUpperCase(),
+  })
+})
+
+/**
+ * Route: POST /backend/v1/referrals/refuse-contact
+ * Apaga e anonimiza os dados do indicado caso ele recuse o contato no primeiro atendimento
+ */
+routerAdd('POST', '/backend/v1/referrals/refuse-contact', (e) => {
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const referralId = (body.referral_id || '').trim()
+  const reason = (body.reason || 'Indicado recusou contato no primeiro atendimento').trim()
+
+  if (!referralId) {
+    return e.json(400, { message: 'ID da indicação é obrigatório.' })
+  }
+
+  let ref = null
+  try {
+    ref = $app.findRecordById('referrals', referralId)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+
+  const nowIso = new Date().toISOString()
+  const maskedLabel = '[DADOS APAGADOS - CONTATO RECUSADO]'
+
+  ref.set('status', 'cancelada')
+  ref.set('status_reason', reason)
+  ref.set('public_reason_code', 'recusada')
+  ref.set('owner_name', maskedLabel)
+  ref.set('owner_phone', '')
+  ref.set('owner_email', '')
+  ref.set('owner_cpf', '')
+  ref.set('buyer_name', maskedLabel)
+  ref.set('buyer_phone', '')
+  ref.set('buyer_email', '')
+  ref.set('unit', '')
+  ref.set('normalized_address', '')
+  ref.set('description', `[Dados do indicado excluídos sob recusa de contato: ${reason}]`)
+  ref.set('anonymized_at', nowIso)
+  ref.set('anonymized_reason', reason)
+
+  $app.save(ref)
+
+  try {
+    const eventsCol = $app.findCollectionByNameOrId('referral_events')
+    const ev = new Record(eventsCol)
+    ev.set('referral_id', ref.id)
+    ev.set('from_status', ref.original().getString('status'))
+    ev.set('to_status', 'cancelada')
+    ev.set('public_label', 'Não aproveitada')
+    ev.set('reason', 'recusada')
+    ev.set('visible_to_participant', true)
+    $app.save(ev)
+  } catch (_) {}
+
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado foram apagados com sucesso.',
+  })
+})
