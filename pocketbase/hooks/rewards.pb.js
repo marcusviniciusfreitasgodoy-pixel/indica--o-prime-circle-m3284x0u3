@@ -57,6 +57,16 @@ onRecordAfterCreateSuccess((e) => {
       }
     }
 
+    const categoryId = participant.getString('category_id')
+
+    // Regra C9 / C7: entidade_condominial NUNCA recebe dinheiro
+    let isEntidadeCondominial = false
+    try {
+      const partCat = $app.findRecordById('participant_categories', categoryId)
+      if (partCat.getString('slug') === 'entidade_condominial') isEntidadeCondominial = true
+    } catch (_) {}
+    if (isEntidadeCondominial) return
+
     // Teto de 8 recompensas por participante por ano civil
     let annualCap = 8
     try {
@@ -94,7 +104,6 @@ onRecordAfterCreateSuccess((e) => {
       else refType = 'proprietario_venda'
     }
 
-    const categoryId = participant.getString('category_id')
     const campaignId = referral.getString('campaign_id')
     const condoId = referral.getString('condominium_id')
 
@@ -263,6 +272,46 @@ onRecordAfterUpdateSuccess((e) => {
       }
     }
 
+    const categoryId = participant.getString('category_id')
+
+    // Regra C9 / C7: entidade_condominial NUNCA recebe dinheiro
+    let isEntidadeCondominial = false
+    try {
+      const partCat = $app.findRecordById('participant_categories', categoryId)
+      if (partCat.getString('slug') === 'entidade_condominial') isEntidadeCondominial = true
+    } catch (_) {}
+    if (isEntidadeCondominial) return
+
+    // Teto de 8 recompensas por participante por ano civil
+    let annualCap = 8
+    try {
+      const stCap = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'annual_reward_cap_per_participant',
+      )
+      const capVal = JSON.parse(stCap.getString('value_json'))
+      if (typeof capVal === 'number') annualCap = capVal
+    } catch (_) {}
+
+    const currentYear = new Date().getFullYear()
+    const yearStart = `${currentYear}-01-01 00:00:00.000Z`
+    const yearEnd = `${currentYear}-12-31 23:59:59.999Z`
+
+    let isOverAnnualCap = false
+    try {
+      const paidThisYear = $app.findRecordsByFilter(
+        'rewards',
+        `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+        '',
+        100,
+        0,
+      )
+      if (paidThisYear && paidThisYear.length >= annualCap) {
+        isOverAnnualCap = true
+      }
+    } catch (_) {}
+
     let refType = referral.getString('referral_type')
     if (!refType || refType === 'proprietario') {
       const rawType = referral.getString('type')
@@ -270,7 +319,6 @@ onRecordAfterUpdateSuccess((e) => {
       else refType = 'proprietario_venda'
     }
 
-    const categoryId = participant.getString('category_id')
     const campaignId = referral.getString('campaign_id')
     const condoId = referral.getString('condominium_id')
 
@@ -348,7 +396,12 @@ onRecordAfterUpdateSuccess((e) => {
     const hasCpfPix = !!(
       (participant.getString('pix_key') || '').trim() && (participant.getString('cpf') || '').trim()
     )
-    const initialStatus = amount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise'
+    let initialStatus = amount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise'
+    let adjustmentReason = ''
+    if (isOverAnnualCap) {
+      initialStatus = 'em_revisao_admin'
+      adjustmentReason = 'teto anual'
+    }
 
     const rewardsCol = $app.findCollectionByNameOrId('rewards')
     const rew = new Record(rewardsCol)
@@ -362,6 +415,9 @@ onRecordAfterUpdateSuccess((e) => {
     rew.set('final_amount_brl', amount)
     rew.set('via_decline', false)
     rew.set('status', initialStatus)
+    if (adjustmentReason) {
+      rew.set('adjustment_reason', adjustmentReason)
+    }
     $app.save(rew)
 
     try {
@@ -510,7 +566,12 @@ onRecordAfterUpdateSuccess((e) => {
     const hasCpfPix = !!(
       (participant.getString('pix_key') || '').trim() && (participant.getString('cpf') || '').trim()
     )
-    const initialStatus = amount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise'
+    let initialStatus = amount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise'
+    let adjustmentReason = ''
+    if (isOverAnnualCap) {
+      initialStatus = 'em_revisao_admin'
+      adjustmentReason = 'teto anual'
+    }
 
     const rewardsCol = $app.findCollectionByNameOrId('rewards')
     const rew = new Record(rewardsCol)
@@ -524,6 +585,9 @@ onRecordAfterUpdateSuccess((e) => {
     rew.set('final_amount_brl', amount)
     rew.set('via_decline', true)
     rew.set('status', initialStatus)
+    if (adjustmentReason) {
+      rew.set('adjustment_reason', adjustmentReason)
+    }
     $app.save(rew)
 
     try {

@@ -138,9 +138,7 @@ export function AdminReferralDetailPage() {
 
   // Register First Visit Modal (Buyer referral)
   const [firstVisitModalOpen, setFirstVisitModalOpen] = useState(false)
-  const [firstVisitDate, setFirstVisitDate] = useState(
-    new Date().toISOString().substring(0, 10),
-  )
+  const [firstVisitDate, setFirstVisitDate] = useState(new Date().toISOString().substring(0, 10))
   const [firstVisitCapacity, setFirstVisitCapacity] = useState<'sim' | 'nao'>('sim')
   const [firstVisitProofType, setFirstVisitProofType] = useState<string>('pre_aprovacao_credito')
   const [firstVisitDescription, setFirstVisitDescription] = useState('')
@@ -448,10 +446,8 @@ export function AdminReferralDetailPage() {
       toast({
         title: 'Primeira visita registrada!',
         description: res.reward_created
-          ? `Recompensa de R$ ${res.reward_created.amount} gerada com status: ${res.reward_created.status}.`
-          : res.reward_skipped_reason
-            ? `Visita gravada. Recompensa não gerada: ${res.reward_skipped_reason}`
-            : 'Atendimento gravado na linha do tempo.',
+          ? res.reward_info || 'Recompensa de primeira visita gerada com sucesso!'
+          : res.reward_info || 'Atendimento registrado na linha do tempo.',
       })
       loadData()
     } catch (err: any) {
@@ -1731,6 +1727,119 @@ export function AdminReferralDetailPage() {
               className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
             >
               {submitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : 'Fazer Upload'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* MODAL: Registrar Primeira Visita (Comprador) */}
+      <Dialog open={firstVisitModalOpen} onOpenChange={setFirstVisitModalOpen}>
+        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg text-white">
+              Registrar Primeira Visita / Atendimento
+            </DialogTitle>
+            <DialogDescription className="text-stone-400 text-xs">
+              Registre a realização da primeira visita para indicação de comprador e a avaliação da
+              capacidade financeira. O evento constará na linha do tempo como "Atendimento
+              realizado".
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-1">
+              <label className="text-stone-300 font-medium">Data do Atendimento / Visita:</label>
+              <Input
+                type="date"
+                value={firstVisitDate}
+                onChange={(e) => setFirstVisitDate(e.target.value)}
+                className="bg-stone-950 border-stone-800 text-xs rounded-none"
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-stone-300 font-medium">
+                Capacidade Financeira Demonstrada?
+              </label>
+              <Select
+                value={firstVisitCapacity}
+                onValueChange={(val: 'sim' | 'nao') => setFirstVisitCapacity(val)}
+              >
+                <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                  <SelectItem value="sim">
+                    Sim (gera recompensa de R$ 500 para indicador ativo)
+                  </SelectItem>
+                  <SelectItem value="nao">
+                    Não (apenas registra atendimento sem recompensa)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {firstVisitCapacity === 'sim' && (
+              <div className="space-y-1">
+                <label className="text-stone-300 font-medium">Tipo de Comprovação:</label>
+                <Select
+                  value={firstVisitProofType}
+                  onValueChange={(val: string) => setFirstVisitProofType(val)}
+                >
+                  <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                    <SelectItem value="pre_aprovacao_credito">Pré-aprovação de crédito</SelectItem>
+                    <SelectItem value="comprovante_recursos">Comprovante de recursos</SelectItem>
+                    <SelectItem value="outro">Outro (com descrição)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            <div className="space-y-1">
+              <label className="text-stone-300 font-medium">
+                Descrição{' '}
+                {firstVisitCapacity === 'sim' && firstVisitProofType === 'outro'
+                  ? '(obrigatória)'
+                  : '(opcional)'}
+                :
+              </label>
+              <Textarea
+                placeholder="Detalhes da comprovação e do atendimento ao comprador..."
+                value={firstVisitDescription}
+                onChange={(e) => setFirstVisitDescription(e.target.value)}
+                className="bg-stone-950 border-stone-800 text-xs rounded-none h-20"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setFirstVisitModalOpen(false)}
+              className="rounded-none text-xs text-stone-400"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={
+                submitting ||
+                !firstVisitDate ||
+                (firstVisitCapacity === 'sim' &&
+                  firstVisitProofType === 'outro' &&
+                  !firstVisitDescription.trim())
+              }
+              onClick={handleRegisterFirstVisit}
+              className="bg-sky-600 hover:bg-sky-700 text-white rounded-none text-xs"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  Registrando...
+                </>
+              ) : (
+                'Salvar Atendimento'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

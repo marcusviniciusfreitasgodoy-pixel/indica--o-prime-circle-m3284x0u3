@@ -575,7 +575,8 @@ export function AdminParticipantsPage() {
                     </span>
                   ) : (
                     <span className="text-amber-400 flex items-center gap-1 font-medium">
-                      <AlertCircle className="w-3 h-3" /> E-mail ainda não verificado pelo participante (aprovação bloqueada)
+                      <AlertCircle className="w-3 h-3" /> E-mail ainda não verificado pelo
+                      participante (aprovação bloqueada)
                     </span>
                   )}
                 </div>

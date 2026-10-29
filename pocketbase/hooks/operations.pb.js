@@ -1384,8 +1384,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
     const maxBytes = 10 * 1024 * 1024
     if (!decodedBytes || decodedBytes.length > maxBytes) {
       return e.json(400, {
-        message:
-          'O arquivo da ata de assembleia excede o tamanho máximo permitido de 10 MB.',
+        message: 'O arquivo da ata de assembleia excede o tamanho máximo permitido de 10 MB.',
       })
     }
   }
@@ -1673,10 +1672,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
     const createdUserRec = $app.findRecordById('_pb_users_auth_', finalUserId)
     $mails.sendRecordVerification($app, createdUserRec)
   } catch (errVerif) {
-    console.error(
-      '[register-participant] Erro ao disparar e-mail de verificação nativo:',
-      errVerif,
-    )
+    console.error('[register-participant] Erro ao disparar e-mail de verificação nativo:', errVerif)
     try {
       const auditCol = $app.findCollectionByNameOrId('audit_logs')
       const auditErr = new Record(auditCol)
@@ -2624,6 +2620,330 @@ routerAdd('POST', '/backend/v1/referrals/resolve-attribution-hint', (e) => {
 /**
  * POST /backend/v1/referrals/confirm-consent
  */
+/**
+ * POST /backend/v1/referrals/register-first-visit
+ * Registra o atendimento / primeira visita realizada para comprador
+ */
+routerAdd('POST', '/backend/v1/referrals/register-first-visit', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
+
+  let canRegister = false
+  try {
+    const rolesRecords = $app.findRecordsByFilter(
+      'user_roles',
+      `user_id = '${authRecord.id}'`,
+      'created',
+      5,
+      0,
+    )
+    const roleNames = rolesRecords.map((r) => r.getString('role'))
+    canRegister = roleNames.includes('admin') || roleNames.includes('operador')
+  } catch (_) {}
+
+  if (!canRegister) {
+    return e.json(403, {
+      message: 'Apenas usuários com papel admin ou operador podem registrar a primeira visita.',
+    })
+  }
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const referralId = (body.referral_id || '').trim()
+  const visitDate = (body.data || body.visit_date || '').trim()
+  const rawCap = (body.capacidade_financeira_demonstrada || '').toString().toLowerCase().trim()
+  const hasCapacity = rawCap === 'sim' || rawCap === 'true' || rawCap === '1'
+  const proofType = (body.tipo_comprovacao || body.proof_type || '').trim()
+  const description = (body.descricao || body.description || '').trim()
+
+  if (!referralId) {
+    return e.json(400, { message: 'referral_id é obrigatório.' })
+  }
+  if (!visitDate) {
+    return e.json(400, { message: 'A data do atendimento é obrigatória.' })
+  }
+  if (!rawCap || (rawCap !== 'sim' && rawCap !== 'nao' && rawCap !== 'não')) {
+    return e.json(400, {
+      message: "capacidade_financeira_demonstrada deve ser 'sim' ou 'nao'.",
+    })
+  }
+  if (hasCapacity && !proofType) {
+    return e.json(400, {
+      message: 'O tipo de comprovação é obrigatório quando a capacidade financeira for sim.',
+    })
+  }
+
+  let referral = null
+  try {
+    referral = $app.findRecordById('referrals', referralId)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+
+  // Aceitar somente indicação de comprador (recusar as demais com 400)
+  const refType = referral.getString('referral_type') || referral.getString('type')
+  if (refType !== 'comprador') {
+    return e.json(400, {
+      message: 'O registro de primeira visita aplica-se exclusivamente a indicações de comprador.',
+    })
+  }
+
+  // Atualiza campos na indicação
+  referral.set('primeira_visita_at', visitDate)
+  referral.set('capacidade_financeira_demonstrada', hasCapacity)
+  referral.set('capacidade_tipo_comprovacao', hasCapacity ? proofType : '')
+  referral.set('capacidade_descricao', description)
+  $app.save(referral)
+
+  // Registra o evento visível "Atendimento realizado" na linha do tempo / histórico da indicação
+  const eventsCol = $app.findCollectionByNameOrId('referral_events')
+  const ev = new Record(eventsCol)
+  ev.set('referral_id', referral.id)
+  ev.set('from_status', referral.getString('status'))
+  ev.set('to_status', referral.getString('status'))
+  ev.set('actor_id', authRecord.id)
+  ev.set('actor_name', authRecord.getString('name') || 'Operador')
+  ev.set('public_label', 'Atendimento realizado')
+  ev.set(
+    'reason',
+    `Primeira visita/atendimento realizado em ${visitDate}. Capacidade financeira demonstrada: ${hasCapacity ? 'Sim (' + proofType + ')' : 'Não'}. ${description ? ' Obs: ' + description : ''}`,
+  )
+  ev.set('visible_to_participant', true)
+  ev.set(
+    'metadata',
+    JSON.stringify({
+      data: visitDate,
+      capacidade_financeira_demonstrada: hasCapacity ? 'sim' : 'nao',
+      tipo_comprovacao: proofType,
+      descricao: description,
+    }),
+  )
+  $app.save(ev)
+
+  // Auditoria
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('actor_id', authRecord.id)
+    audit.set('actor_email', authRecord.getString('email'))
+    audit.set('action', 'referral_first_visit_registered')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', referral.id)
+    audit.set(
+      'details',
+      JSON.stringify({
+        visitDate,
+        hasCapacity,
+        proofType,
+        description,
+      }),
+    )
+    audit.set('ip_address', e.request.remoteAddr)
+    $app.save(audit)
+  } catch (_) {}
+
+  let rewardCreated = false
+  let rewardMessage = ''
+
+  // SOMENTE se a capacidade for "sim" e o participante estiver ativo, cria a recompensa da regra primeira_visita_realizada
+  if (hasCapacity) {
+    const partId = referral.getString('participant_id')
+    let participant = null
+    if (partId) {
+      try {
+        participant = $app.findRecordById('participants', partId)
+      } catch (_) {}
+    }
+
+    if (participant && participant.getString('status') === 'ativo') {
+      const categoryId = participant.getString('category_id')
+
+      // Regra 5: Entidade condominial nunca recebe dinheiro
+      let isEntidadeCondominial = false
+      try {
+        const partCat = $app.findRecordById('participant_categories', categoryId)
+        if (partCat.getString('slug') === 'entidade_condominial') isEntidadeCondominial = true
+      } catch (_) {}
+
+      if (!isEntidadeCondominial) {
+        // Checa validade / janela de 90 dias da indicação se implementada
+        let windowDays = 90
+        try {
+          const st = $app.findFirstRecordByData(
+            'program_settings',
+            'key',
+            'capture_attribution_window_days',
+          )
+          const val = JSON.parse(st.getString('value_json'))
+          if (val !== undefined && val !== null) windowDays = Number(val)
+        } catch (_) {}
+
+        let withinWindow = true
+        const refCreatedStr = referral.getString('created')
+        if (refCreatedStr) {
+          const refCreated = new Date(refCreatedStr)
+          const diffDays = Math.floor((Date.now() - refCreated.getTime()) / (1000 * 60 * 60 * 24))
+          if (diffDays > windowDays) {
+            withinWindow = false
+          }
+        }
+
+        if (withinWindow) {
+          // Checa se já existe recompensa de primeira_visita_realizada para esta indicação (não duplicar)
+          let existingRewards = []
+          try {
+            existingRewards = $app.findRecordsByFilter(
+              'rewards',
+              `referral_id = '${referral.id}' && milestone = 'primeira_visita_realizada' && beneficiary_type = 'indicador'`,
+              '',
+              1,
+              0,
+            )
+          } catch (_) {}
+
+          if (existingRewards.length === 0) {
+            // Teto de 8 recompensas por ano civil
+            let annualCap = 8
+            try {
+              const stCap = $app.findFirstRecordByData(
+                'program_settings',
+                'key',
+                'annual_reward_cap_per_participant',
+              )
+              const capVal = JSON.parse(stCap.getString('value_json'))
+              if (typeof capVal === 'number') annualCap = capVal
+            } catch (_) {}
+
+            const currentYear = new Date().getFullYear()
+            const yearStart = `${currentYear}-01-01 00:00:00.000Z`
+            const yearEnd = `${currentYear}-12-31 23:59:59.999Z`
+
+            let isOverAnnualCap = false
+            try {
+              const paidThisYear = $app.findRecordsByFilter(
+                'rewards',
+                `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+                '',
+                100,
+                0,
+              )
+              if (paidThisYear && paidThisYear.length >= annualCap) {
+                isOverAnnualCap = true
+              }
+            } catch (_) {}
+
+            // Procura regra de recompensa de comprador no marco primeira_visita_realizada
+            let filter = `category_id = '${categoryId}' && milestone = 'primeira_visita_realizada' && beneficiary_type = 'indicador' && active = true && (referral_type = 'comprador' || referral_type = 'todos')`
+            const rules = $app.findRecordsByFilter('reward_rules', filter, '-version', 10, 0)
+
+            let rule = null
+            if (rules && rules.length > 0) {
+              const refDate = refCreatedStr ? new Date(refCreatedStr) : new Date()
+              const validRules = rules.filter((r) => {
+                const vf = r.getString('valid_from')
+                const vt = r.getString('valid_to')
+                if (vf && new Date(vf) > refDate) return false
+                if (vt && new Date(vt) < refDate) return false
+                return true
+              })
+              if (validRules.length > 0) {
+                rule = validRules[0]
+              }
+            }
+
+            // Se não encontrou regra específica da categoria, tenta regra fallback com referral_type comprador
+            if (!rule) {
+              try {
+                const fallbackRules = $app.findRecordsByFilter(
+                  'reward_rules',
+                  "milestone = 'primeira_visita_realizada' && beneficiary_type = 'indicador' && active = true && (referral_type = 'comprador' || referral_type = 'todos')",
+                  '-version',
+                  5,
+                  0,
+                )
+                if (fallbackRules.length > 0) rule = fallbackRules[0]
+              } catch (_) {}
+            }
+
+            const amount = rule ? rule.getFloat('fixed_amount_brl') || 500 : 500
+            const ruleId = rule ? rule.id : ''
+
+            const hasCpfPix = !!(
+              (participant.getString('pix_key') || '').trim() &&
+              (participant.getString('cpf') || '').trim()
+            )
+            let initialStatus = amount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise'
+            let adjustmentReason = ''
+            if (isOverAnnualCap) {
+              initialStatus = 'em_revisao_admin'
+              adjustmentReason = 'teto anual'
+            }
+
+            try {
+              const rewardsCol = $app.findCollectionByNameOrId('rewards')
+              const rew = new Record(rewardsCol)
+              rew.set('referral_id', referral.id)
+              rew.set('milestone', 'primeira_visita_realizada')
+              rew.set('beneficiary_type', 'indicador')
+              rew.set('participant_id', participant.id)
+              if (ruleId) rew.set('rule_id', ruleId)
+              rew.set('reward_type', 'valor_fixo')
+              rew.set('calculated_amount_brl', amount)
+              rew.set('final_amount_brl', amount)
+              rew.set('via_decline', false)
+              rew.set('status', initialStatus)
+              if (adjustmentReason) {
+                rew.set('adjustment_reason', adjustmentReason)
+              }
+              $app.save(rew)
+              rewardCreated = true
+              rewardMessage = `Recompensa de R$ ${amount.toFixed(2)} criada com status: ${initialStatus}.`
+
+              const auditCol = $app.findCollectionByNameOrId('audit_logs')
+              const auditRew = new Record(auditCol)
+              auditRew.set('actor_id', authRecord.id)
+              auditRew.set('actor_email', authRecord.getString('email'))
+              auditRew.set('action', 'reward_created_first_visit')
+              auditRew.set('resource_type', 'rewards')
+              auditRew.set('resource_id', rew.id)
+              auditRew.set(
+                'details',
+                JSON.stringify({
+                  referral_id: referral.id,
+                  participant_id: participant.id,
+                  amount,
+                  status: initialStatus,
+                  adjustment_reason: adjustmentReason,
+                }),
+              )
+              auditRew.set('ip_address', e.request.remoteAddr)
+              $app.save(auditRew)
+            } catch (errRew) {
+              console.error('[register-first-visit] Erro ao criar recompensa:', errRew)
+            }
+          } else {
+            rewardMessage = 'Recompensa de primeira visita já existia para esta indicação.'
+          }
+        } else {
+          rewardMessage = 'Janela de 90 dias da indicação expirada; sem recompensa.'
+        }
+      } else {
+        rewardMessage = 'Participante da categoria entidade_condominial não recebe dinheiro.'
+      }
+    } else {
+      rewardMessage = 'Participante inativo ou inexistente; sem recompensa.'
+    }
+  }
+
+  return e.json(200, {
+    success: true,
+    message: 'Atendimento/primeira visita registrado com sucesso.',
+    referral_id: referral.id,
+    reward_created: rewardCreated,
+    reward_info: rewardMessage,
+  })
+})
+
 routerAdd('POST', '/backend/v1/referrals/confirm-consent', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
