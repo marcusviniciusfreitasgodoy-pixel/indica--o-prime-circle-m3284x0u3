@@ -1134,6 +1134,302 @@ routerAdd('POST', '/backend/v1/referrals/register-deal', (e) => {
 })
 
 /**
+ * POST /backend/v1/public/register-participant
+ * Cadastro público de indicador (usuário + participante) em uma única operação.
+ */
+routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
+  const genericSuccess = {
+    success: true,
+    message:
+      'Cadastro realizado com sucesso! Se necessário aprovação, você será notificado assim que sua conta for ativada.',
+  }
+
+  const reqInfo = e.requestInfo()
+  const rawBody = reqInfo.body || {}
+
+  // 1. Honeypot check contra robôs
+  const honeypot = (rawBody.website || rawBody.honeypot || rawBody.url || '').trim()
+  if (honeypot) {
+    return e.json(200, genericSuccess)
+  }
+
+  // 2. Limite de 5 cadastros por IP por hora
+  const clientIp = (e.request && e.request.remoteAddr) || 'unknown'
+  const userAgent =
+    (e.request && e.request.headers && e.request.headers.get
+      ? e.request.headers.get('user-agent')
+      : '') || ''
+
+  if (clientIp && clientIp !== 'unknown') {
+    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString().replace('T', ' ')
+    try {
+      const recentAttempts = $app.findRecordsByFilter(
+        'audit_logs',
+        "action = 'participant_registered' && ip_address = {:ip} && created >= {:since}",
+        '-created',
+        10,
+        0,
+        { ip: clientIp, since: oneHourAgo },
+      )
+      if (recentAttempts.length >= 5) {
+        return e.json(429, {
+          message:
+            'Limite de cadastros excedido temporariamente para este endereço IP. Tente novamente mais tarde.',
+        })
+      }
+    } catch (_) {}
+  }
+
+  // 3. SEGURANÇA: nunca aceitar is_admin, is_operador, is_financeiro, status, level_id nem referral_code vindos do corpo
+  const sanitized = Object.assign({}, rawBody)
+  delete sanitized.is_admin
+  delete sanitized.is_operador
+  delete sanitized.is_financeiro
+  delete sanitized.status
+  delete sanitized.level_id
+  delete sanitized.referral_code
+
+  // Extrair campos permitidos
+  const categoryId = (sanitized.category_id || '').trim()
+  const name = (sanitized.nome || sanitized.name || '').trim()
+  const cpf = (sanitized.cpf || sanitized.CPF || '').trim()
+  const phone = (sanitized.telefone || sanitized.phone || '').trim()
+  const email = (sanitized.email || sanitized['e-mail'] || '').trim().toLowerCase()
+  const password = sanitized.senha || sanitized.password || ''
+  const condominiumId = (sanitized.condominium_id || '').trim()
+  const cnpj = (sanitized.cnpj || sanitized.CNPJ || '').trim()
+  const roleTitle = (sanitized.role_title || '').trim()
+  const creci = (sanitized.creci || sanitized.CRECI || '').trim()
+  const whatsappOptin = !!(sanitized.whatsapp_optin !== undefined
+    ? sanitized.whatsapp_optin
+    : sanitized.whatsappOptin)
+  const marketingOptin = !!(sanitized.marketing_optin !== undefined
+    ? sanitized.marketing_optin
+    : sanitized.marketingOptin)
+  const acceptedDocuments = Array.isArray(sanitized.accepted_documents)
+    ? sanitized.accepted_documents
+    : Array.isArray(sanitized.documents)
+      ? sanitized.documents
+      : []
+
+  // Validações básicas de entrada
+  if (!name || !email || !password) {
+    return e.json(400, { message: 'Nome, e-mail e senha são obrigatórios.' })
+  }
+
+  if (password.length < 8) {
+    return e.json(400, { message: 'A senha deve conter no mínimo 8 caracteres.' })
+  }
+
+  if (!categoryId) {
+    return e.json(400, { message: 'Categoria de indicador é obrigatória.' })
+  }
+
+  // Buscar categoria vinculada
+  let categoryRec = null
+  try {
+    categoryRec = $app.findRecordById('participant_categories', categoryId)
+  } catch (_) {
+    return e.json(400, { message: 'Categoria informada não encontrada.' })
+  }
+
+  // Validação de condomínio quando a categoria exigir condomínio
+  const catSlug = categoryRec.getString('slug')
+  const requiresCondo =
+    catSlug === 'porteiro_zelador' || catSlug === 'sindico' || catSlug === 'entidade_condominial'
+  if (requiresCondo && !condominiumId) {
+    return e.json(400, { message: 'A categoria selecionada exige a seleção de um condomínio.' })
+  }
+
+  if (condominiumId) {
+    try {
+      $app.findRecordById('condominiums', condominiumId)
+    } catch (_) {
+      return e.json(400, { message: 'Condomínio informado não encontrado.' })
+    }
+  }
+
+  // Se o e-mail já estiver cadastrado, responde com a MESMA mensagem genérica de sucesso (para não revelar quem já existe)
+  try {
+    const existingUser = $app.findAuthRecordByEmail('_pb_users_auth_', email)
+    if (existingUser) {
+      return e.json(200, genericSuccess)
+    }
+  } catch (_) {}
+
+  // Determinar status inicial do participante: pendente_aprovacao se requires_approval=true, senão ativo
+  const requiresApproval = categoryRec.getBool('requires_approval')
+  const initialStatus = requiresApproval ? 'pendente_aprovacao' : 'ativo'
+
+  // Se nascer ativo, gerar referral_code de 6 caracteres maiúsculos sem letras ambíguas (sem O, I, L, 0, 1)
+  let referralCode = ''
+  if (initialStatus === 'ativo') {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+    let attempts = 0
+    while (attempts < 50) {
+      attempts++
+      let candidate = ''
+      for (let i = 0; i < 6; i++) {
+        candidate += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      try {
+        const existing = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
+          c: candidate,
+        })
+        if (!existing) {
+          referralCode = candidate
+          break
+        }
+      } catch (_) {
+        referralCode = candidate
+        break
+      }
+    }
+  }
+
+  // Criação do usuário e participante numa única operação com rollback caso falhe
+  let createdUser = null
+  try {
+    // 1. Criar Auth Record (users) nativo do PocketBase com senha
+    const usersCol = $app.findCollectionByNameOrId('_pb_users_auth_')
+    const userRec = new Record(usersCol)
+    userRec.setEmail(email)
+    userRec.setPassword(password)
+    userRec.setVerified(true)
+    userRec.set('name', name)
+    if (phone) userRec.set('phone', phone)
+    userRec.set('is_admin', false)
+    userRec.set('is_operador', false)
+    userRec.set('is_financeiro', false)
+    $app.save(userRec)
+    createdUser = userRec
+
+    // 2. Criar Participante
+    const partCol = $app.findCollectionByNameOrId('participants')
+    const partRec = new Record(partCol)
+    partRec.set('user_id', createdUser.id)
+    partRec.set('category_id', categoryRec.id)
+    partRec.set('status', initialStatus)
+    if (cpf) partRec.set('cpf', cpf)
+    if (cnpj) partRec.set('cnpj', cnpj)
+    if (roleTitle) partRec.set('role_title', roleTitle)
+    if (creci) partRec.set('creci', creci)
+    partRec.set('marketing_optin', marketingOptin)
+    if (referralCode) partRec.set('referral_code', referralCode)
+
+    $app.save(partRec)
+
+    // 3. Vincular participante ao condomínio se informado
+    if (condominiumId) {
+      try {
+        const pcCol = $app.findCollectionByNameOrId('participant_condominiums')
+        const pcRec = new Record(pcCol)
+        pcRec.set('participant_id', partRec.id)
+        pcRec.set('condominium_id', condominiumId)
+        if (roleTitle) pcRec.set('role_description', roleTitle)
+        $app.save(pcRec)
+      } catch (errPc) {
+        console.error('[register-participant] Erro ao associar condomínio:', errPc)
+      }
+    }
+
+    // 4. Gravar em acceptances cada documento aceito (com versão, data, IP e navegador)
+    const nowIso = new Date().toISOString()
+    const acceptancesCol = $app.findCollectionByNameOrId('acceptances')
+    for (let i = 0; i < acceptedDocuments.length; i++) {
+      const docItem = acceptedDocuments[i] || {}
+      const docId = (docItem.id || docItem.document_id || '').trim()
+      if (docId) {
+        try {
+          // Verificar se o documento existe
+          const docRec = $app.findRecordById('legal_documents', docId)
+          if (docRec) {
+            const accRec = new Record(acceptancesCol)
+            accRec.set('user_id', createdUser.id)
+            accRec.set('document_id', docRec.id)
+            accRec.set('ip_address', clientIp)
+            accRec.set('user_agent', userAgent)
+            accRec.set('accepted_at', nowIso)
+            $app.save(accRec)
+          }
+        } catch (errDoc) {
+          console.warn(
+            '[register-participant] Aviso ao gravar aceitação de documento:',
+            docId,
+            errDoc,
+          )
+        }
+      }
+    }
+
+    // 5. Gravar o opt-in em whatsapp_optins
+    if (whatsappOptin && phone) {
+      try {
+        const woCol = $app.findCollectionByNameOrId('whatsapp_optins')
+        const woRec = new Record(woCol)
+        woRec.set('phone', phone)
+        woRec.set('person_type', 'participante')
+        woRec.set('person_id', partRec.id)
+        woRec.set('opted_in_at', nowIso)
+        woRec.set('source', 'public_registration')
+        $app.save(woRec)
+      } catch (errWo) {
+        console.error('[register-participant] Erro ao gravar whatsapp_optin:', errWo)
+      }
+    }
+
+    // 6. Gravar audit_log da tentativa bem-sucedida para controle de rate limiting e auditoria
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const auditRec = new Record(auditCol)
+      auditRec.set('actor_id', createdUser.id)
+      auditRec.set('actor_email', email)
+      auditRec.set('action', 'participant_registered')
+      auditRec.set('resource_type', 'participants')
+      auditRec.set('resource_id', partRec.id)
+      auditRec.set(
+        'details',
+        JSON.stringify({
+          category_id: categoryRec.id,
+          category_slug: catSlug,
+          status: initialStatus,
+          referral_code: referralCode || null,
+          has_condo: !!condominiumId,
+          docs_accepted_count: acceptedDocuments.length,
+        }),
+      )
+      auditRec.set('ip_address', clientIp)
+      $app.save(auditRec)
+    } catch (_) {}
+
+    return e.json(200, {
+      success: true,
+      message:
+        initialStatus === 'ativo'
+          ? 'Cadastro realizado com sucesso! Sua conta está ativa.'
+          : 'Cadastro realizado com sucesso! Seu acesso está pendente de aprovação pela equipe Prime Circle.',
+      user_id: createdUser.id,
+      participant_id: partRec.id,
+      status: initialStatus,
+      referral_code: referralCode || null,
+    })
+  } catch (err) {
+    console.error('[register-participant] Erro durante o cadastro:', err)
+    // Se algo falhar depois de criar o usuário, desfaz/apaga o usuário para não deixar usuário sem participante
+    if (createdUser) {
+      try {
+        $app.delete(createdUser)
+      } catch (errDelete) {
+        console.error('[register-participant] Erro no rollback do usuário:', errDelete)
+      }
+    }
+    return e.json(500, {
+      message: 'Não foi possível concluir o cadastro neste momento. Por favor, tente novamente.',
+    })
+  }
+})
+
+/**
  * GET /backend/v1/public/vitrine/{imovelId}
  * Retorna dados públicos do imóvel em divulgação (sem unidade nem endereço completo)
  */
@@ -2067,6 +2363,36 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
   part.set('status', 'ativo')
   part.set('approved_at', new Date().toISOString())
   part.set('approved_by', authRecord.id)
+
+  // Gerar e gravar referral_code no momento da aprovação caso o participante ainda não tenha um
+  if (!part.getString('referral_code')) {
+    const chars = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+    let uniqueCode = ''
+    let attempts = 0
+    while (attempts < 50) {
+      attempts++
+      let candidate = ''
+      for (let i = 0; i < 6; i++) {
+        candidate += chars.charAt(Math.floor(Math.random() * chars.length))
+      }
+      try {
+        const existing = $app.findFirstRecordByFilter('participants', 'referral_code = {:c}', {
+          c: candidate,
+        })
+        if (!existing) {
+          uniqueCode = candidate
+          break
+        }
+      } catch (_) {
+        uniqueCode = candidate
+        break
+      }
+    }
+    if (uniqueCode) {
+      part.set('referral_code', uniqueCode)
+    }
+  }
+
   $app.save(part)
 
   try {
