@@ -6,7 +6,8 @@ import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
 
 // Pages
-import LoginPage, { Cadastro } from './pages/Login'
+import LoginPage from './pages/Login'
+import CadastroPage from './pages/Cadastro'
 import IndicatorLink from './pages/IndicatorLink'
 import IndicatorThankYou from './pages/IndicatorThankYou'
 import DirectSell from './pages/DirectSell'
@@ -47,7 +48,7 @@ const App = () => (
         <Sonner position="top-right" />
         <Routes>
           {/* Public Landing & Direct Leads */}
-          <Route path="/cadastro" element={<Cadastro />} />
+          <Route path="/cadastro" element={<CadastroPage />} />
           <Route path="/i/:codigo" element={<IndicatorLink />} />
           <Route path="/i/:codigo/obrigado" element={<IndicatorThankYou />} />
           <Route path="/quero-vender" element={<DirectSell />} />

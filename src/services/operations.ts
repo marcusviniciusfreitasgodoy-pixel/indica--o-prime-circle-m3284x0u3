@@ -279,6 +279,26 @@ export interface PublicIndicatorInfo {
   front?: string
 }
 
+export interface PublicCategoryItem {
+  id: string
+  slug: string
+  name: string
+  front: 'comunidade' | 'parceiros' | string
+  description?: string
+  requires_approval: boolean
+  exige_condominio: boolean
+  is_entidade_empresa?: boolean
+  is_corretor?: boolean
+}
+
+export interface PublicLegalDocumentItem {
+  id: string
+  slug: string
+  title: string
+  content: string
+  version: number
+}
+
 export interface PublicFormData {
   condominiums: Array<{
     id: string
@@ -291,6 +311,53 @@ export interface PublicFormData {
     content: string
     version: number
   } | null
+  categories?: PublicCategoryItem[]
+  legal_documents?: PublicLegalDocumentItem[]
+}
+
+export interface RegisterParticipantPayload {
+  category_id: string
+  nome: string
+  cpf?: string
+  telefone?: string
+  email: string
+  senha: string
+  condominium_id?: string
+  cnpj?: string
+  role_title?: string
+  creci?: string
+  whatsapp_optin?: boolean
+  marketing_optin?: boolean
+  accepted_documents?: Array<{ id: string; slug?: string; version?: number }>
+  website?: string
+  honeypot?: string
+}
+
+export interface RegisterParticipantResponse {
+  success: boolean
+  message: string
+  user_id?: string
+  participant_id?: string
+  status?: 'ativo' | 'pendente_aprovacao' | string
+  referral_code?: string | null
+}
+
+/**
+ * Cadastro público de indicador (usuário + participante)
+ */
+export async function registerParticipant(
+  payload: RegisterParticipantPayload,
+): Promise<RegisterParticipantResponse> {
+  const res = await fetch(`${BACKEND_URL}/backend/v1/public/register-participant`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || 'Erro ao realizar cadastro.')
+  }
+  return data as RegisterParticipantResponse
 }
 
 /**

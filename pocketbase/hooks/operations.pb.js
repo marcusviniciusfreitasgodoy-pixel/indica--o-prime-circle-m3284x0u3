@@ -1602,9 +1602,55 @@ routerAdd('GET', '/backend/v1/public/form-data', (e) => {
     }
   } catch (_) {}
 
+  let categories = []
+  try {
+    const catRecords = $app.findRecordsByFilter('participant_categories', '', 'front,name', 100, 0)
+    categories = catRecords.map((c) => {
+      const slug = c.getString('slug')
+      const exigeCondominio =
+        slug === 'porteiro_zelador' || slug === 'sindico' || slug === 'entidade_condominial'
+      const isEntidadeOuEmpresa =
+        slug === 'entidade_condominial' || slug === 'administradora' || slug === 'empresa_parceira'
+      const isCorretor = slug === 'corretor_parceiro'
+
+      return {
+        id: c.id,
+        slug: slug,
+        name: c.getString('name'),
+        front: c.getString('front') || 'comunidade',
+        description: c.getString('description'),
+        requires_approval: c.getBool('requires_approval'),
+        exige_condominio: exigeCondominio,
+        is_entidade_empresa: isEntidadeOuEmpresa,
+        is_corretor: isCorretor,
+      }
+    })
+  } catch (_) {}
+
+  let legalDocs = []
+  try {
+    const docs = $app.findRecordsByFilter(
+      'legal_documents',
+      'is_active = {:act}',
+      'slug,-version',
+      20,
+      0,
+      { act: true },
+    )
+    legalDocs = docs.map((d) => ({
+      id: d.id,
+      slug: d.getString('slug'),
+      title: d.getString('title'),
+      content: d.getString('content'),
+      version: d.getInt('version') || 1,
+    }))
+  } catch (_) {}
+
   return e.json(200, {
     condominiums: condos,
     consent: consentDoc,
+    categories: categories,
+    legal_documents: legalDocs,
   })
 })
 
