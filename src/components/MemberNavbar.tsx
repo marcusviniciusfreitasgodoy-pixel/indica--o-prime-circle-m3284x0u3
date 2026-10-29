@@ -21,6 +21,7 @@ import {
   QrCode,
   Menu,
   X,
+  FileText,
 } from 'lucide-react'
 
 export const MemberNavbar: React.FC = () => {
