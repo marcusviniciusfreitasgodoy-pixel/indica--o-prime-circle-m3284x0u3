@@ -24,6 +24,8 @@ import {
   Building,
   Coins,
   ChevronRight,
+  Gift,
+  ExternalLink,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
 
@@ -51,6 +53,7 @@ export default function DashboardPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [copiedLink, setCopiedLink] = useState(false)
   const [rewardsStats, setRewardsStats] = useState<RewardSummary>({ aReceber: 0, recebido: 0 })
+  const [clubeBeneficiosUrl, setClubeBeneficiosUrl] = useState<string>('')
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState('')
@@ -111,9 +114,29 @@ export default function DashboardPage() {
                 .reduce((s: number, r: any) => s + (Number(r.final_amount_brl) || 0), 0)
 
               setRewardsStats({ aReceber: pending, recebido: paid })
+
+              // Carregar URL do Clube de benefícios Godoy Prime (item 4)
+              if (partRec.status === 'ativo') {
+                try {
+                  const res = await pb.send<{ url: string }>(
+                    '/backend/v1/participant/clube-beneficios',
+                    { method: 'GET' },
+                  )
+                  if (res?.url) {
+                    setClubeBeneficiosUrl(res.url)
+                  } else {
+                    setClubeBeneficiosUrl('')
+                  }
+                } catch {
+                  setClubeBeneficiosUrl('')
+                }
+              } else {
+                setClubeBeneficiosUrl('')
+              }
             }
           } catch {
             // Sem participante ainda
+            setClubeBeneficiosUrl('')
           }
         }
       } catch (err) {
@@ -328,6 +351,42 @@ export default function DashboardPage() {
             </div>
           </div>
         </div>
+
+        {/* Cartão do Clube de Benefícios Godoy Prime (exibido para participante ativo quando a URL está preenchida) */}
+        {clubeBeneficiosUrl && (
+          <Card className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border-amber-500/30 text-slate-100 shadow-lg overflow-hidden">
+            <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                  <Gift className="h-5 w-5" />
+                </div>
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                      Exclusivo
+                    </span>
+                    <h3 className="text-base sm:text-lg font-bold text-white font-serif">
+                      Clube de benefícios Godoy Prime
+                    </h3>
+                  </div>
+                  <p className="text-xs text-slate-300 max-w-xl">
+                    Acesso a vantagens, descontos e experiências exclusivas para participantes
+                    ativos do programa.
+                  </p>
+                </div>
+              </div>
+              <Button
+                asChild
+                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 shrink-0 shadow-md"
+              >
+                <a href={clubeBeneficiosUrl} target="_blank" rel="noopener noreferrer">
+                  Acessar Clube
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                </a>
+              </Button>
+            </div>
+          </Card>
+        )}
 
         {/* Cartões A RECEBER e RECEBIDO — Recompensas por Indicação */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

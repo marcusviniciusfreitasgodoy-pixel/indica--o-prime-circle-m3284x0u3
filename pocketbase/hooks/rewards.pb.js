@@ -85,14 +85,14 @@ onRecordAfterCreateSuccess((e) => {
 
     let isOverAnnualCap = false
     try {
-      const paidThisYear = $app.findRecordsByFilter(
+      const countedThisYear = $app.findRecordsByFilter(
         'rewards',
-        `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+        `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote' || status = 'em_analise' || status = 'pendente_dados') && created >= '${yearStart}' && created <= '${yearEnd}'`,
         '',
         100,
         0,
       )
-      if (paidThisYear && paidThisYear.length >= annualCap) {
+      if (countedThisYear && countedThisYear.length >= annualCap) {
         isOverAnnualCap = true
       }
     } catch (_) {}
@@ -300,14 +300,14 @@ onRecordAfterUpdateSuccess((e) => {
 
     let isOverAnnualCap = false
     try {
-      const paidThisYear = $app.findRecordsByFilter(
+      const countedThisYear = $app.findRecordsByFilter(
         'rewards',
-        `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+        `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote' || status = 'em_analise' || status = 'pendente_dados') && created >= '${yearStart}' && created <= '${yearEnd}'`,
         '',
         100,
         0,
       )
-      if (paidThisYear && paidThisYear.length >= annualCap) {
+      if (countedThisYear && countedThisYear.length >= annualCap) {
         isOverAnnualCap = true
       }
     } catch (_) {}
@@ -477,6 +477,36 @@ onRecordAfterUpdateSuccess((e) => {
         return
       }
     }
+
+    // Teto de 8 recompensas por participante por ano civil
+    let annualCap = 8
+    try {
+      const stCap = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'annual_reward_cap_per_participant',
+      )
+      const capVal = JSON.parse(stCap.getString('value_json'))
+      if (typeof capVal === 'number') annualCap = capVal
+    } catch (_) {}
+
+    const currentYear = new Date().getFullYear()
+    const yearStart = `${currentYear}-01-01 00:00:00.000Z`
+    const yearEnd = `${currentYear}-12-31 23:59:59.999Z`
+
+    let isOverAnnualCap = false
+    try {
+      const countedThisYear = $app.findRecordsByFilter(
+        'rewards',
+        `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote' || status = 'em_analise' || status = 'pendente_dados') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+        '',
+        100,
+        0,
+      )
+      if (countedThisYear && countedThisYear.length >= annualCap) {
+        isOverAnnualCap = true
+      }
+    } catch (_) {}
 
     let refType = referral.getString('referral_type')
     if (!refType || refType === 'proprietario') {
@@ -1122,6 +1152,41 @@ routerAdd('POST', '/backend/v1/rewards/approve-reward', (e) => {
       message:
         'Não é possível aprovar recompensa vinculada a regra NÃO liberada para uso (released_for_use = false).',
     })
+  }
+
+  // Conferir o teto anual de novo antes de aprovar
+  const partId = rew.getString('participant_id')
+  if (partId) {
+    let annualCap = 8
+    try {
+      const stCap = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'annual_reward_cap_per_participant',
+      )
+      const capVal = JSON.parse(stCap.getString('value_json'))
+      if (typeof capVal === 'number') annualCap = capVal
+    } catch (_) {}
+
+    const curYear = new Date().getFullYear()
+    const yearStart = `${curYear}-01-01 00:00:00.000Z`
+    const yearEnd = `${curYear}-12-31 23:59:59.999Z`
+
+    try {
+      // Contar outras recompensas pagas, aprovadas ou em lote no mesmo ano civil
+      const approvedOrPaidThisYear = $app.findRecordsByFilter(
+        'rewards',
+        `participant_id = '${partId}' && id != '${rew.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+        '',
+        100,
+        0,
+      )
+      if (approvedOrPaidThisYear && approvedOrPaidThisYear.length >= annualCap) {
+        return e.json(400, {
+          message: `Aprovação bloqueada: participante já atingiu o teto anual de ${annualCap} recompensas aprovadas/pagas no ano civil.`,
+        })
+      }
+    } catch (_) {}
   }
 
   rew.set('status', 'aprovada')

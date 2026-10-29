@@ -739,6 +739,69 @@ routerAdd('GET', '/backend/v1/referrals/my-referrals', handleMyReferrals)
 routerAdd('POST', '/backend/v1/referrals/my-referrals', handleMyReferrals)
 
 /**
+ * Route: GET /backend/v1/participant/clube-beneficios
+ * Devolve APENAS a URL do Clube de benefícios Godoy Prime cadastrada em program_settings.
+ * Acesso não depende de ter indicado; liberado para participante ativo autenticado.
+ */
+routerAdd('GET', '/backend/v1/participant/clube-beneficios', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) {
+    return e.json(401, { message: 'Não autorizado.' })
+  }
+
+  // Verifica se o participante existe e está ativo (ou usuário admin)
+  let isActive = false
+  try {
+    const part = $app.findFirstRecordByFilter(
+      'participants',
+      'user_id = {:uid} && status = "ativo"',
+      { uid: authRecord.id },
+    )
+    if (part) isActive = true
+  } catch (_) {}
+
+  if (!isActive) {
+    try {
+      const role = $app.findFirstRecordByFilter(
+        'user_roles',
+        'user_id = {:uid} && role = "admin"',
+        { uid: authRecord.id },
+      )
+      if (role) isActive = true
+    } catch (_) {}
+  }
+
+  if (!isActive) {
+    return e.json(403, {
+      message: 'Apenas participantes com status ativo têm acesso ao Clube de Benefícios.',
+    })
+  }
+
+  let url = ''
+  try {
+    const stRec = $app.findFirstRecordByData('program_settings', 'key', 'clube_beneficios_url')
+    if (stRec) {
+      const valJson = stRec.getString('value_json')
+      if (valJson) {
+        try {
+          const parsed = JSON.parse(valJson)
+          if (typeof parsed === 'string') url = parsed.trim()
+          else if (parsed && typeof parsed === 'object' && parsed.url) {
+            url = String(parsed.url).trim()
+          }
+        } catch (_) {
+          url = valJson.replace(/^["']|["']$/g, '').trim()
+        }
+      }
+    }
+  } catch (_) {}
+
+  return e.json(200, {
+    url: url || '',
+  })
+})
+
+/**
  * Route: POST /backend/v1/referrals/submit-direct-referral
  * Authorized only for categories that allow direct panel submissions (allowed_channels != 'link_only')
  */

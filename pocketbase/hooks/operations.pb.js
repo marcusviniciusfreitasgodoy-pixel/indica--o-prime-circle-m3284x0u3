@@ -2820,14 +2820,14 @@ routerAdd('POST', '/backend/v1/referrals/register-first-visit', (e) => {
 
             let isOverAnnualCap = false
             try {
-              const paidThisYear = $app.findRecordsByFilter(
+              const countedThisYear = $app.findRecordsByFilter(
                 'rewards',
-                `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+                `participant_id = '${participant.id}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote' || status = 'em_analise' || status = 'pendente_dados') && created >= '${yearStart}' && created <= '${yearEnd}'`,
                 '',
                 100,
                 0,
               )
-              if (paidThisYear && paidThisYear.length >= annualCap) {
+              if (countedThisYear && countedThisYear.length >= annualCap) {
                 isOverAnnualCap = true
               }
             } catch (_) {}
@@ -2851,22 +2851,101 @@ routerAdd('POST', '/backend/v1/referrals/register-first-visit', (e) => {
               }
             }
 
-            // Se não encontrou regra específica da categoria, tenta regra fallback com referral_type comprador
+            // Sem regra da própria categoria: não cria nada e registra o motivo em audit_logs (sem regra de reserva e sem valor padrão de 500)
             if (!rule) {
+              rewardMessage =
+                'Sem regra de recompensa configurada para a categoria do participante no marco primeira_visita_realizada.'
               try {
-                const fallbackRules = $app.findRecordsByFilter(
-                  'reward_rules',
-                  "milestone = 'primeira_visita_realizada' && beneficiary_type = 'indicador' && active = true && (referral_type = 'comprador' || referral_type = 'todos')",
-                  '-version',
-                  5,
-                  0,
+                const auditCol = $app.findCollectionByNameOrId('audit_logs')
+                const auditNoRule = new Record(auditCol)
+                auditNoRule.set('actor_id', authRecord.id)
+                auditNoRule.set('actor_email', authRecord.getString('email'))
+                auditNoRule.set('action', 'reward_first_visit_skipped_no_rule')
+                auditNoRule.set('resource_type', 'referrals')
+                auditNoRule.set('resource_id', referral.id)
+                auditNoRule.set(
+                  'details',
+                  JSON.stringify({
+                    participant_id: participant.id,
+                    category_id: categoryId,
+                    reason:
+                      'Sem regra de recompensa da própria categoria no marco primeira_visita_realizada.',
+                  }),
                 )
-                if (fallbackRules.length > 0) rule = fallbackRules[0]
+                auditNoRule.set('ip_address', e.request.remoteAddr)
+                $app.save(auditNoRule)
               } catch (_) {}
+              return e.json(200, {
+                success: true,
+                message: 'Atendimento/primeira visita registrado com sucesso.',
+                referral_id: referral.id,
+                reward_created: false,
+                reward_info: rewardMessage,
+              })
             }
 
-            const amount = rule ? rule.getFloat('fixed_amount_brl') || 500 : 500
-            const ruleId = rule ? rule.id : ''
+            // Regra C10 / C7: se a frente da categoria for parceiros (ex: profissional liberal, síndico), cria gratificação em benefit_grants em análise e NUNCA recompensa em dinheiro
+            let isPartnerFront = false
+            try {
+              const partCat = $app.findRecordById('participant_categories', categoryId)
+              if (partCat.getString('front') === 'parceiros') isPartnerFront = true
+            } catch (_) {}
+
+            const rType = rule.getString('reward_type')
+
+            if (rType === 'beneficio_catalogo' || isPartnerFront) {
+              try {
+                const grantsCol = $app.findCollectionByNameOrId('benefit_grants')
+                const grant = new Record(grantsCol)
+                grant.set('participant_id', participant.id)
+                grant.set('referral_id', referral.id)
+                grant.set('milestone', 'primeira_visita_realizada')
+                grant.set('status', 'em_analise')
+                grant.set(
+                  'custom_description',
+                  rule.getString('catalog_benefit_desc') ||
+                    'Gratificação por Atendimento de Parceiro',
+                )
+                $app.save(grant)
+
+                const auditCol = $app.findCollectionByNameOrId('audit_logs')
+                const auditGrant = new Record(auditCol)
+                auditGrant.set('actor_id', authRecord.id)
+                auditGrant.set('actor_email', authRecord.getString('email'))
+                auditGrant.set('action', 'benefit_grant_created_first_visit')
+                auditGrant.set('resource_type', 'benefit_grants')
+                auditGrant.set('resource_id', grant.id)
+                auditGrant.set(
+                  'details',
+                  JSON.stringify({
+                    referral_id: referral.id,
+                    status: 'em_analise',
+                    front: 'parceiros',
+                  }),
+                )
+                auditGrant.set('ip_address', e.request.remoteAddr)
+                $app.save(auditGrant)
+
+                rewardCreated = true
+                rewardMessage = 'Gratificação de parceiro criada em benefit_grants (em análise).'
+              } catch (errGrant) {
+                console.error(
+                  '[register-first-visit] Erro ao criar benefit_grant para parceiro:',
+                  errGrant,
+                )
+              }
+
+              return e.json(200, {
+                success: true,
+                message: 'Atendimento/primeira visita registrado com sucesso.',
+                referral_id: referral.id,
+                reward_created: rewardCreated,
+                reward_info: rewardMessage,
+              })
+            }
+
+            const amount = rule.getFloat('fixed_amount_brl') || 0
+            const ruleId = rule.id
 
             const hasCpfPix = !!(
               (participant.getString('pix_key') || '').trim() &&
@@ -2887,7 +2966,7 @@ routerAdd('POST', '/backend/v1/referrals/register-first-visit', (e) => {
               rew.set('beneficiary_type', 'indicador')
               rew.set('participant_id', participant.id)
               if (ruleId) rew.set('rule_id', ruleId)
-              rew.set('reward_type', 'valor_fixo')
+              rew.set('reward_type', rType || 'valor_fixo')
               rew.set('calculated_amount_brl', amount)
               rew.set('final_amount_brl', amount)
               rew.set('via_decline', false)
