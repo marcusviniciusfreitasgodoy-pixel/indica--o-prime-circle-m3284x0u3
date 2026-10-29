@@ -37,6 +37,8 @@ import {
   getCaptureRecords,
   getPublicReasonCodes,
   assignOperator,
+  markFirstContactDone,
+  markContactRefused,
 } from '@/services/operations'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -80,11 +82,15 @@ import {
   Loader2,
   DollarSign,
   Share2,
+  Copy,
+  Check,
+  UserX,
+  MessageCircle,
 } from 'lucide-react'
 
 export function AdminReferralDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { user, isAdmin, roles } = useAuth()
+  const { user, isAdmin, isOperator, refreshUser } = useAuth()
   const { toast } = useToast()
 
   const [referral, setReferral] = useState<Referral | null>(null)
@@ -160,6 +166,17 @@ export function AdminReferralDetailPage() {
   const [uploadFile, setUploadFile] = useState<File | null>(null)
   const [uploadTitle, setUploadTitle] = useState('')
   const [submitting, setSubmitting] = useState(false)
+
+  // C10b — Primeiro Contato states
+  const [contactRefusedModalOpen, setContactRefusedModalOpen] = useState(false)
+  const [contactRefusedReason, setContactRefusedReason] = useState(
+    'Indicado não quer ser contatado',
+  )
+  const [submittingFirstContact, setSubmittingFirstContact] = useState(false)
+  const [submittingRefusal, setSubmittingRefusal] = useState(false)
+  const [copiedMessage, setCopiedMessage] = useState(false)
+  const [creciInput, setCreciInput] = useState('')
+  const [savingCreci, setSavingCreci] = useState(false)
 
   const loadData = async () => {
     if (!id) return
@@ -533,6 +550,101 @@ export function AdminReferralDetailPage() {
     }
   }
 
+  // C10b — Handler: Contato feito, origem informada
+  const handleFirstContactDone = async () => {
+    if (!referral) return
+    try {
+      setSubmittingFirstContact(true)
+      const res = await markFirstContactDone(referral.id)
+      toast({
+        title: 'Primeiro contato registrado!',
+        description: 'Origem informada ao indicado e data registrada com sucesso.',
+      })
+      // Atualiza o estado local imediatamente e recarrega
+      setReferral((prev) =>
+        prev
+          ? {
+              ...prev,
+              first_contact_at: res.first_contact_at,
+              first_contact_by: res.first_contact_by,
+            }
+          : null,
+      )
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao registrar primeiro contato',
+        description: err.message || 'Falha ao comunicar com o servidor.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSubmittingFirstContact(false)
+    }
+  }
+
+  // C10b — Handler: Indicado não quer ser contatado
+  const handleContactRefusedConfirm = async () => {
+    if (!referral) return
+    try {
+      setSubmittingRefusal(true)
+      await markContactRefused(referral.id, contactRefusedReason.trim())
+      setContactRefusedModalOpen(false)
+      toast({
+        title: 'Contato recusado',
+        description: 'Dados pessoais do indicado apagados e indicação cancelada.',
+      })
+      // Atualiza o estado local imediatamente para refletir cancelada
+      setReferral((prev) =>
+        prev
+          ? {
+              ...prev,
+              status: 'cancelada',
+              status_reason: contactRefusedReason.trim(),
+              owner_name: '[DADOS APAGADOS - CONTATO RECUSADO]',
+              owner_phone: '',
+              owner_email: '',
+              buyer_name: '[DADOS APAGADOS - CONTATO RECUSADO]',
+              buyer_phone: '',
+              buyer_email: '',
+            }
+          : null,
+      )
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao registrar recusa de contato',
+        description: err.message || 'Falha ao processar cancelamento.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSubmittingRefusal(false)
+    }
+  }
+
+  // C10b — Handler: Salvar CRECI do corretor logado
+  const handleSaveCreci = async () => {
+    if (!user || !creciInput.trim()) return
+    try {
+      setSavingCreci(true)
+      const updatedUser = await pb.collection('users').update<Member>(user.id, {
+        creci: creciInput.trim(),
+      })
+      await refreshUser()
+      toast({
+        title: 'CRECI atualizado com sucesso!',
+        description: `CRECI ${updatedUser.creci} gravado no seu perfil.`,
+      })
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao atualizar CRECI',
+        description: err.message || 'Não foi possível salvar o CRECI.',
+        variant: 'destructive',
+      })
+    } finally {
+      setSavingCreci(false)
+    }
+  }
+
   if (loading || !referral) {
     return (
       <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
@@ -670,6 +782,233 @@ export function AdminReferralDetailPage() {
             )}
           </div>
         </div>
+
+        {/* C10b — Quadro "Primeiro contato": Apenas para admin e operador em consent_status = 'declarado_indicador' */}
+        {(isAdmin || isOperator) &&
+          referral.consent_status === 'declarado_indicador' &&
+          (() => {
+            // Extração do primeiro nome do indicado
+            const rawIndicatedName =
+              referral.owner_name || referral.buyer_name || referral.referrer_name || ''
+            const indicatedFirstName =
+              rawIndicatedName && !rawIndicatedName.startsWith('[DADOS APAGADOS')
+                ? rawIndicatedName.trim().split(/\s+/)[0]
+                : '[primeiro nome do indicado]'
+
+            // Nome do corretor logado e CRECI
+            const brokerName = user?.name?.trim() || 'Corretor'
+            const brokerCreci = user?.creci?.trim() || '[número]'
+
+            // Extração do primeiro nome do indicador
+            const rawReferrerName =
+              referral.expand?.participant_id?.expand?.user_id?.name ||
+              referral.expand?.current_owner_id?.name ||
+              referral.referrer_name ||
+              ''
+            const referrerFirstName = rawReferrerName
+              ? rawReferrerName.trim().split(/\s+/)[0]
+              : 'um parceiro'
+
+            // Finalidade: vender / alugar / comprar
+            const finalidade =
+              referral.type === 'imovel' || referral.type === 'proprietario' ? 'vender' : 'comprar'
+
+            const contactMessageText = `Olá, ${indicatedFirstName}. Aqui é ${brokerName}, corretor da Godoy Prime Realty, CRECI ${brokerCreci}. ${referrerFirstName} nos contou que você pode ter interesse em ${finalidade} um imóvel. Podemos conversar? Se preferir não ser contatado, responda NÃO e apagaremos os seus dados.`
+
+            const isContactDone = !!referral.first_contact_at
+            const isCancelled = referral.status === 'cancelada'
+            const buttonsDisabled = isCancelled || submittingFirstContact || submittingRefusal
+
+            const handleCopyText = async () => {
+              try {
+                await navigator.clipboard.writeText(contactMessageText)
+                setCopiedMessage(true)
+                toast({ title: 'Texto copiado com sucesso!' })
+                setTimeout(() => setCopiedMessage(false), 2500)
+              } catch (_) {
+                toast({
+                  title: 'Erro ao copiar',
+                  description: 'Não foi possível copiar para a área de transferência.',
+                  variant: 'destructive',
+                })
+              }
+            }
+
+            return (
+              <Card className="bg-amber-950/20 border-2 border-amber-500/50 rounded-none shadow-lg">
+                <CardHeader className="pb-3 border-b border-amber-500/20 bg-amber-500/5">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <CardTitle className="text-base font-serif text-amber-200 flex items-center gap-2">
+                      <MessageCircle className="w-5 h-5 text-amber-400" />
+                      Primeiro Contato — Indicação Direta
+                    </CardTitle>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 rounded-none text-xs">
+                        consent_status: declarado_indicador
+                      </Badge>
+                      {isContactDone && (
+                        <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/40 rounded-none text-xs flex items-center gap-1">
+                          <Check className="w-3 h-3" />
+                          Primeiro contato realizado
+                        </Badge>
+                      )}
+                      {isCancelled && (
+                        <Badge className="bg-rose-500/20 text-rose-300 border-rose-500/40 rounded-none text-xs">
+                          Indicação Cancelada
+                        </Badge>
+                      )}
+                    </div>
+                  </div>
+                  <CardDescription className="text-stone-300 text-xs">
+                    Esta indicação foi cadastrada com consentimento declarado pelo indicador. O
+                    corretor responsável deve realizar o primeiro contato informando a origem e
+                    dando a opção de recusa (LGPD).
+                  </CardDescription>
+                </CardHeader>
+
+                <CardContent className="pt-4 space-y-4 text-xs">
+                  {/* 1. Mensagem pronta */}
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between">
+                      <span className="text-stone-300 font-medium">
+                        Mensagem oficial pré-formatada para primeiro contato:
+                      </span>
+                      <Button
+                        size="sm"
+                        type="button"
+                        variant="outline"
+                        onClick={handleCopyText}
+                        className="border-amber-500/50 text-amber-300 hover:bg-amber-500/20 rounded-none text-xs h-7 px-3 flex items-center gap-1.5"
+                      >
+                        {copiedMessage ? (
+                          <>
+                            <Check className="w-3.5 h-3.5 text-emerald-400" />
+                            <span className="text-emerald-400 font-medium">Copiado</span>
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="w-3.5 h-3.5" />
+                            Copiar Texto
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                    <div className="p-3.5 bg-stone-950 border border-stone-800 text-stone-200 text-xs font-mono leading-relaxed rounded-none select-all">
+                      {contactMessageText}
+                    </div>
+                  </div>
+
+                  {/* 3. Se o CRECI do corretor logado estiver vazio, permitir salvar no próprio quadro */}
+                  {!user?.creci && (
+                    <div className="p-3 bg-stone-950/80 border border-amber-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                      <div className="space-y-0.5 text-xs">
+                        <span className="font-semibold text-amber-300 block">
+                          Meu CRECI não informado
+                        </span>
+                        <span className="text-stone-400 text-[11px] block">
+                          Cadastre seu número de CRECI para sair automaticamente nas mensagens
+                          prontas de primeiro contato.
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          placeholder="Ex: 12345-F/RJ"
+                          value={creciInput}
+                          onChange={(e) => setCreciInput(e.target.value)}
+                          className="bg-stone-900 border-stone-700 text-xs rounded-none h-8 w-36 text-stone-100"
+                        />
+                        <Button
+                          size="sm"
+                          disabled={savingCreci || !creciInput.trim()}
+                          onClick={handleSaveCreci}
+                          className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs h-8 px-3"
+                        >
+                          {savingCreci ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : null}
+                          Salvar
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Selo/Linha de confirmação de primeiro contato se já realizado */}
+                  {referral.first_contact_at && (
+                    <div className="p-2.5 bg-emerald-950/30 border border-emerald-500/40 text-emerald-200 text-xs flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                        <span>
+                          Primeiro contato registrado em{' '}
+                          <strong>
+                            {new Date(referral.first_contact_at).toLocaleString('pt-BR', {
+                              day: '2-digit',
+                              month: '2-digit',
+                              year: 'numeric',
+                              hour: '2-digit',
+                              minute: '2-digit',
+                            })}
+                          </strong>
+                          {referral.expand?.first_contact_by?.name && (
+                            <span className="text-emerald-300/80 ml-1">
+                              por {referral.expand.first_contact_by.name}
+                            </span>
+                          )}
+                        </span>
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className="border-emerald-500/40 text-emerald-300 rounded-none text-[10px]"
+                      >
+                        Concluído
+                      </Badge>
+                    </div>
+                  )}
+
+                  {/* Aviso se a indicação estiver cancelada por recusa */}
+                  {isCancelled && (
+                    <div className="p-2.5 bg-rose-950/30 border border-rose-500/40 text-rose-200 text-xs flex items-center gap-2">
+                      <AlertTriangle className="w-4 h-4 text-rose-400 shrink-0" />
+                      <span>
+                        Indicação cancelada: o contato foi recusado ou finalizado. Dados do indicado
+                        foram anonimizados.
+                      </span>
+                    </div>
+                  )}
+
+                  {/* 2. Botões de ação do quadro */}
+                  <div className="pt-2 flex flex-wrap gap-3">
+                    <Button
+                      type="button"
+                      disabled={buttonsDisabled || isContactDone}
+                      onClick={handleFirstContactDone}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-xs h-9 px-4 flex items-center gap-1.5"
+                    >
+                      {submittingFirstContact ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin mr-1" />
+                      ) : (
+                        <CheckCircle2 className="w-3.5 h-3.5 mr-1 text-emerald-200" />
+                      )}
+                      {isContactDone
+                        ? 'Primeiro contato já registrado'
+                        : 'Contato feito, origem informada'}
+                    </Button>
+
+                    <Button
+                      type="button"
+                      variant="outline"
+                      disabled={buttonsDisabled}
+                      onClick={() => {
+                        setContactRefusedReason('Indicado não quer ser contatado')
+                        setContactRefusedModalOpen(true)
+                      }}
+                      className="border-rose-800 text-rose-300 hover:bg-rose-950/60 rounded-none text-xs h-9 px-4 flex items-center gap-1.5"
+                    >
+                      <UserX className="w-3.5 h-3.5 mr-1 text-rose-400" />
+                      Indicado não quer ser contatado
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )
+          })()}
 
         {/* Informações Centrais em 3 Colunas */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -1912,6 +2251,73 @@ export function AdminReferralDetailPage() {
               className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
             >
               Registrar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* C10b — MODAL: Confirmação de Indicado Não Quer Ser Contatado */}
+      <Dialog open={contactRefusedModalOpen} onOpenChange={setContactRefusedModalOpen}>
+        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg text-rose-300 flex items-center gap-2">
+              <AlertTriangle className="w-5 h-5 text-rose-400" />
+              Confirmar Recusa de Contato
+            </DialogTitle>
+            <DialogDescription className="text-stone-300 text-xs">
+              Atenção: esta ação é irreversível sob as diretrizes da LGPD. Os dados pessoais do
+              indicado (nome, telefone, e-mail, CPF e descrição) serão apagados permanentemente, a
+              indicação será marcada como cancelada e quaisquer recompensas/gratificações não pagas
+              serão canceladas.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-3 py-2 text-xs">
+            <div className="p-3 bg-rose-950/40 border border-rose-500/30 text-rose-200 text-xs space-y-1">
+              <p className="font-semibold">O que acontecerá ao confirmar:</p>
+              <ul className="list-disc pl-4 space-y-0.5 text-stone-300 text-[11px]">
+                <li>Dados de contato do indicado serão apagados imediatamente;</li>
+                <li>
+                  Status mudará para <strong>cancelada</strong> com rótulo "Não aproveitada";
+                </li>
+                <li>Recompensas e gratificações pendentes serão canceladas;</li>
+                <li>Ação será registrada na auditoria do sistema.</li>
+              </ul>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-stone-300 font-medium">Motivo do cancelamento / recusa:</label>
+              <Input
+                value={contactRefusedReason}
+                onChange={(e) => setContactRefusedReason(e.target.value)}
+                placeholder="Ex: Indicado não quer ser contatado"
+                className="bg-stone-950 border-stone-800 text-xs rounded-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              variant="ghost"
+              disabled={submittingRefusal}
+              onClick={() => setContactRefusedModalOpen(false)}
+              className="rounded-none text-xs text-stone-400"
+            >
+              Voltar / Cancelar
+            </Button>
+            <Button
+              disabled={submittingRefusal || !contactRefusedReason.trim()}
+              onClick={handleContactRefusedConfirm}
+              className="bg-rose-700 hover:bg-rose-800 text-white rounded-none text-xs"
+            >
+              {submittingRefusal ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                  Apagando dados e cancelando...
+                </>
+              ) : (
+                'Sim, apagar dados e cancelar indicação'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
