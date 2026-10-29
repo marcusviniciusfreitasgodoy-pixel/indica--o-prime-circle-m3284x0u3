@@ -22,6 +22,7 @@ import {
   registerListing,
   registerDeal,
   confirmConsent,
+  registerFirstVisit,
   getDocumentDownloadUrl,
   getReferralEvents,
   getContactAttempts,
@@ -134,6 +135,15 @@ export function AdminReferralDetailPage() {
   const [returnCaptureModalOpen, setReturnCaptureModalOpen] = useState(false)
   const [returnCaptureId, setReturnCaptureId] = useState('')
   const [returnReason, setReturnReason] = useState('')
+
+  // Register First Visit Modal (Buyer referral)
+  const [firstVisitModalOpen, setFirstVisitModalOpen] = useState(false)
+  const [firstVisitDate, setFirstVisitDate] = useState(
+    new Date().toISOString().substring(0, 10),
+  )
+  const [firstVisitCapacity, setFirstVisitCapacity] = useState<'sim' | 'nao'>('sim')
+  const [firstVisitProofType, setFirstVisitProofType] = useState<string>('pre_aprovacao_credito')
+  const [firstVisitDescription, setFirstVisitDescription] = useState('')
 
   // Register Listing Modal
   const [listingModalOpen, setListingModalOpen] = useState(false)
@@ -422,6 +432,39 @@ export function AdminReferralDetailPage() {
     }
   }
 
+  // Register First Visit
+  const handleRegisterFirstVisit = async () => {
+    if (!referral || !firstVisitDate) return
+    try {
+      setSubmitting(true)
+      const res = await registerFirstVisit({
+        referral_id: referral.id,
+        data: firstVisitDate,
+        capacidade_financeira_demonstrada: firstVisitCapacity,
+        tipo_comprovacao: firstVisitProofType,
+        descricao: firstVisitDescription.trim(),
+      })
+      setFirstVisitModalOpen(false)
+      toast({
+        title: 'Primeira visita registrada!',
+        description: res.reward_created
+          ? `Recompensa de R$ ${res.reward_created.amount} gerada com status: ${res.reward_created.status}.`
+          : res.reward_skipped_reason
+            ? `Visita gravada. Recompensa não gerada: ${res.reward_skipped_reason}`
+            : 'Atendimento gravado na linha do tempo.',
+      })
+      loadData()
+    } catch (err: any) {
+      toast({
+        title: 'Erro ao registrar primeira visita',
+        description: err.message,
+        variant: 'destructive',
+      })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
   // Register Listing
   const handleRegisterListing = async () => {
     if (!referral) return
@@ -595,6 +638,27 @@ export function AdminReferralDetailPage() {
               >
                 <Share2 className="w-3.5 h-3.5 mr-1.5" />
                 Colocar em Divulgação
+              </Button>
+            )}
+
+            {!isProp && (
+              <Button
+                size="sm"
+                onClick={() => {
+                  setFirstVisitDate(
+                    referral.primeira_visita_at
+                      ? referral.primeira_visita_at.substring(0, 10)
+                      : new Date().toISOString().substring(0, 10),
+                  )
+                  setFirstVisitCapacity(
+                    referral.capacidade_financeira_demonstrada === 'nao' ? 'nao' : 'sim',
+                  )
+                  setFirstVisitModalOpen(true)
+                }}
+                className="bg-sky-600 hover:bg-sky-700 text-white rounded-none text-xs"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                Registrar primeira visita
               </Button>
             )}
 

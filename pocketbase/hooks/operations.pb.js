@@ -1351,12 +1351,41 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
     }
   }
 
-  // Item 2: Entidade condominial exige upload da ata de assembleia
+  // Item 2 e Item 6: Entidade condominial exige upload da ata de assembleia (limite 10 MB, PDF, JPG ou PNG)
   if (catSlug === 'entidade_condominial') {
     if (!ataBase64 || !ataFileName) {
       return e.json(400, {
         message:
           'Para a categoria de entidade condominial ou associação, o envio da ata de assembleia é obrigatório.',
+      })
+    }
+
+    const lowerName = ataFileName.toLowerCase()
+    const isAllowedExt =
+      lowerName.endsWith('.pdf') ||
+      lowerName.endsWith('.jpg') ||
+      lowerName.endsWith('.jpeg') ||
+      lowerName.endsWith('.png')
+    if (!isAllowedExt) {
+      return e.json(400, {
+        message:
+          'Formato de arquivo não permitido para a ata de assembleia. Formatos válidos: PDF, JPG e PNG.',
+      })
+    }
+
+    let decodedBytes = null
+    try {
+      decodedBytes = $security.base64Decode(ataBase64)
+    } catch (_) {
+      return e.json(400, { message: 'Arquivo da ata de assembleia corrompido ou inválido.' })
+    }
+
+    // Limite máximo de 10 MB (10 * 1024 * 1024 bytes)
+    const maxBytes = 10 * 1024 * 1024
+    if (!decodedBytes || decodedBytes.length > maxBytes) {
+      return e.json(400, {
+        message:
+          'O arquivo da ata de assembleia excede o tamanho máximo permitido de 10 MB.',
       })
     }
   }
@@ -1639,23 +1668,32 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
     })
   }
 
-  // Disparar o e-mail de verificação nativo do PocketBase (após sucesso da transação)
+  // Disparar o e-mail de verificação nativo do PocketBase (após sucesso da transação) via $mails.sendRecordVerification
   try {
     const createdUserRec = $app.findRecordById('_pb_users_auth_', finalUserId)
-    if (typeof $app.sendRecordVerification === 'function') {
-      $app.sendRecordVerification(createdUserRec)
-    } else if (typeof $app.sendAuthVerification === 'function') {
-      $app.sendAuthVerification(createdUserRec)
-    } else if (typeof $app.sendVerification === 'function') {
-      $app.sendVerification(createdUserRec)
-    } else {
-      console.warn('[register-participant] Método nativo de verificação não disponível em $app')
-    }
+    $mails.sendRecordVerification($app, createdUserRec)
   } catch (errVerif) {
     console.error(
-      '[register-participant] Aviso ao disparar e-mail de verificação nativo:',
+      '[register-participant] Erro ao disparar e-mail de verificação nativo:',
       errVerif,
     )
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const auditErr = new Record(auditCol)
+      auditErr.set('actor_id', finalUserId)
+      auditErr.set('actor_email', email)
+      auditErr.set('action', 'email_verification_failed')
+      auditErr.set('resource_type', 'users')
+      auditErr.set('resource_id', finalUserId)
+      auditErr.set(
+        'details',
+        JSON.stringify({
+          error: String(errVerif && errVerif.message ? errVerif.message : errVerif),
+        }),
+      )
+      auditErr.set('ip_address', clientIp)
+      $app.save(auditErr)
+    } catch (_) {}
   }
 
   // Gravar audit_log da tentativa bem-sucedida
@@ -2673,6 +2711,19 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
     part = $app.findRecordById('participants', participantId)
   } catch (_) {
     return e.json(404, { message: 'Participante não encontrado.' })
+  }
+
+  // A aprovação fica bloqueada enquanto o e-mail não for verificado
+  let partUser = null
+  try {
+    partUser = $app.findRecordById('users', part.getString('user_id'))
+  } catch (_) {}
+
+  if (!partUser || !partUser.getBool('verified')) {
+    return e.json(400, {
+      message:
+        'Aprovação bloqueada: o participante ainda não confirmou a verificação do e-mail cadastrado.',
+    })
   }
 
   const oldCategoryId = part.getString('category_id')

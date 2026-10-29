@@ -415,10 +415,31 @@ export function AdminParticipantsPage() {
                   return (
                     <tr key={p.id} className="hover:bg-stone-800/30 transition-colors">
                       <td className="p-3">
-                        <div className="font-medium text-stone-200">
-                          {userRec?.name || 'Sem nome'}
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-stone-200">
+                            {userRec?.name || 'Sem nome'}
+                          </span>
+                          {userRec?.verified ? (
+                            <Badge
+                              variant="outline"
+                              className="rounded-none border-emerald-500/40 bg-emerald-500/10 text-emerald-400 text-[10px] px-1.5 py-0 flex items-center gap-1 font-normal"
+                              title="E-mail verificado"
+                            >
+                              <CheckCircle2 className="w-2.5 h-2.5 text-emerald-400" />
+                              E-mail verificado
+                            </Badge>
+                          ) : (
+                            <Badge
+                              variant="outline"
+                              className="rounded-none border-amber-500/50 bg-amber-500/10 text-amber-300 text-[10px] px-1.5 py-0 flex items-center gap-1 font-normal"
+                              title="E-mail ainda não verificado"
+                            >
+                              <AlertCircle className="w-2.5 h-2.5 text-amber-400" />
+                              E-mail não verificado
+                            </Badge>
+                          )}
                         </div>
-                        <div className="text-[11px] text-stone-500 font-mono">
+                        <div className="text-[11px] text-stone-500 font-mono mt-0.5">
                           {userRec?.email} • {userRec?.phone || 'Sem telefone'}
                         </div>
                       </td>
@@ -466,8 +487,17 @@ export function AdminParticipantsPage() {
                             <Button
                               size="sm"
                               onClick={() => openApproveModal(p)}
-                              disabled={submitting}
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-xs"
+                              disabled={submitting || !userRec?.verified}
+                              title={
+                                !userRec?.verified
+                                  ? 'Aprovação bloqueada: participante ainda não verificou o e-mail'
+                                  : 'Revisar e aprovar cadastro'
+                              }
+                              className={`rounded-none text-xs text-white ${
+                                !userRec?.verified
+                                  ? 'bg-stone-800 text-stone-500 border border-stone-700 cursor-not-allowed hover:bg-stone-800 opacity-70'
+                                  : 'bg-emerald-600 hover:bg-emerald-700'
+                              }`}
                             >
                               <CheckCircle2 className="w-3 h-3 mr-1" />
                               Revisar / Aprovar
@@ -538,6 +568,17 @@ export function AdminParticipantsPage() {
                     {approveModal.part.expand?.category_id?.name || 'Não informada'}
                   </span>
                 </div>
+                <div className="text-[11px] pt-1">
+                  {approveModal.part.expand?.user_id?.verified ? (
+                    <span className="text-emerald-400 flex items-center gap-1 font-medium">
+                      <CheckCircle2 className="w-3 h-3" /> E-mail verificado
+                    </span>
+                  ) : (
+                    <span className="text-amber-400 flex items-center gap-1 font-medium">
+                      <AlertCircle className="w-3 h-3" /> E-mail ainda não verificado pelo participante (aprovação bloqueada)
+                    </span>
+                  )}
+                </div>
               </div>
 
               <div className="space-y-1.5">
@@ -587,8 +628,14 @@ export function AdminParticipantsPage() {
             <Button
               disabled={
                 submitting ||
+                !approveModal.part?.expand?.user_id?.verified ||
                 (selectedCategoryId !== approveModal.part?.category_id &&
                   !categoryChangeReason.trim())
+              }
+              title={
+                !approveModal.part?.expand?.user_id?.verified
+                  ? 'Aprovação bloqueada: participante com e-mail não verificado'
+                  : ''
               }
               onClick={handleConfirmApprove}
               className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-xs"
