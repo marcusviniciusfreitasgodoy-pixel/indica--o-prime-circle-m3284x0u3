@@ -1029,6 +1029,12 @@ export default function CadastroPage() {
             </DialogDescription>
           </DialogHeader>
 
+          {activeDocModal?.is_provisional && (
+            <div className="bg-amber-500/10 border-l-2 border-amber-500 text-amber-400 px-3 py-2 text-xs font-semibold">
+              Texto provisório, em revisão jurídica.
+            </div>
+          )}
+
           <div className="my-3 flex-1 overflow-y-auto pr-1 text-xs text-stone-300 leading-relaxed space-y-3 whitespace-pre-wrap font-sans bg-stone-900/50 p-3.5 border border-stone-800/80">
             {activeDocModal?.content || 'Conteúdo do documento em carregamento...'}
           </div>

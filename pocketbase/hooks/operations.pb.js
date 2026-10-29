@@ -1853,6 +1853,7 @@ routerAdd('GET', '/backend/v1/public/form-data', (e) => {
         title: docs[0].getString('title'),
         content: docs[0].getString('content'),
         version: docs[0].getInt('version') || 1,
+        is_provisional: docs[0].getBool('is_provisional'),
       }
     }
   } catch (_) {}
@@ -1908,6 +1909,7 @@ routerAdd('GET', '/backend/v1/public/form-data', (e) => {
       title: d.getString('title'),
       content: d.getString('content'),
       version: d.getInt('version') || 1,
+      is_provisional: d.getBool('is_provisional'),
     }))
   } catch (_) {}
 

@@ -60,6 +60,7 @@ interface LegalDoc {
   title: string
   version: number
   content: string
+  is_provisional?: boolean
 }
 
 export default function IndicatorLinkPage() {
@@ -744,6 +745,11 @@ export default function IndicatorLinkPage() {
                 Governança LGPD Godoy Prime Imóveis.
               </DialogDescription>
             </DialogHeader>
+            {legalDoc?.is_provisional && (
+              <div className="bg-amber-500/10 border-l-2 border-amber-500 text-amber-400 px-3 py-2 text-xs font-semibold">
+                Texto provisório, em revisão jurídica.
+              </div>
+            )}
             <div className="flex-1 overflow-y-auto p-3 bg-neutral-950 rounded border border-neutral-800 text-xs text-neutral-300 font-mono whitespace-pre-wrap leading-relaxed">
               {legalDoc?.content || 'Carregando termo...'}
             </div>

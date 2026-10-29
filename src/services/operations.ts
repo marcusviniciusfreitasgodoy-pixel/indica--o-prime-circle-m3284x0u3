@@ -297,6 +297,7 @@ export interface PublicLegalDocumentItem {
   title: string
   content: string
   version: number
+  is_provisional?: boolean
 }
 
 export interface PublicFormData {
@@ -310,6 +311,7 @@ export interface PublicFormData {
     title: string
     content: string
     version: number
+    is_provisional?: boolean
   } | null
   categories?: PublicCategoryItem[]
   legal_documents?: PublicLegalDocumentItem[]
