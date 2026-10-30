@@ -1160,7 +1160,8 @@ routerAdd('POST', '/backend/v1/referrals/contact-refused', (e) => {
   const previousStatus = ref.getString('status')
   const maskedLabel = '[DADOS APAGADOS - CONTATO RECUSADO]'
 
-  // 1. Anonimizar dados do indicado
+  // 1. Anonimizar dados do indicado e limpar contato residual em referrals
+  let cleanedReferralsCount = 0
   ref.set('status', 'cancelada')
   ref.set('status_reason', reason)
   ref.set('public_reason_code', 'recusada')
@@ -1171,12 +1172,90 @@ routerAdd('POST', '/backend/v1/referrals/contact-refused', (e) => {
   ref.set('buyer_name', maskedLabel)
   ref.set('buyer_phone', '')
   ref.set('buyer_email', '')
+  ref.set('return_contact', '')
   ref.set('unit', '')
   ref.set('normalized_address', '')
   ref.set('description', `[Dados do indicado excluídos: ${reason}]`)
   ref.set('anonymized_at', nowIso)
   ref.set('anonymized_reason', reason)
   $app.save(ref)
+  cleanedReferralsCount = 1
+
+  // Limpeza de contato residual do indicado em duplicate_flags
+  let cleanedDuplicateFlagsCount = 0
+  try {
+    const dupFlags = $app.findRecordsByFilter(
+      'duplicate_flags',
+      'referral_id = {:refId} || conflicting_referral_id = {:refId}',
+      'created',
+      100,
+      0,
+      { refId: ref.id },
+    )
+    for (let i = 0; i < dupFlags.length; i++) {
+      const flag = dupFlags[i]
+      flag.set('conflict_details', '[dados excluídos]')
+      $app.save(flag)
+      cleanedDuplicateFlagsCount++
+    }
+  } catch (errDup) {
+    console.error('[contact-refused] Erro ao limpar duplicate_flags:', errDup)
+  }
+
+  // Limpeza de contato residual do indicado em message_queue
+  let cleanedMessageQueueCount = 0
+  try {
+    const queueRecords = $app.findRecordsByFilter(
+      'message_queue',
+      'metadata ~ {:refId}',
+      'created',
+      100,
+      0,
+      { refId: ref.id },
+    )
+    for (let i = 0; i < queueRecords.length; i++) {
+      const q = queueRecords[i]
+      q.set('recipient', '[dados excluídos]')
+      q.set('params', '[]')
+      q.set('last_error', '')
+      if (q.getString('status') === 'pending') {
+        q.set('status', 'cancelled')
+      }
+      try {
+        const meta = JSON.parse(q.getString('metadata')) || {}
+        meta.button_url_param = ''
+        q.set('metadata', JSON.stringify(meta))
+      } catch (_) {
+        q.set('metadata', '{}')
+      }
+      $app.save(q)
+      cleanedMessageQueueCount++
+    }
+  } catch (errMq) {
+    console.error('[contact-refused] Erro ao limpar message_queue:', errMq)
+  }
+
+  // Limpeza de contato residual do indicado em notification_logs
+  let cleanedNotificationLogsCount = 0
+  try {
+    const notifRecords = $app.findRecordsByFilter(
+      'notification_logs',
+      'entity_id = {:refId}',
+      'created',
+      100,
+      0,
+      { refId: ref.id },
+    )
+    for (let i = 0; i < notifRecords.length; i++) {
+      const nl = notifRecords[i]
+      nl.set('recipient', '[dados excluídos]')
+      nl.set('error', '')
+      $app.save(nl)
+      cleanedNotificationLogsCount++
+    }
+  } catch (errNl) {
+    console.error('[contact-refused] Erro ao limpar notification_logs:', errNl)
+  }
 
   // 2. Cancelar recompensas e gratificações ainda não pagas
   // (status: em_analise, pendente_dados, aprovada, em_lote não pagas, aguardando_comissao, em_revisao_admin)
@@ -1250,7 +1329,7 @@ routerAdd('POST', '/backend/v1/referrals/contact-refused', (e) => {
     $app.save(ev)
   } catch (_) {}
 
-  // 4. Gravar em audit_logs quem fez e quando
+  // 4. Gravar em audit_logs quem fez e quando (incluindo contagem de registros limpos por coleção)
   try {
     const auditCol = $app.findCollectionByNameOrId('audit_logs')
     const audit = new Record(auditCol)
@@ -1266,6 +1345,16 @@ routerAdd('POST', '/backend/v1/referrals/contact-refused', (e) => {
         anonymized_at: nowIso,
         cancelled_rewards_count: cancelledRewardsCount,
         cancelled_grants_count: cancelledGrantsCount,
+        cleaned_counts: {
+          referrals: cleanedReferralsCount,
+          duplicate_flags: cleanedDuplicateFlagsCount,
+          message_queue: cleanedMessageQueueCount,
+          notification_logs: cleanedNotificationLogsCount,
+        },
+        cleaned_referrals_count: cleanedReferralsCount,
+        cleaned_duplicate_flags_count: cleanedDuplicateFlagsCount,
+        cleaned_message_queue_count: cleanedMessageQueueCount,
+        cleaned_notification_logs_count: cleanedNotificationLogsCount,
         actor_name: authRecord.getString('name'),
       }),
     )
@@ -1281,6 +1370,12 @@ routerAdd('POST', '/backend/v1/referrals/contact-refused', (e) => {
     referral_id: ref.id,
     cancelled_rewards_count: cancelledRewardsCount,
     cancelled_grants_count: cancelledGrantsCount,
+    cleaned_counts: {
+      referrals: cleanedReferralsCount,
+      duplicate_flags: cleanedDuplicateFlagsCount,
+      message_queue: cleanedMessageQueueCount,
+      notification_logs: cleanedNotificationLogsCount,
+    },
   })
 })
 
