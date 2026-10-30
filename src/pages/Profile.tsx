@@ -96,12 +96,14 @@ export default function ProfilePage() {
     <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
-      <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 max-w-3xl space-y-6">
-        <div>
+      <main className="container mx-auto px-3 sm:px-6 pt-5 sm:pt-8 max-w-3xl space-y-5 sm:space-y-6">
+        <div className="min-w-0">
           <Eyebrow>CONTA DO INDICADOR · GODOY PRIME REALTY</Eyebrow>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground flex items-center gap-2">
-            <User className="h-6 w-6 text-gold-deep" strokeWidth={1.5} />
-            Meu Perfil &amp; <em>Link Pessoal</em>
+          <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground flex items-center gap-2 break-words">
+            <User className="h-6 w-6 text-gold-deep shrink-0" strokeWidth={1.5} />
+            <span>
+              Meu Perfil &amp; <em>Link Pessoal</em>
+            </span>
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1 font-sans">
             Gerencie seus dados no programa e personalize o identificador do seu link exclusivo.
@@ -109,10 +111,10 @@ export default function ProfilePage() {
         </div>
 
         {/* Public link showcase box */}
-        <Card className="bg-card border-border shadow-luxury text-card-foreground rounded-[1px]">
-          <CardHeader className="pb-3">
+        <Card className="bg-card border-border shadow-luxury text-card-foreground rounded-[1px] overflow-hidden">
+          <CardHeader className="pb-3 p-4 sm:p-6">
             <div className="flex items-center gap-2 text-gold-deep">
-              <Share2 className="h-4 w-4" strokeWidth={1.5} />
+              <Share2 className="h-4 w-4 shrink-0" strokeWidth={1.5} />
               <CardTitle className="text-base text-foreground font-serif font-bold">
                 Seu Link Pessoal de Indicação
               </CardTitle>
@@ -122,28 +124,31 @@ export default function ProfilePage() {
               para que eles preencham o formulário oficial diretamente.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-3 pt-0 font-sans">
+          <CardContent className="space-y-3 pt-0 p-4 sm:p-6 font-sans">
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 bg-secondary/50 p-2.5 rounded-[1px] border border-border">
               <span className="text-xs font-mono text-foreground break-all px-2 select-all flex-1">
                 {publicLinkUrl}
               </span>
-              <div className="flex items-center gap-2">
+              <div className="grid grid-cols-2 sm:flex items-center gap-2 pt-1 sm:pt-0">
                 <Button
                   type="button"
                   size="sm"
                   variant="outline"
                   onClick={handleCopyLink}
-                  className="text-xs h-9 shrink-0 rounded-[1px]"
+                  className="text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 shrink-0 rounded-[1px] w-full sm:w-auto"
                 >
                   {copiedLink ? (
                     <>
-                      <Check className="h-3.5 w-3.5 mr-1 text-success" strokeWidth={1.5} />
+                      <Check className="h-3.5 w-3.5 mr-1 text-success shrink-0" strokeWidth={1.5} />
                       Copiado!
                     </>
                   ) : (
                     <>
-                      <Copy className="h-3.5 w-3.5 mr-1 text-gold-deep" strokeWidth={1.5} />
-                      Copiar Link
+                      <Copy
+                        className="h-3.5 w-3.5 mr-1 text-gold-deep shrink-0"
+                        strokeWidth={1.5}
+                      />
+                      Copiar
                     </>
                   )}
                 </Button>
@@ -152,10 +157,10 @@ export default function ProfilePage() {
                   type="button"
                   size="sm"
                   variant="outline"
-                  className="text-xs h-9 shrink-0 rounded-[1px]"
+                  className="text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 shrink-0 rounded-[1px] w-full sm:w-auto"
                 >
                   <Link to={`/i/${slug}`} target="_blank" rel="noopener noreferrer">
-                    <ExternalLink className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
+                    <ExternalLink className="h-3.5 w-3.5 mr-1 shrink-0" strokeWidth={1.5} />
                     Abrir Página
                   </Link>
                 </Button>
@@ -270,15 +275,15 @@ export default function ProfilePage() {
               </div>
             </CardContent>
 
-            <CardFooter className="border-t border-border pt-4 flex justify-end">
+            <CardFooter className="border-t border-border pt-4 flex justify-end p-4 sm:p-6">
               <Button
                 type="submit"
                 disabled={isSaving}
-                className="rounded-[1px] text-xs sm:text-sm h-9"
+                className="rounded-[1px] text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
               >
                 {isSaving ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" strokeWidth={1.5} />
                     Salvando...
                   </>
                 ) : (

@@ -11,6 +11,7 @@ import {
   Building,
   Calendar,
   ArrowRight,
+  ArrowLeft,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
@@ -165,16 +166,25 @@ export function MemberRewardsPage() {
     <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
-        <div className="p-5 sm:p-6 rounded-[1px] bg-card border border-border shadow-luxury space-y-1.5">
-          <Eyebrow>EXTRATO · RECOMPENSA POR INDICAÇÃO</Eyebrow>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
-            Minhas <em>Recompensas</em>
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl font-sans">
-            Acompanhe o valor de cada marco conquistado, datas previstas de pagamento e histórico de
-            liquidações.
-          </p>
+      <main className="max-w-5xl mx-auto px-3 sm:px-6 pt-5 sm:pt-8 space-y-5 sm:space-y-6">
+        <div>
+          <Link
+            to="/painel"
+            className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors mb-2 h-10 sm:h-8 min-h-[44px] sm:min-h-0"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1 text-gold-deep shrink-0" strokeWidth={1.5} />
+            Voltar ao Painel
+          </Link>
+          <div className="p-4 sm:p-6 rounded-[1px] bg-card border border-border shadow-luxury space-y-1.5">
+            <Eyebrow>EXTRATO · RECOMPENSA POR INDICAÇÃO</Eyebrow>
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
+              Minhas <em>Recompensas</em>
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl font-sans">
+              Acompanhe o valor de cada marco conquistado, datas previstas de pagamento e histórico
+              de liquidações.
+            </p>
+          </div>
         </div>
 
         {/* Alerta de dados pendentes se CPF/Pix não cadastrados */}
@@ -207,39 +217,39 @@ export function MemberRewardsPage() {
 
         {/* Cards Resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card className="bg-card border-border rounded-[1px] text-card-foreground shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <div className="text-xs font-heading font-semibold text-gold-deep uppercase tracking-wider">
+          <Card className="bg-card border-border rounded-[1px] text-card-foreground shadow-sm overflow-hidden">
+            <CardContent className="p-4 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[11px] sm:text-xs font-heading font-semibold text-gold-deep uppercase tracking-wider truncate">
                   Total a Receber
                 </div>
-                <div className="text-2xl sm:text-3xl font-mono font-bold text-foreground mt-1">
+                <div className="text-xl sm:text-3xl font-mono font-bold text-foreground mt-1 break-words">
                   R$ {aReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-0.5 font-sans">
                   Em validação ou programadas para lote mensal
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center">
+              <div className="w-10 h-10 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center shrink-0">
                 <Clock className="w-5 h-5" strokeWidth={1.5} />
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-card border-border rounded-[1px] text-card-foreground shadow-sm">
-            <CardContent className="p-4 flex items-center justify-between">
-              <div>
-                <div className="text-xs font-heading font-semibold text-success uppercase tracking-wider">
+          <Card className="bg-card border-border rounded-[1px] text-card-foreground shadow-sm overflow-hidden">
+            <CardContent className="p-4 flex items-center justify-between gap-2">
+              <div className="min-w-0">
+                <div className="text-[11px] sm:text-xs font-heading font-semibold text-success uppercase tracking-wider truncate">
                   Total Recebido
                 </div>
-                <div className="text-2xl sm:text-3xl font-mono font-bold text-success mt-1">
+                <div className="text-xl sm:text-3xl font-mono font-bold text-success mt-1 break-words">
                   R$ {recebido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
                 <div className="text-[11px] text-muted-foreground mt-0.5 font-sans">
                   Liquidadas com comprovante via Pix
                 </div>
               </div>
-              <div className="w-10 h-10 rounded-[1px] bg-success/15 border border-success/30 text-success flex items-center justify-center">
+              <div className="w-10 h-10 rounded-[1px] bg-success/15 border border-success/30 text-success flex items-center justify-center shrink-0">
                 <CheckCircle2 className="w-5 h-5" strokeWidth={1.5} />
               </div>
             </CardContent>
@@ -308,16 +318,22 @@ export function MemberRewardsPage() {
                       </div>
 
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-muted-foreground text-[11px]">
-                        <div className="flex items-center gap-1.5">
-                          <Building className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
-                          <span>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Building
+                            className="w-3.5 h-3.5 text-gold-deep shrink-0"
+                            strokeWidth={1.5}
+                          />
+                          <span className="break-words">
                             {condoObj?.name || 'Condomínio não informado'} — Indicação #
                             <span className="font-mono">{r.referral_id?.substring(0, 8)}</span>
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-foreground font-medium font-mono">
-                          <Calendar className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
+                        <div className="flex items-center gap-1.5 text-foreground font-medium font-mono shrink-0">
+                          <Calendar
+                            className="w-3.5 h-3.5 text-gold-deep shrink-0"
+                            strokeWidth={1.5}
+                          />
                           <span>{getExpectedPaymentDate(r)}</span>
                         </div>
                       </div>

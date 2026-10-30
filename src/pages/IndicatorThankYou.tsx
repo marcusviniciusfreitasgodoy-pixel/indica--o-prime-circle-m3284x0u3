@@ -25,15 +25,15 @@ export default function IndicatorThankYouPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <BrandPublicHeader />
 
-      <main className="flex flex-1 items-center justify-center p-4 py-12">
+      <main className="flex flex-1 items-center justify-center p-3 sm:p-4 py-6 sm:py-12">
         <div className="max-w-md w-full space-y-4">
-          <Card className="bg-card border border-border text-card-foreground shadow-luxury text-center rounded-[1px]">
-            <CardHeader className="pb-3">
+          <Card className="bg-card border border-border text-card-foreground shadow-luxury text-center rounded-[1px] overflow-hidden">
+            <CardHeader className="pb-3 p-4 sm:p-6">
               <Eyebrow className="justify-center">PROTOCOLO REGISTRADO</Eyebrow>
-              <div className="w-14 h-14 bg-success/15 text-success rounded-[1px] flex items-center justify-center mx-auto my-2 border border-success/30">
+              <div className="w-14 h-14 bg-success/15 text-success rounded-[1px] flex items-center justify-center mx-auto my-2 border border-success/30 shrink-0">
                 <CheckCircle2 className="w-8 h-8" strokeWidth={1.5} />
               </div>
-              <CardTitle className="text-2xl font-serif font-bold text-foreground">
+              <CardTitle className="text-xl sm:text-2xl font-serif font-bold text-foreground break-words">
                 Solicitação <em>Recebida</em>!
               </CardTitle>
               <CardDescription className="text-muted-foreground text-xs sm:text-sm font-sans">
@@ -42,14 +42,16 @@ export default function IndicatorThankYouPage() {
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="space-y-4">
-              <div className="p-4 rounded-[1px] bg-secondary/60 border border-gold-deep/30 space-y-1">
+            <CardContent className="space-y-4 p-4 sm:p-6 pt-0">
+              <div className="p-3.5 sm:p-4 rounded-[1px] bg-secondary/60 border border-gold-deep/30 space-y-1">
                 <p className="text-xs text-muted-foreground uppercase tracking-wider font-heading">
                   Protocolo de Atendimento
                 </p>
-                <p className="text-2xl font-mono font-bold text-gold-deep">{protocolo}</p>
+                <p className="text-xl sm:text-2xl font-mono font-bold text-gold-deep break-all">
+                  {protocolo}
+                </p>
                 {codigo && (
-                  <p className="text-[11px] text-muted-foreground font-mono">
+                  <p className="text-[11px] text-muted-foreground font-mono break-all">
                     Referência do Indicador: #{codigo}
                   </p>
                 )}
@@ -68,22 +70,25 @@ export default function IndicatorThankYouPage() {
               </div>
             </CardContent>
 
-            <CardFooter className="flex flex-col gap-2 pt-2">
+            <CardFooter className="flex flex-col gap-2 pt-2 p-4 sm:p-6">
               <a
                 href={`https://wa.me/5521999999999?text=${encodeURIComponent(`Olá! Enviei uma solicitação pelo link de indicação (Protocolo: ${protocolo}). Gostaria de agilizar meu atendimento.`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 py-2.5 px-4 rounded-[1px] bg-primary text-primary-foreground font-heading font-semibold text-xs uppercase tracking-wider transition-colors hover:bg-gold-light"
+                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 min-h-[44px] rounded-[1px] bg-primary text-primary-foreground font-heading font-semibold text-xs uppercase tracking-wider transition-colors hover:bg-gold-light"
               >
-                <MessageSquare className="w-4 h-4" strokeWidth={1.5} />
+                <MessageSquare className="w-4 h-4 shrink-0" strokeWidth={1.5} />
                 Falar com a Godoy Prime no WhatsApp
               </a>
-
               {codigo && (
-                <Button asChild variant="outline" className="w-full text-xs">
-                  <Link to={`/i/${codigo}`}>Voltar para a página do indicador</Link>
+                <Button
+                  asChild
+                  variant="outline"
+                  className="w-full text-xs h-11 sm:h-9 min-h-[44px] sm:min-h-0"
+                >
+                  <Link to={`/i/${codigo}`}>Voltar à Página do Indicador</Link>
                 </Button>
-              )}
+              )}{' '}
             </CardFooter>
           </Card>
         </div>

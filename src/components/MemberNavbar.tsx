@@ -57,12 +57,12 @@ export const MemberNavbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-40 w-full navy border-b border-border/20 backdrop-blur text-primary">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
+      <div className="container mx-auto flex h-16 items-center justify-between px-3 sm:px-6">
         {/* Brand */}
-        <div className="flex items-center gap-6">
-          <Link to="/painel" className="flex items-center gap-2.5 focus:outline-none">
-            <GodoyWordmark onDark className="h-6 w-auto" />
-            <span className="font-heading text-xs sm:text-sm font-semibold tracking-widest text-primary uppercase border-l border-primary/30 pl-2.5">
+        <div className="flex items-center gap-4 sm:gap-6 min-w-0">
+          <Link to="/painel" className="flex items-center gap-2 focus:outline-none shrink-0">
+            <GodoyWordmark onDark className="h-5 sm:h-6 w-auto" />
+            <span className="font-heading text-[11px] sm:text-sm font-semibold tracking-widest text-primary uppercase border-l border-primary/30 pl-2">
               INDICA
             </span>
           </Link>
@@ -91,7 +91,7 @@ export const MemberNavbar: React.FC = () => {
         </div>
 
         {/* Action / User menu */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           {/* Quick link button to member's public page */}
           <Link
             to={publicLink}
@@ -108,7 +108,7 @@ export const MemberNavbar: React.FC = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-9 w-9 rounded-[1px] border border-border/30 hover:border-gold-deep/60 p-0"
+                className="relative h-10 w-10 sm:h-9 sm:w-9 rounded-[1px] border border-border/30 hover:border-gold-deep/60 p-0"
               >
                 <Avatar className="h-8 w-8 rounded-[1px] bg-navy-light text-gold font-mono font-bold">
                   <AvatarFallback className="bg-navy-light text-gold text-xs font-semibold rounded-[1px]">
@@ -183,7 +183,7 @@ export const MemberNavbar: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-primary/80 hover:text-primary hover:bg-navy-light/60 rounded-[1px]"
+            className="md:hidden text-primary/80 hover:text-primary hover:bg-navy-light/60 rounded-[1px] h-10 w-10 min-h-[44px] min-w-[44px] flex items-center justify-center"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             aria-label="Abrir menu"
           >
@@ -198,7 +198,7 @@ export const MemberNavbar: React.FC = () => {
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-border/20 navy px-4 py-3 space-y-2 font-heading text-xs uppercase tracking-wider animate-in fade-in">
+        <div className="md:hidden border-t border-border/20 navy px-3 py-3 space-y-1.5 font-heading text-xs uppercase tracking-wider animate-in fade-in">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
@@ -207,14 +207,14 @@ export const MemberNavbar: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2.5 rounded-[1px] transition-colors ${
+                className={`flex items-center gap-2.5 px-3 py-3 rounded-[1px] min-h-[44px] transition-colors ${
                   isActive
                     ? 'bg-navy-light text-gold font-semibold'
                     : 'text-primary/75 hover:bg-navy-light/60 hover:text-primary'
                 }`}
               >
-                <Icon className="h-4 w-4" strokeWidth={1.5} />
-                {item.label}
+                <Icon className="h-4 w-4 shrink-0" strokeWidth={1.5} />
+                <span>{item.label}</span>
               </Link>
             )
           })}
@@ -224,10 +224,10 @@ export const MemberNavbar: React.FC = () => {
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between px-3 py-2.5 rounded-[1px] text-gold bg-navy-light/50 font-medium"
+              className="flex items-center justify-between px-3 py-3 rounded-[1px] text-gold bg-navy-light/50 font-medium min-h-[44px]"
             >
               <span>Ver Meu Link de Indicação</span>
-              <ExternalLink className="h-4 w-4 text-gold-deep" strokeWidth={1.5} />
+              <ExternalLink className="h-4 w-4 text-gold-deep shrink-0" strokeWidth={1.5} />
             </Link>
           </div>
         </div>

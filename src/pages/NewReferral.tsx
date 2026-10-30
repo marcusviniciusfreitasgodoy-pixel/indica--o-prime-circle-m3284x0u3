@@ -201,20 +201,22 @@ export default function NewReferralPage() {
     <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
-      <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 max-w-2xl space-y-6">
+      <main className="container mx-auto px-3 sm:px-6 pt-5 sm:pt-8 max-w-2xl space-y-5 sm:space-y-6">
         <div>
           <Link
             to="/painel"
-            className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors mb-3"
+            className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors mb-3 h-10 sm:h-8 min-h-[44px] sm:min-h-0"
           >
-            <ArrowLeft className="h-4 w-4 mr-1 text-gold-deep" strokeWidth={1.5} />
+            <ArrowLeft className="h-4 w-4 mr-1 text-gold-deep shrink-0" strokeWidth={1.5} />
             Voltar ao Painel
           </Link>
-          <div className="space-y-1">
+          <div className="space-y-1 min-w-0">
             <Eyebrow>PAINEL DO INDICADOR · COMUNICAÇÃO DIRETA</Eyebrow>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground flex items-center gap-2">
-              <PlusCircle className="h-6 w-6 text-gold-deep" strokeWidth={1.5} />
-              Nova Indicação <em>Direta</em>
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground flex items-center gap-2 break-words">
+              <PlusCircle className="h-6 w-6 text-gold-deep shrink-0" strokeWidth={1.5} />
+              <span>
+                Nova Indicação <em>Direta</em>
+              </span>
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-sans">
               Envio direto autorizado pelo painel para categorias elegíveis da rede Godoy Prime.
@@ -409,7 +411,7 @@ export default function NewReferralPage() {
                       value={indicatedName}
                       onChange={(e) => setIndicatedName(e.target.value)}
                       required
-                      className="rounded-[1px] text-xs sm:text-sm font-sans"
+                      className="rounded-[1px] text-xs sm:text-sm font-sans h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                     />
                   </div>
 
@@ -422,11 +424,13 @@ export default function NewReferralPage() {
                     </Label>
                     <Input
                       id="indicated-phone"
+                      type="tel"
+                      inputMode="tel"
                       placeholder="(21) 98888-7777"
                       value={indicatedPhone}
                       onChange={(e) => setIndicatedPhone(e.target.value)}
                       required
-                      className="rounded-[1px] text-xs sm:text-sm font-mono"
+                      className="rounded-[1px] text-xs sm:text-sm font-mono h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                     />
                   </div>
                 </div>
@@ -442,10 +446,11 @@ export default function NewReferralPage() {
                     <Input
                       id="indicated-email"
                       type="email"
+                      inputMode="email"
                       placeholder="exemplo@email.com"
                       value={indicatedEmail}
                       onChange={(e) => setIndicatedEmail(e.target.value)}
-                      className="rounded-[1px] text-xs sm:text-sm font-sans"
+                      className="rounded-[1px] text-xs sm:text-sm font-sans h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                     />
                   </div>
 
@@ -459,7 +464,7 @@ export default function NewReferralPage() {
                       value={neighborhood}
                       onChange={(e) => setNeighborhood(e.target.value)}
                       required
-                      className="rounded-[1px] text-xs sm:text-sm font-sans"
+                      className="rounded-[1px] text-xs sm:text-sm font-sans h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                     />
                   </div>
                 </div>
@@ -511,13 +516,13 @@ export default function NewReferralPage() {
                 </div>
               </CardContent>
 
-              <CardFooter className="border-t border-border pt-4 flex items-center justify-between">
+              <CardFooter className="border-t border-border pt-4 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
                 <Button
                   type="button"
                   variant="outline"
                   onClick={() => navigate('/painel')}
                   disabled={isSubmitting}
-                  className="text-xs rounded-[1px] h-9"
+                  className="text-xs rounded-[1px] h-11 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
                 >
                   Cancelar
                 </Button>
@@ -525,11 +530,11 @@ export default function NewReferralPage() {
                 <Button
                   type="submit"
                   disabled={isSubmitting || !consentDeclared}
-                  className="text-xs sm:text-sm rounded-[1px] h-9"
+                  className="text-xs sm:text-sm rounded-[1px] h-12 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
                 >
                   {isSubmitting ? (
                     <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin shrink-0" strokeWidth={1.5} />
                       Enviando...
                     </>
                   ) : (

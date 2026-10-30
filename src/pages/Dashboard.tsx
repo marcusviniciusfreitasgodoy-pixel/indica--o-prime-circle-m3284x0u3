@@ -265,12 +265,12 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
-      <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6 max-w-5xl">
+      <main className="container mx-auto px-3 sm:px-6 pt-5 sm:pt-8 space-y-5 sm:space-y-6 max-w-5xl">
         {/* Banner de Boas-Vindas e Link Pessoal */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-[1px] bg-card border border-border shadow-luxury">
-          <div className="space-y-1.5">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-4 sm:p-6 rounded-[1px] bg-card border border-border shadow-luxury">
+          <div className="space-y-1.5 min-w-0">
             <Eyebrow>PAINEL DO INDICADOR · GODOY PRIME REALTY</Eyebrow>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground truncate">
               Olá, <em>{user?.name || 'Indicador'}</em>
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground max-w-xl font-sans">
@@ -280,45 +280,54 @@ export default function DashboardPage() {
           </div>
 
           {/* Cartão de Ação Rápida */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-secondary/50 p-3 rounded-[1px] border border-border">
-            <div className="space-y-0.5 text-xs pr-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-secondary/50 p-3 rounded-[1px] border border-border w-full lg:w-auto">
+            <div className="space-y-0.5 text-xs min-w-0 sm:pr-2">
               <div className="font-heading font-medium text-foreground flex items-center gap-1.5">
-                <QrCode className="h-3.5 w-3.5 text-gold-deep" strokeWidth={1.5} />
+                <QrCode className="h-3.5 w-3.5 text-gold-deep shrink-0" strokeWidth={1.5} />
                 Seu link pessoal exclusivo:
               </div>
-              <p className="text-muted-foreground font-mono text-[11px] truncate max-w-[240px]">
+              <p className="text-muted-foreground font-mono text-[11px] truncate max-w-full sm:max-w-[240px]">
                 {personalLink}
               </p>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="grid grid-cols-2 sm:flex items-center gap-2 pt-1 sm:pt-0">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={copyPersonalLink}
-                className="text-xs h-9"
+                className="text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
               >
                 {copiedLink ? (
                   <>
-                    <Check className="h-3.5 w-3.5 mr-1 text-success" strokeWidth={1.5} />
+                    <Check className="h-3.5 w-3.5 mr-1 text-success shrink-0" strokeWidth={1.5} />
                     Copiado!
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
-                    Copiar Link
+                    <Copy className="h-3.5 w-3.5 mr-1 shrink-0" strokeWidth={1.5} />
+                    Copiar
                   </>
                 )}
               </Button>
-              <Button asChild variant="outline" size="sm" className="text-xs h-9">
+              <Button
+                asChild
+                variant="outline"
+                size="sm"
+                className="text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+              >
                 <Link to="/painel/materiais">
-                  <QrCode className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
+                  <QrCode className="h-3.5 w-3.5 mr-1 shrink-0" strokeWidth={1.5} />
                   Materiais
                 </Link>
               </Button>
               {allowsDirectSubmission && (
-                <Button asChild size="sm" className="text-xs h-9">
+                <Button
+                  asChild
+                  size="sm"
+                  className="col-span-2 sm:col-auto text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+                >
                   <Link to="/nova-indicacao">
-                    <PlusCircle className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
+                    <PlusCircle className="h-3.5 w-3.5 mr-1 shrink-0" strokeWidth={1.5} />
                     Indicar
                   </Link>
                 </Button>
@@ -331,12 +340,12 @@ export default function DashboardPage() {
         {clubeBeneficiosUrl && (
           <Card className="bg-card border-border text-card-foreground shadow-sm rounded-[1px] overflow-hidden">
             <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <div className="flex items-start sm:items-center gap-3.5">
+              <div className="flex items-start sm:items-center gap-3.5 min-w-0">
                 <div className="w-10 h-10 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
                   <Gift className="h-5 w-5" strokeWidth={1.5} />
                 </div>
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
+                <div className="space-y-0.5 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Eyebrow>EXCLUSIVO</Eyebrow>
                     <h3 className="text-base sm:text-lg font-serif font-bold text-foreground">
                       Clube de benefícios <em>Godoy Prime</em>
@@ -351,11 +360,11 @@ export default function DashboardPage() {
               <Button
                 asChild
                 variant="outline"
-                className="text-xs sm:text-sm h-9 sm:h-10 px-4 shrink-0"
+                className="w-full sm:w-auto text-xs sm:text-sm h-11 sm:h-10 min-h-[44px] sm:min-h-0 px-4 shrink-0"
               >
                 <a href={clubeBeneficiosUrl} target="_blank" rel="noopener noreferrer">
                   Acessar Clube
-                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" strokeWidth={1.5} />
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5 shrink-0" strokeWidth={1.5} />
                 </a>
               </Button>
             </div>
@@ -364,22 +373,22 @@ export default function DashboardPage() {
 
         {/* Cartões A RECEBER e RECEBIDO — Recompensas por Indicação */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card className="bg-card border border-border text-card-foreground rounded-[1px] shadow-sm">
-            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-              <div>
-                <span className="text-xs font-heading font-semibold text-gold-deep uppercase tracking-wider block">
+          <Card className="bg-card border border-border text-card-foreground rounded-[1px] shadow-sm overflow-hidden">
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-xs font-heading font-semibold text-gold-deep uppercase tracking-wider block truncate">
                   Recompensa por Indicação
                 </span>
                 <CardTitle className="text-sm font-heading font-semibold text-foreground">
                   A Receber
                 </CardTitle>
               </div>
-              <div className="w-9 h-9 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center">
+              <div className="w-9 h-9 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center shrink-0">
                 <Clock className="h-5 w-5" strokeWidth={1.5} />
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-1">
-              <div className="text-2xl sm:text-3xl font-bold font-mono text-foreground">
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-foreground break-words">
                 R$ {rewardsStats.aReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
@@ -389,22 +398,22 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card className="bg-card border border-border text-card-foreground rounded-[1px] shadow-sm">
-            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-              <div>
-                <span className="text-xs font-heading font-semibold text-success uppercase tracking-wider block">
+          <Card className="bg-card border border-border text-card-foreground rounded-[1px] shadow-sm overflow-hidden">
+            <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between gap-2">
+              <div className="min-w-0">
+                <span className="text-[11px] sm:text-xs font-heading font-semibold text-success uppercase tracking-wider block truncate">
                   Recompensa por Indicação
                 </span>
                 <CardTitle className="text-sm font-heading font-semibold text-foreground">
                   Recebido
                 </CardTitle>
               </div>
-              <div className="w-9 h-9 rounded-[1px] bg-success/15 border border-success/30 text-success flex items-center justify-center">
+              <div className="w-9 h-9 rounded-[1px] bg-success/15 border border-success/30 text-success flex items-center justify-center shrink-0">
                 <Coins className="h-5 w-5" strokeWidth={1.5} />
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-1">
-              <div className="text-2xl sm:text-3xl font-bold font-mono text-success">
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-success break-words">
                 R$ {rewardsStats.recebido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
               <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
@@ -417,11 +426,11 @@ export default function DashboardPage() {
         {/* Informação sobre os valores fixos do regulamento */}
         <div className="p-3.5 bg-secondary/40 border border-border rounded-[1px] text-xs text-muted-foreground flex items-start gap-2.5 font-sans">
           <ShieldCheck className="h-4 w-4 text-gold-deep shrink-0 mt-0.5" strokeWidth={1.5} />
-          <div className="space-y-0.5">
+          <div className="space-y-0.5 min-w-0">
             <p className="text-foreground font-heading font-medium">
               Valores fixos da recompensa por indicação:
             </p>
-            <p className="leading-relaxed text-[11px]">
+            <p className="leading-relaxed text-[11px] break-words">
               <strong className="font-mono">R$ 100</strong> para indicação de proprietário (venda ou
               locação) com assinatura de autorização ou decisão da Godoy Prime de não prosseguir com
               imóvel qualificado. • <strong className="font-mono">R$ 500</strong> para indicação de
@@ -434,7 +443,7 @@ export default function DashboardPage() {
         {/* Barra de Filtro e Busca */}
         <div className="space-y-3">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
-            <div className="relative flex-1 max-w-md">
+            <div className="relative flex-1 max-w-full sm:max-w-md">
               <Search
                 className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
                 strokeWidth={1.5}
@@ -444,7 +453,7 @@ export default function DashboardPage() {
                 placeholder="Buscar por protocolo, primeiro nome ou bairro..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 text-xs sm:text-sm font-sans"
+                className="pl-9 text-xs sm:text-sm font-sans h-10 min-h-[44px] sm:min-h-0"
               />
             </div>
 
@@ -454,10 +463,10 @@ export default function DashboardPage() {
                 size="sm"
                 onClick={() => loadData(true)}
                 disabled={isRefreshing}
-                className="text-xs"
+                className="text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
               >
                 <RefreshCw
-                  className={`h-3.5 w-3.5 mr-1.5 ${isRefreshing ? 'animate-spin text-gold-deep' : ''}`}
+                  className={`h-3.5 w-3.5 mr-1.5 shrink-0 ${isRefreshing ? 'animate-spin text-gold-deep' : ''}`}
                   strokeWidth={1.5}
                 />
                 Atualizar
@@ -471,7 +480,7 @@ export default function DashboardPage() {
               size="sm"
               variant={filterStage === 'all' ? 'default' : 'outline'}
               onClick={() => setFilterStage('all')}
-              className="text-xs h-8"
+              className="text-xs h-9 sm:h-8 min-h-[38px] sm:min-h-0"
             >
               Todas ({referralItems.length})
             </Button>
@@ -479,7 +488,7 @@ export default function DashboardPage() {
               size="sm"
               variant={filterStage === 'nova' ? 'default' : 'outline'}
               onClick={() => setFilterStage('nova')}
-              className="text-xs h-8"
+              className="text-xs h-9 sm:h-8 min-h-[38px] sm:min-h-0"
             >
               Novas
             </Button>
@@ -487,7 +496,7 @@ export default function DashboardPage() {
               size="sm"
               variant={filterStage === 'em_atendimento' ? 'default' : 'outline'}
               onClick={() => setFilterStage('em_atendimento')}
-              className="text-xs h-8"
+              className="text-xs h-9 sm:h-8 min-h-[38px] sm:min-h-0"
             >
               Em Atendimento
             </Button>
@@ -495,7 +504,7 @@ export default function DashboardPage() {
               size="sm"
               variant={filterStage === 'concluida' ? 'default' : 'outline'}
               onClick={() => setFilterStage('concluida')}
-              className="text-xs h-8"
+              className="text-xs h-9 sm:h-8 min-h-[38px] sm:min-h-0"
             >
               Concluídas
             </Button>
@@ -522,14 +531,21 @@ export default function DashboardPage() {
                   ? 'Nenhuma indicação corresponde aos filtros aplicados.'
                   : 'Você ainda não possui indicações registradas. Compartilhe seu link pessoal ou entregue seu cartão com QR em mãos.'}
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <Button onClick={copyPersonalLink} variant="outline" className="text-xs">
-                  <Copy className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+              <div className="flex flex-wrap items-center justify-center gap-3 w-full sm:w-auto">
+                <Button
+                  onClick={copyPersonalLink}
+                  variant="outline"
+                  className="text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+                >
+                  <Copy className="h-4 w-4 mr-1.5 shrink-0" strokeWidth={1.5} />
                   Copiar Meu Link
                 </Button>
-                <Button asChild className="text-xs">
+                <Button
+                  asChild
+                  className="text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
+                >
                   <Link to="/painel/materiais">
-                    <QrCode className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+                    <QrCode className="h-4 w-4 mr-1.5 shrink-0" strokeWidth={1.5} />
                     Ver Materiais &amp; QR
                   </Link>
                 </Button>
@@ -551,7 +567,7 @@ export default function DashboardPage() {
                       {/* Left */}
                       <div className="space-y-2.5 flex-1 min-w-0">
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-gold-deep px-2 py-0.5 rounded-[1px] bg-secondary border border-border">
+                          <span className="font-mono text-xs font-bold text-gold-deep px-2 py-0.5 rounded-[1px] bg-secondary border border-border break-all">
                             {item.protocol}
                           </span>
                           {renderStageBadge(stage)}
@@ -561,29 +577,29 @@ export default function DashboardPage() {
                           >
                             {isBuyer ? 'Comprador' : 'Proprietário'}
                           </Badge>
-                          <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-sans">
-                            <Calendar className="h-3 w-3" strokeWidth={1.5} />
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-sans shrink-0">
+                            <Calendar className="h-3 w-3 shrink-0" strokeWidth={1.5} />
                             {formatDate(item.created)}
                           </span>
                         </div>
 
-                        <div>
-                          <h4 className="text-sm sm:text-base font-serif font-bold text-foreground">
+                        <div className="min-w-0">
+                          <h4 className="text-sm sm:text-base font-serif font-bold text-foreground break-words">
                             {item.indicated_first_name} ·{' '}
                             <span className="text-muted-foreground font-sans font-normal">
                               {item.neighborhood}
                             </span>
                           </h4>
-                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed font-sans">
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed font-sans break-words">
                             {item.public_summary || 'Indicação comunicada à Godoy Prime Realty.'}
                           </p>
                         </div>
 
-                        <div className="pt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-sans">
-                          <span className="text-[11px] uppercase font-heading font-semibold text-gold-deep tracking-wider">
+                        <div className="pt-1 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground font-sans">
+                          <span className="text-[11px] uppercase font-heading font-semibold text-gold-deep tracking-wider shrink-0">
                             Linha do tempo:
                           </span>
-                          <span className="text-foreground font-medium">
+                          <span className="text-foreground font-medium break-words">
                             {stage === 'Atendimento realizado' && item.primeira_visita_at
                               ? `Atendimento realizado em ${formatDate(item.primeira_visita_at)} por corretor credenciado com CRECI ativo`
                               : stage}
@@ -595,7 +611,7 @@ export default function DashboardPage() {
                             <span className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider block">
                               Última atualização:
                             </span>
-                            <div className="text-[11px] text-muted-foreground">
+                            <div className="text-[11px] text-muted-foreground break-words">
                               {item.events[item.events.length - 1].public_label} (
                               {formatDate(item.events[item.events.length - 1].created)})
                             </div>
@@ -604,7 +620,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Right */}
-                      <div className="flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0 shrink-0 gap-1.5">
+                      <div className="flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0 shrink-0 gap-1.5 w-full md:w-auto">
                         <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-medium">
                           Recompensa prevista
                         </span>

@@ -129,30 +129,30 @@ export default function ReferralDetailPage() {
     <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
-      <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 max-w-4xl space-y-6">
+      <main className="container mx-auto px-3 sm:px-6 pt-5 sm:pt-8 max-w-4xl space-y-5 sm:space-y-6">
         {/* Top Back & Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pb-2 border-b border-border">
+          <div className="min-w-0">
             <Link
-              to="/"
-              className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors mb-2"
+              to="/painel"
+              className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors mb-2 h-10 sm:h-8 min-h-[44px] sm:min-h-0"
             >
-              <ArrowLeft className="h-4 w-4 mr-1 text-gold-deep" strokeWidth={1.5} />
+              <ArrowLeft className="h-4 w-4 mr-1 text-gold-deep shrink-0" strokeWidth={1.5} />
               Voltar ao Painel
             </Link>
-            <div className="space-y-1">
+            <div className="space-y-1 min-w-0">
               <Eyebrow>INDICAÇÃO · #{referral.id.substring(0, 8).toUpperCase()}</Eyebrow>
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+                <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
                   Indicação: <em>{referral.referrer_name}</em>
                 </h1>
                 <StatusBadge status={referral.status} />
                 <TypeBadge type={referral.type} />
               </div>
             </div>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2 font-sans">
-              <Calendar className="h-3.5 w-3.5 text-gold-deep" strokeWidth={1.5} />
-              Cadastrada em{' '}
+            <p className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-1.5 font-sans">
+              <Calendar className="h-3.5 w-3.5 text-gold-deep shrink-0" strokeWidth={1.5} />
+              <span>Cadastrada em</span>{' '}
               <span className="font-mono text-foreground">{formatDate(referral.created)}</span> via{' '}
               <strong className="text-foreground">
                 {referral.channel === 'link_publico' ? 'Página Pública' : 'Registro Manual'}
@@ -249,15 +249,15 @@ export default function ReferralDetailPage() {
                     />
                   </div>
 
-                  <div className="flex flex-wrap items-center gap-2 pt-1 font-heading">
+                  <div className="grid grid-cols-1 sm:flex sm:flex-wrap items-center gap-2 pt-1 font-heading">
                     <Button
                       size="sm"
                       variant={referral.status === 'em_atendimento' ? 'default' : 'outline'}
                       onClick={() => handleStatusChange('em_atendimento')}
                       disabled={isUpdatingStatus}
-                      className="text-xs rounded-[1px] h-8"
+                      className="text-xs rounded-[1px] h-10 sm:h-8 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
                     >
-                      <Clock className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
+                      <Clock className="h-3.5 w-3.5 mr-1 shrink-0" strokeWidth={1.5} />
                       Em Atendimento
                     </Button>
 
@@ -266,9 +266,9 @@ export default function ReferralDetailPage() {
                       variant={referral.status === 'atendida' ? 'default' : 'outline'}
                       onClick={() => handleStatusChange('atendida')}
                       disabled={isUpdatingStatus}
-                      className="text-xs rounded-[1px] h-8"
+                      className="text-xs rounded-[1px] h-10 sm:h-8 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
                     >
-                      <UserCheck className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
+                      <UserCheck className="h-3.5 w-3.5 mr-1 shrink-0" strokeWidth={1.5} />
                       Marcar Atendida
                     </Button>
 
@@ -277,9 +277,9 @@ export default function ReferralDetailPage() {
                       variant={referral.status === 'concluida' ? 'default' : 'outline'}
                       onClick={() => handleStatusChange('concluida')}
                       disabled={isUpdatingStatus}
-                      className="text-xs rounded-[1px] h-8"
+                      className="text-xs rounded-[1px] h-10 sm:h-8 min-h-[44px] sm:min-h-0 w-full sm:w-auto"
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
+                      <CheckCircle2 className="h-3.5 w-3.5 mr-1 shrink-0" strokeWidth={1.5} />
                       Concluir Negociação
                     </Button>
                   </div>
@@ -319,9 +319,9 @@ export default function ReferralDetailPage() {
                       <div key={index} className="relative group">
                         {/* Dot */}
                         <div className="absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full bg-gold-deep border-2 border-background" />
-                        <div className="space-y-0.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-heading font-semibold text-foreground">
+                        <div className="space-y-0.5 min-w-0">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1 text-xs">
+                            <span className="font-heading font-semibold text-foreground break-words">
                               {item.action === 'criada_link_publico' && 'Criada via Link Público'}
                               {item.action === 'criada_manual' && 'Criada Manualmente'}
                               {item.action === 'repasse_manual' && 'Repasse em Parceria'}
@@ -329,16 +329,16 @@ export default function ReferralDetailPage() {
                                 'Repasse Automático (3 Dias)'}
                               {item.action.startsWith('status_') && 'Atualização de Status'}
                             </span>
-                            <span className="text-[11px] text-muted-foreground font-mono">
+                            <span className="text-[11px] text-muted-foreground font-mono shrink-0">
                               {formatDate(item.date)}
                             </span>
                           </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed">
+                          <p className="text-xs text-muted-foreground leading-relaxed break-words">
                             {item.description}
                           </p>
                           {item.reason && (
-                            <p className="text-[11px] text-foreground italic bg-secondary/50 p-1.5 rounded-[1px] border border-border mt-1">
-                              "{item.reason}"
+                            <p className="text-[11px] text-foreground italic bg-secondary/50 p-1.5 rounded-[1px] border border-border mt-1 break-words">
+                              &ldquo;{item.reason}&rdquo;
                             </p>
                           )}
                         </div>
@@ -375,8 +375,11 @@ export default function ReferralDetailPage() {
                       </p>
                     )}
                     {referral.expand?.current_owner_id?.phone && (
-                      <p className="text-foreground font-mono flex items-center gap-1 pt-0.5">
-                        <Phone className="h-3 w-3 inline text-gold-deep" strokeWidth={1.5} />
+                      <p className="text-foreground font-mono flex items-center gap-1 pt-0.5 break-all">
+                        <Phone
+                          className="h-3 w-3 inline text-gold-deep shrink-0"
+                          strokeWidth={1.5}
+                        />
                         {referral.expand.current_owner_id.phone}
                       </p>
                     )}

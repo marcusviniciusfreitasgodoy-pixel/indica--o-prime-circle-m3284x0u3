@@ -48,18 +48,18 @@ export function AdminNavbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full navy border-b border-white/10 backdrop-blur">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-3">
-            <Link to="/admin" className="flex items-center gap-2.5 focus:outline-none">
-              <GodoyWordmark onDark className="h-6 w-auto" />
-              <span className="font-heading text-xs sm:text-sm font-semibold tracking-label text-gold-brand uppercase border-l border-white/20 pl-2.5">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16 gap-2">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
+            <Link to="/admin" className="flex items-center gap-2 sm:gap-2.5 focus:outline-none">
+              <GodoyWordmark onDark className="h-5 sm:h-6 w-auto" />
+              <span className="font-heading text-xs sm:text-sm font-semibold tracking-label text-gold-brand uppercase border-l border-white/20 pl-2 sm:pl-2.5">
                 Admin
               </span>
             </Link>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <div className="hidden md:flex flex-col text-right">
               <span className="text-xs text-on-navy font-medium">{user?.name || user?.email}</span>
               <span className="text-[10px] text-on-navy-muted uppercase tracking-wider font-heading">
@@ -71,7 +71,7 @@ export function AdminNavbar() {
               asChild
               variant="outline"
               size="sm"
-              className="rounded-[1px] border-white/20 text-on-navy hover:bg-white/10 hover:text-white text-xs hidden sm:inline-flex"
+              className="rounded-[1px] border-white/20 text-on-navy hover:bg-white/10 hover:text-white text-xs hidden sm:inline-flex h-9"
             >
               <Link to="/painel">Painel do Indicador</Link>
             </Button>
@@ -80,9 +80,9 @@ export function AdminNavbar() {
               variant="ghost"
               size="sm"
               onClick={logout}
-              className="rounded-[1px] text-on-navy/80 hover:text-white hover:bg-white/10 text-xs"
+              className="rounded-[1px] text-on-navy/80 hover:text-white hover:bg-white/10 text-xs h-10 sm:h-9 min-h-[44px] sm:min-h-0 px-2.5 sm:px-3"
             >
-              <LogOut className="w-4 h-4 mr-1.5" strokeWidth={1.5} />
+              <LogOut className="w-4 h-4 mr-1 shrink-0" strokeWidth={1.5} />
               Sair
             </Button>
           </div>

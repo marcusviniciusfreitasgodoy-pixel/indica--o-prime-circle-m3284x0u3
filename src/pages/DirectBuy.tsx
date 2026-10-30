@@ -176,20 +176,19 @@ export default function DirectBuyPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <BrandPublicHeader />
 
-      <main className="flex-1 py-10 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <main className="flex-1 py-6 sm:py-10 px-3 sm:px-6">
+        <div className="max-w-2xl mx-auto space-y-5 sm:space-y-6">
           {/* Header */}
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-1.5 min-w-0">
             <Eyebrow className="justify-center">COMPRADORES · BARRA &amp; RECREIO</Eyebrow>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
-              Quero Comprar um <em>Imóvel</em>
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
+              Quero Comprar Meu <em>Imóvel</em>
             </h1>
             <p className="text-muted-foreground text-xs sm:text-sm max-w-lg mx-auto font-sans">
-              Encontre o imóvel ideal na Barra da Tijuca e Recreio dos Bandeirantes com atendimento
-              de corretor com CRECI ativo.
+              Conte com corretores credenciados para encontrar o imóvel ideal nos melhores
+              condomínios da Barra da Tijuca e Recreio dos Bandeirantes.
             </p>
           </div>
-
           {createdProtocol ? (
             <Card className="bg-card border border-border text-card-foreground shadow-luxury text-center rounded-[1px]">
               <CardHeader className="pb-3">
@@ -282,7 +281,7 @@ export default function DirectBuyPage() {
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Ex: Mariana Castro"
                           required
-                          className="text-xs sm:text-sm"
+                          className="text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         />
                       </div>
 
@@ -295,11 +294,13 @@ export default function DirectBuyPage() {
                         </Label>
                         <Input
                           id="buyerPhone"
+                          type="tel"
+                          inputMode="tel"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="(21) 99999-9999"
                           required
-                          className="font-mono text-xs sm:text-sm"
+                          className="font-mono text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         />
                       </div>
 
@@ -313,10 +314,11 @@ export default function DirectBuyPage() {
                         <Input
                           id="buyerEmail"
                           type="email"
+                          inputMode="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="seu@email.com"
-                          className="font-mono text-xs sm:text-sm"
+                          className="font-mono text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         />
                       </div>
                     </div>
@@ -517,16 +519,20 @@ export default function DirectBuyPage() {
                 </CardContent>
 
                 <CardFooter className="flex justify-end pt-3 border-t border-border">
-                  <Button type="submit" disabled={submitting} className="px-8">
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full sm:w-auto px-8 h-12 sm:h-9 min-h-[44px] sm:min-h-0"
+                  >
                     {submitting ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" strokeWidth={1.5} />
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" strokeWidth={1.5} />
                         Enviando Preferências...
                       </>
                     ) : (
                       <>
                         Buscar Imóveis Disponíveis
-                        <ArrowRight className="w-4 h-4 ml-2" strokeWidth={1.5} />
+                        <ArrowRight className="w-4 h-4 ml-2 shrink-0" strokeWidth={1.5} />
                       </>
                     )}
                   </Button>

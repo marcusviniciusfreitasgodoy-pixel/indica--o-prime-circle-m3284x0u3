@@ -26,7 +26,7 @@ export function MetaRow({ label, value, isMonoValue, className, ...props }: Meta
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 py-2 border-b border-border/40 text-sm last:border-b-0',
+        'flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-4 py-2 border-b border-border/40 text-sm last:border-b-0 min-w-0',
         className,
       )}
       {...props}
@@ -36,7 +36,7 @@ export function MetaRow({ label, value, isMonoValue, className, ...props }: Meta
       </span>
       <span
         className={cn(
-          'text-right text-foreground font-normal',
+          'text-left sm:text-right text-foreground font-normal break-words sm:break-all min-w-0',
           useMono && 'font-mono text-xs tracking-tight',
         )}
       >

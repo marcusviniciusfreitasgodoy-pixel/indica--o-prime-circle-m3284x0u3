@@ -420,12 +420,12 @@ export default function CadastroPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <BrandPublicHeader />
 
-      <main className="flex-1 py-10 px-3 sm:px-6 lg:px-8">
-        <div className="mx-auto w-full max-w-lg space-y-6">
+      <main className="flex-1 py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-lg space-y-5 sm:space-y-6">
           {/* Brand header */}
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-1.5 min-w-0">
             <Eyebrow className="justify-center">CADASTRO DE PARCEIRO</Eyebrow>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
               Cadastro de <em>Indicador</em>
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-sans max-w-sm mx-auto">
@@ -533,7 +533,7 @@ export default function CadastroPage() {
                       value={nome}
                       onChange={(e) => setNome(e.target.value)}
                       required
-                      className="h-10 text-xs sm:text-sm"
+                      className="h-11 sm:h-10 min-h-[44px] sm:min-h-0 text-xs sm:text-sm"
                     />
                   </div>
 
@@ -548,10 +548,11 @@ export default function CadastroPage() {
                       <Input
                         id="cpf-input"
                         type="text"
+                        inputMode="numeric"
                         placeholder="000.000.000-00"
                         value={cpf}
                         onChange={(e) => handleCpfChange(e.target.value)}
-                        className="h-10 text-xs sm:text-sm font-mono"
+                        className="h-11 sm:h-10 min-h-[44px] sm:min-h-0 text-xs sm:text-sm font-mono"
                       />
                     </div>
 
@@ -564,11 +565,12 @@ export default function CadastroPage() {
                       </Label>
                       <Input
                         id="telefone-input"
-                        type="text"
+                        type="tel"
+                        inputMode="tel"
                         placeholder="(21) 99999-9999"
                         value={telefone}
                         onChange={(e) => handlePhoneChange(e.target.value)}
-                        className="h-10 text-xs sm:text-sm font-mono"
+                        className="h-11 sm:h-10 min-h-[44px] sm:min-h-0 text-xs sm:text-sm font-mono"
                       />
                     </div>
                   </div>
@@ -583,11 +585,12 @@ export default function CadastroPage() {
                     <Input
                       id="email-input"
                       type="email"
+                      inputMode="email"
                       placeholder="seu.email@exemplo.com.br"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
-                      className="h-10 text-xs sm:text-sm font-mono"
+                      className="h-11 sm:h-10 min-h-[44px] sm:min-h-0 text-xs sm:text-sm font-mono"
                     />
                   </div>
 
@@ -605,7 +608,7 @@ export default function CadastroPage() {
                       value={senha}
                       onChange={(e) => setSenha(e.target.value)}
                       required
-                      className="h-10 text-xs sm:text-sm"
+                      className="h-11 sm:h-10 min-h-[44px] sm:min-h-0 text-xs sm:text-sm"
                     />
                     <p className="text-[11px] text-muted-foreground font-sans">
                       Você usará este e-mail e senha para entrar no seu painel.

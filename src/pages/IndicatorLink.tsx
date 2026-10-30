@@ -311,27 +311,27 @@ export default function IndicatorLinkPage() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <BrandPublicHeader />
 
-      <main className="flex-1 py-10 px-4 sm:px-6">
-        <div className="max-w-2xl mx-auto space-y-6">
+      <main className="flex-1 py-6 sm:py-10 px-3 sm:px-6">
+        <div className="max-w-2xl mx-auto space-y-5 sm:space-y-6">
           {/* Header Personalizado com Primeiro Nome do Indicador ou Nome da Entidade */}
-          <div className="text-center space-y-3">
+          <div className="text-center space-y-2.5 sm:space-y-3 min-w-0">
             <Eyebrow className="justify-center">BARRA DA TIJUCA &amp; RECREIO</Eyebrow>
 
-            <div className="p-4 rounded-[1px] bg-card border border-border shadow-sm flex items-center justify-center gap-3">
-              <div className="w-10 h-10 rounded-[1px] bg-secondary text-gold-deep flex items-center justify-center border border-border">
+            <div className="p-3.5 sm:p-4 rounded-[1px] bg-card border border-border shadow-sm flex items-center justify-center gap-3">
+              <div className="w-10 h-10 rounded-[1px] bg-secondary text-gold-deep flex items-center justify-center border border-border shrink-0">
                 <UserCheck className="w-5 h-5" strokeWidth={1.5} />
               </div>
-              <div className="text-left font-sans">
-                <p className="text-xs text-muted-foreground uppercase tracking-wider font-heading">
+              <div className="text-left font-sans min-w-0">
+                <p className="text-[11px] sm:text-xs text-muted-foreground uppercase tracking-wider font-heading">
                   Você foi indicado por
                 </p>
-                <h2 className="text-lg font-serif font-bold text-foreground">
+                <h2 className="text-base sm:text-lg font-serif font-bold text-foreground truncate">
                   {indicator.display_name}
                 </h2>
               </div>
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
               Como a Godoy Prime pode <em>ajudar você</em> hoje?
             </h1>
             <p className="text-muted-foreground text-xs sm:text-sm max-w-lg mx-auto font-sans">
@@ -430,7 +430,7 @@ export default function IndicatorLinkPage() {
                           onChange={(e) => setName(e.target.value)}
                           placeholder="Ex: João da Silva"
                           required
-                          className="text-xs sm:text-sm"
+                          className="text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         />
                       </div>
 
@@ -440,11 +440,13 @@ export default function IndicatorLinkPage() {
                         </Label>
                         <Input
                           id="leadPhone"
+                          type="tel"
+                          inputMode="tel"
                           value={phone}
                           onChange={(e) => setPhone(e.target.value)}
                           placeholder="(21) 99999-9999"
                           required
-                          className="font-mono text-xs sm:text-sm"
+                          className="font-mono text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         />
                       </div>
 
@@ -455,10 +457,11 @@ export default function IndicatorLinkPage() {
                         <Input
                           id="leadEmail"
                           type="email"
+                          inputMode="email"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           placeholder="seu@email.com"
-                          className="font-mono text-xs sm:text-sm"
+                          className="font-mono text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         />
                       </div>
                     </div>
@@ -717,26 +720,30 @@ export default function IndicatorLinkPage() {
                   </div>
                 </CardContent>
 
-                <CardFooter className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-3 border-t border-border">
+                <CardFooter className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3 pt-3 border-t border-border">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setSelectedOption(null)}
-                    className="w-full sm:w-auto text-xs"
+                    className="w-full sm:w-auto text-xs h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                   >
                     Voltar
                   </Button>
 
-                  <Button type="submit" disabled={submitting} className="w-full sm:w-auto px-6">
+                  <Button
+                    type="submit"
+                    disabled={submitting}
+                    className="w-full sm:w-auto px-6 h-12 sm:h-9 min-h-[44px] sm:min-h-0"
+                  >
                     {submitting ? (
                       <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" strokeWidth={1.5} />
+                        <Loader2 className="w-4 h-4 mr-2 animate-spin shrink-0" strokeWidth={1.5} />
                         Enviando Solicitação...
                       </>
                     ) : (
                       <>
                         Enviar Solicitação
-                        <ArrowRight className="w-4 h-4 ml-2" strokeWidth={1.5} />
+                        <ArrowRight className="w-4 h-4 ml-2 shrink-0" strokeWidth={1.5} />
                       </>
                     )}
                   </Button>

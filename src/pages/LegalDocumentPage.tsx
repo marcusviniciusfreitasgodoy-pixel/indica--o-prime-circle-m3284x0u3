@@ -88,26 +88,24 @@ export const LegalDocumentPage: React.FC<LegalPageProps> = ({ type, defaultTitle
       )}
 
       <header className="navy border-b border-border/20 sticky top-0 z-20">
-        <div className="container mx-auto px-4 sm:px-6 h-14 flex items-center justify-between max-w-4xl">
+        <div className="container mx-auto px-3 sm:px-6 h-14 flex items-center justify-between max-w-4xl gap-2">
           <Link
             to="/painel"
-            className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors"
+            className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors shrink-0 h-10 min-h-[44px] sm:min-h-0"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5 text-primary" strokeWidth={1.5} />
+            <ArrowLeft className="h-4 w-4 mr-1.5 text-primary shrink-0" strokeWidth={1.5} />
             Voltar ao Painel
           </Link>
-          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
-            <Shield className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
-            <span className="text-primary font-semibold">
-              Godoy Prime Realty · CRECI-RJ PJ 11.841
-            </span>
+          <div className="flex items-center gap-1.5 text-[11px] sm:text-xs font-mono text-muted-foreground shrink-0 truncate">
+            <Shield className="h-3.5 w-3.5 text-primary shrink-0" strokeWidth={1.5} />
+            <span className="text-primary font-semibold truncate">CRECI-RJ PJ 11.841</span>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-16 max-w-4xl space-y-6 flex-1">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
+      <main className="container mx-auto px-3 sm:px-6 pt-5 sm:pt-8 pb-16 max-w-4xl space-y-5 sm:space-y-6 flex-1">
+        <div className="min-w-0">
+          <div className="flex items-center gap-2 mb-1 flex-wrap">
             <Eyebrow>DOCUMENTO LEGAL OFICIAL</Eyebrow>
             {doc?.version && (
               <>
@@ -118,13 +116,13 @@ export const LegalDocumentPage: React.FC<LegalPageProps> = ({ type, defaultTitle
               </>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+          <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
             {doc?.title || defaultTitle}
           </h1>
         </div>
 
         <Card className="bg-card border-border text-card-foreground shadow-luxury overflow-hidden rounded-[1px]">
-          <CardContent className="p-5 sm:p-8 font-sans">
+          <CardContent className="p-4 sm:p-8 font-sans overflow-x-hidden">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-2">
                 <Loader2 className="h-7 w-7 animate-spin text-gold-deep" strokeWidth={1.5} />

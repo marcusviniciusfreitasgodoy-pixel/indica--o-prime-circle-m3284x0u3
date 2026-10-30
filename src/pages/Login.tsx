@@ -163,12 +163,12 @@ export default function LoginPage({
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <BrandPublicHeader showLoginLink={false} />
 
-      <main className="flex flex-1 items-center justify-center py-10 px-4 sm:px-6 lg:px-8">
-        <div className="w-full max-w-md space-y-6">
+      <main className="flex flex-1 items-center justify-center py-6 sm:py-10 px-3 sm:px-6 lg:px-8">
+        <div className="w-full max-w-md space-y-5 sm:space-y-6">
           {/* Brand header */}
-          <div className="text-center space-y-2">
+          <div className="text-center space-y-1.5 min-w-0">
             <Eyebrow className="justify-center">ACESSO RESTRITO</Eyebrow>
-            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+            <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
               Portal do <em>Indicador</em>
             </h1>
             <p className="text-xs sm:text-sm text-muted-foreground font-sans">
@@ -243,12 +243,13 @@ export default function LoginPage({
                       <Input
                         id="email-password"
                         type="email"
+                        inputMode="email"
                         placeholder="exemplo@primecircle.com.br"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         disabled={isLoading}
                         required
-                        className="font-mono text-xs sm:text-sm"
+                        className="font-mono text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                       />
                     </div>
 
@@ -263,7 +264,7 @@ export default function LoginPage({
                         <button
                           type="button"
                           onClick={() => setActiveTab('forgot')}
-                          className="text-xs text-gold-deep hover:underline font-heading font-medium"
+                          className="text-xs text-gold-deep hover:underline font-heading font-medium py-1"
                         >
                           Esqueceu?
                         </button>
@@ -276,22 +277,25 @@ export default function LoginPage({
                         onChange={(e) => setPassword(e.target.value)}
                         disabled={isLoading}
                         required
-                        className="text-xs sm:text-sm"
+                        className="text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                       />
                     </div>
                   </CardContent>
 
                   <CardFooter className="flex flex-col space-y-4 pt-2">
-                    <Button type="submit" disabled={isLoading} className="w-full">
+                    <Button type="submit" disabled={isLoading} className="w-full h-12 min-h-[44px]">
                       {isLoading ? (
                         <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />
+                          <Loader2
+                            className="mr-2 h-4 w-4 animate-spin shrink-0"
+                            strokeWidth={1.5}
+                          />
                           Autenticando...
                         </>
                       ) : (
                         <>
                           Acessar Painel
-                          <ArrowRight className="ml-2 h-4 w-4" strokeWidth={1.5} />
+                          <ArrowRight className="ml-2 h-4 w-4 shrink-0" strokeWidth={1.5} />
                         </>
                       )}
                     </Button>
@@ -324,27 +328,35 @@ export default function LoginPage({
                         <Input
                           id="email-otp"
                           type="email"
+                          inputMode="email"
                           placeholder="seu.email@exemplo.com"
                           value={email}
                           onChange={(e) => setEmail(e.target.value)}
                           disabled={isLoading}
                           required
-                          className="font-mono text-xs sm:text-sm"
+                          className="font-mono text-xs sm:text-sm h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         />
                       </div>
                     </CardContent>
 
                     <CardFooter className="flex flex-col space-y-4 pt-2">
-                      <Button type="submit" disabled={isLoading} className="w-full">
+                      <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-12 min-h-[44px]"
+                      >
                         {isLoading ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />
+                            <Loader2
+                              className="mr-2 h-4 w-4 animate-spin shrink-0"
+                              strokeWidth={1.5}
+                            />
                             Enviando código...
                           </>
                         ) : (
                           <>
                             Solicitar Código de Acesso
-                            <Send className="ml-2 h-4 w-4" strokeWidth={1.5} />
+                            <Send className="ml-2 h-4 w-4 shrink-0" strokeWidth={1.5} />
                           </>
                         )}
                       </Button>
@@ -374,6 +386,8 @@ export default function LoginPage({
                         <Input
                           id="otp-code-input"
                           type="text"
+                          inputMode="numeric"
+                          pattern="[0-9]*"
                           maxLength={6}
                           placeholder="123456"
                           value={otpCode}
@@ -381,7 +395,7 @@ export default function LoginPage({
                           disabled={isLoading}
                           autoFocus
                           required
-                          className="text-center tracking-widest text-lg font-mono"
+                          className="text-center tracking-widest text-lg font-mono h-12 min-h-[44px]"
                         />
                       </div>
                       <div className="flex justify-between items-center text-xs font-heading">
@@ -392,7 +406,7 @@ export default function LoginPage({
                             setOtpCode('')
                             setOtpId(null)
                           }}
-                          className="text-muted-foreground hover:text-foreground underline"
+                          className="text-muted-foreground hover:text-foreground underline py-1.5"
                         >
                           Trocar e-mail
                         </button>
@@ -400,7 +414,7 @@ export default function LoginPage({
                           type="button"
                           disabled={isLoading}
                           onClick={handleOTPRequest}
-                          className="text-gold-deep hover:underline font-medium"
+                          className="text-gold-deep hover:underline font-medium py-1.5"
                         >
                           Reenviar código
                         </button>
@@ -408,16 +422,23 @@ export default function LoginPage({
                     </CardContent>
 
                     <CardFooter className="flex flex-col space-y-4 pt-2">
-                      <Button type="submit" disabled={isLoading} className="w-full">
+                      <Button
+                        type="submit"
+                        disabled={isLoading}
+                        className="w-full h-12 min-h-[44px]"
+                      >
                         {isLoading ? (
                           <>
-                            <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />
+                            <Loader2
+                              className="mr-2 h-4 w-4 animate-spin shrink-0"
+                              strokeWidth={1.5}
+                            />
                             Validando código...
                           </>
                         ) : (
                           <>
                             Entrar com Código
-                            <ArrowRight className="ml-2 h-4 w-4" strokeWidth={1.5} />
+                            <ArrowRight className="ml-2 h-4 w-4 shrink-0" strokeWidth={1.5} />
                           </>
                         )}
                       </Button>

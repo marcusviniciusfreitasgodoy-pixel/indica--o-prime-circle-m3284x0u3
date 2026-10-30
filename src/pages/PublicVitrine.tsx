@@ -245,43 +245,55 @@ export function PublicVitrinePage() {
                   <form onSubmit={handleSubmitLead} className="space-y-4 text-xs font-sans">
                     <div className="space-y-1.5">
                       <label className="text-foreground font-heading font-medium flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+                        <User
+                          className="w-3.5 h-3.5 text-muted-foreground shrink-0"
+                          strokeWidth={1.5}
+                        />
                         Seu Nome Completo:
                       </label>
                       <Input
                         value={buyerName}
                         onChange={(e) => setBuyerName(e.target.value)}
                         placeholder="Ex: Carlos Eduardo Silveira"
-                        className="text-xs"
+                        className="text-xs h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         required
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-foreground font-heading font-medium flex items-center gap-1">
-                        <Phone className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+                        <Phone
+                          className="w-3.5 h-3.5 text-muted-foreground shrink-0"
+                          strokeWidth={1.5}
+                        />
                         WhatsApp / Telefone:
                       </label>
                       <Input
+                        type="tel"
+                        inputMode="tel"
                         value={buyerPhone}
                         onChange={(e) => setBuyerPhone(e.target.value)}
                         placeholder="(21) 99999-9999"
-                        className="text-xs font-mono"
+                        className="text-xs font-mono h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                         required
                       />
                     </div>
 
                     <div className="space-y-1.5">
                       <label className="text-foreground font-heading font-medium flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+                        <Mail
+                          className="w-3.5 h-3.5 text-muted-foreground shrink-0"
+                          strokeWidth={1.5}
+                        />
                         E-mail para Contato:
                       </label>
                       <Input
                         type="email"
+                        inputMode="email"
                         value={buyerEmail}
                         onChange={(e) => setBuyerEmail(e.target.value)}
                         placeholder="seuemail@exemplo.com"
-                        className="text-xs font-mono"
+                        className="text-xs font-mono h-11 sm:h-9 min-h-[44px] sm:min-h-0"
                       />
                     </div>
 
@@ -297,15 +309,22 @@ export function PublicVitrinePage() {
                       />
                     </div>
 
-                    <Button type="submit" disabled={submitting} className="w-full text-xs py-5">
+                    <Button
+                      type="submit"
+                      disabled={submitting}
+                      className="w-full text-xs h-12 min-h-[44px]"
+                    >
                       {submitting ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" strokeWidth={1.5} />
+                          <Loader2
+                            className="w-3.5 h-3.5 mr-1.5 animate-spin shrink-0"
+                            strokeWidth={1.5}
+                          />
                           Enviando...
                         </>
                       ) : (
                         <>
-                          <Send className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
+                          <Send className="w-3.5 h-3.5 mr-1.5 shrink-0" strokeWidth={1.5} />
                           Solicitar Atendimento
                         </>
                       )}
