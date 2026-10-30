@@ -75,9 +75,11 @@ export default function RedirectLegacyCapture() {
   }, [slugOrId, navigate])
 
   return (
-    <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-4 text-center">
-      <Loader2 className="h-8 w-8 animate-spin text-amber-500 mb-3" />
-      <p className="text-sm text-slate-400">Redirecionando para a página oficial da indicação...</p>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 text-center">
+      <Loader2 className="h-8 w-8 animate-spin text-gold-deep mb-3" strokeWidth={1.5} />
+      <p className="text-sm text-muted-foreground font-sans">
+        Redirecionando para a página oficial da indicação...
+      </p>
     </div>
   )
 }

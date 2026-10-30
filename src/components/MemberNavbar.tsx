@@ -17,15 +17,17 @@ import {
   User,
   LogOut,
   ExternalLink,
-  Sparkles,
+  Award,
   QrCode,
   Menu,
   X,
   FileText,
+  Shield,
 } from 'lucide-react'
+import { GodoyWordmark } from '@/components/brand/GodoyWordmark'
 
 export const MemberNavbar: React.FC = () => {
-  const { user, logout, isInternal, isAdmin } = useAuth()
+  const { user, logout, isInternal } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = React.useState(false)
@@ -40,7 +42,7 @@ export const MemberNavbar: React.FC = () => {
   const navItems = [
     { label: 'Painel', path: '/painel', icon: LayoutDashboard },
     { label: 'Materiais & QR Code', path: '/painel/materiais', icon: QrCode },
-    { label: 'Recompensas', path: '/painel/recompensas', icon: Sparkles },
+    { label: 'Recompensas', path: '/painel/recompensas', icon: Award },
     { label: 'Nova Indicação', path: '/nova-indicacao', icon: PlusCircle },
     { label: 'Regulamento', path: '/regulamento', icon: FileText },
     { label: 'Meu Perfil', path: '/perfil', icon: User },
@@ -54,29 +56,19 @@ export const MemberNavbar: React.FC = () => {
   }
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-800 bg-slate-900/95 backdrop-blur supports-[backdrop-filter]:bg-slate-900/80 text-white">
+    <header className="sticky top-0 z-40 w-full navy border-b border-border/20 backdrop-blur text-primary">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6">
         {/* Brand */}
         <div className="flex items-center gap-6">
-          <Link to="/" className="flex items-center gap-2.5">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-slate-950 font-bold shadow-md shadow-amber-500/10">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <div className="flex flex-col">
-              <span className="font-serif font-bold text-base leading-tight tracking-tight text-white flex items-center gap-1.5">
-                Godoy Prime
-                <span className="text-[10px] uppercase font-sans tracking-widest font-semibold px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-400 border border-amber-500/30">
-                  Indica
-                </span>
-              </span>
-              <span className="text-[11px] text-slate-400 leading-none">
-                Programa de Indicações
-              </span>
-            </div>
+          <Link to="/painel" className="flex items-center gap-2.5 focus:outline-none">
+            <GodoyWordmark onDark className="h-6 w-auto" />
+            <span className="font-heading text-xs sm:text-sm font-semibold tracking-widest text-primary uppercase border-l border-primary/30 pl-2.5">
+              INDICA
+            </span>
           </Link>
 
           {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-1 text-sm font-medium">
+          <nav className="hidden md:flex items-center gap-1 font-heading text-xs uppercase tracking-wider">
             {navItems.map((item) => {
               const Icon = item.icon
               const isActive = location.pathname === item.path
@@ -84,13 +76,13 @@ export const MemberNavbar: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex items-center gap-1.5 px-3 py-2 rounded-lg transition-colors ${
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-[1px] transition-colors ${
                     isActive
-                      ? 'bg-amber-500/15 text-amber-400 font-semibold'
-                      : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
+                      ? 'bg-navy-light text-gold font-semibold'
+                      : 'text-primary/75 hover:text-primary hover:bg-navy-light/60'
                   }`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-4 w-4" strokeWidth={1.5} />
                   {item.label}
                 </Link>
               )
@@ -105,10 +97,10 @@ export const MemberNavbar: React.FC = () => {
             to={publicLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 transition-colors"
+            className="hidden sm:inline-flex items-center gap-1.5 text-xs font-heading font-medium px-3 py-1.5 rounded-[1px] border border-gold-deep/40 text-gold hover:bg-navy-light/60 transition-colors"
           >
             <span>Ver Meu Link Oficial</span>
-            <ExternalLink className="h-3.5 w-3.5" />
+            <ExternalLink className="h-3.5 w-3.5 text-gold-deep" strokeWidth={1.5} />
           </Link>
 
           {/* User profile dropdown */}
@@ -116,41 +108,41 @@ export const MemberNavbar: React.FC = () => {
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="relative h-9 w-9 rounded-full ring-1 ring-slate-700 hover:ring-amber-500 p-0"
+                className="relative h-9 w-9 rounded-[1px] border border-border/30 hover:border-gold-deep/60 p-0"
               >
-                <Avatar className="h-9 w-9 bg-slate-800 text-amber-400">
-                  <AvatarFallback className="bg-slate-800 text-amber-400 text-xs font-semibold">
+                <Avatar className="h-8 w-8 rounded-[1px] bg-navy-light text-gold font-mono font-bold">
+                  <AvatarFallback className="bg-navy-light text-gold text-xs font-semibold rounded-[1px]">
                     {getInitials(user?.name)}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent
-              className="w-56 bg-slate-900 border-slate-800 text-slate-200"
+              className="w-56 bg-card border-border text-card-foreground font-heading rounded-[1px] shadow-xl"
               align="end"
               forceMount
             >
-              <DropdownMenuLabel className="font-normal">
+              <DropdownMenuLabel className="font-normal text-xs">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium leading-none text-white">
-                    {user?.name || 'Membro'}
+                  <p className="font-semibold text-foreground truncate">{user?.name || 'Membro'}</p>
+                  <p className="text-[11px] font-sans text-muted-foreground truncate">
+                    {user?.email}
                   </p>
-                  <p className="text-xs leading-none text-slate-400 truncate">{user?.email}</p>
                 </div>
               </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuSeparator className="bg-border" />
               <DropdownMenuItem
                 asChild
-                className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                className="focus:bg-secondary focus:text-foreground cursor-pointer text-xs"
               >
                 <Link to="/perfil" className="flex items-center gap-2">
-                  <User className="h-4 w-4 text-slate-400" />
+                  <User className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   <span>Meu Perfil</span>
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem
                 asChild
-                className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                className="focus:bg-secondary focus:text-foreground cursor-pointer text-xs"
               >
                 <Link
                   to={publicLink}
@@ -158,30 +150,30 @@ export const MemberNavbar: React.FC = () => {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2"
                 >
-                  <ExternalLink className="h-4 w-4 text-slate-400" />
+                  <ExternalLink className="h-4 w-4 text-muted-foreground" strokeWidth={1.5} />
                   <span>Meu Link de Indicação</span>
                 </Link>
               </DropdownMenuItem>
               {isInternal && (
                 <>
-                  <DropdownMenuSeparator className="bg-slate-800" />
+                  <DropdownMenuSeparator className="bg-border" />
                   <DropdownMenuItem
                     asChild
-                    className="focus:bg-amber-950/40 text-amber-400 focus:text-amber-300 cursor-pointer"
+                    className="focus:bg-secondary text-gold-deep focus:text-gold cursor-pointer text-xs"
                   >
                     <Link to="/admin" className="flex items-center gap-2">
-                      <Sparkles className="h-4 w-4 text-amber-500" />
+                      <Shield className="h-4 w-4 text-gold-deep" strokeWidth={1.5} />
                       <span>Painel Admin / Interno</span>
                     </Link>
                   </DropdownMenuItem>
                 </>
               )}
-              <DropdownMenuSeparator className="bg-slate-800" />
+              <DropdownMenuSeparator className="bg-border" />
               <DropdownMenuItem
                 onClick={handleLogout}
-                className="text-red-400 focus:bg-red-950/40 focus:text-red-300 cursor-pointer"
+                className="text-destructive focus:bg-destructive/10 focus:text-destructive cursor-pointer text-xs flex items-center gap-2"
               >
-                <LogOut className="h-4 w-4 mr-2" />
+                <LogOut className="h-4 w-4" strokeWidth={1.5} />
                 <span>Sair do Painel</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -191,17 +183,22 @@ export const MemberNavbar: React.FC = () => {
           <Button
             variant="ghost"
             size="icon"
-            className="md:hidden text-slate-300 hover:text-white hover:bg-slate-800"
+            className="md:hidden text-primary/80 hover:text-primary hover:bg-navy-light/60 rounded-[1px]"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            aria-label="Abrir menu"
           >
-            {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            {mobileMenuOpen ? (
+              <X className="h-5 w-5" strokeWidth={1.5} />
+            ) : (
+              <Menu className="h-5 w-5" strokeWidth={1.5} />
+            )}
           </Button>
         </div>
       </div>
 
       {/* Mobile menu dropdown */}
       {mobileMenuOpen && (
-        <div className="md:hidden border-t border-slate-800 bg-slate-900 px-4 py-3 space-y-2">
+        <div className="md:hidden border-t border-border/20 navy px-4 py-3 space-y-2 font-heading text-xs uppercase tracking-wider animate-in fade-in">
           {navItems.map((item) => {
             const Icon = item.icon
             const isActive = location.pathname === item.path
@@ -210,27 +207,27 @@ export const MemberNavbar: React.FC = () => {
                 key={item.path}
                 to={item.path}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
+                className={`flex items-center gap-2 px-3 py-2.5 rounded-[1px] transition-colors ${
                   isActive
-                    ? 'bg-amber-500/15 text-amber-400 font-semibold'
-                    : 'text-slate-300 hover:bg-slate-800 hover:text-white'
+                    ? 'bg-navy-light text-gold font-semibold'
+                    : 'text-primary/75 hover:bg-navy-light/60 hover:text-primary'
                 }`}
               >
-                <Icon className="h-4 w-4" />
+                <Icon className="h-4 w-4" strokeWidth={1.5} />
                 {item.label}
               </Link>
             )
           })}
-          <div className="pt-2 border-t border-slate-800/80">
+          <div className="pt-2 border-t border-border/20">
             <Link
               to={publicLink}
               target="_blank"
               rel="noopener noreferrer"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center justify-between px-3 py-2 rounded-lg text-sm text-amber-400 bg-amber-500/10 font-medium"
+              className="flex items-center justify-between px-3 py-2.5 rounded-[1px] text-gold bg-navy-light/50 font-medium"
             >
               <span>Ver Meu Link de Indicação</span>
-              <ExternalLink className="h-4 w-4" />
+              <ExternalLink className="h-4 w-4 text-gold-deep" strokeWidth={1.5} />
             </Link>
           </div>
         </div>

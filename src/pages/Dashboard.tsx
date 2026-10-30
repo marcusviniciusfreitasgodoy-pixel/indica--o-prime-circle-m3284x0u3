@@ -212,55 +212,45 @@ export default function DashboardPage() {
     switch (stage) {
       case 'Nova':
         return (
-          <Badge className="bg-sky-500/20 text-sky-300 border-sky-500/30 font-medium text-xs">
+          <Badge className="bg-info/15 text-info border-info/30 font-heading text-xs rounded-[1px]">
             Nova
           </Badge>
         )
       case 'Em análise':
-        return (
-          <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 font-medium text-xs">
-            Em análise
-          </Badge>
-        )
       case 'Em atendimento':
         return (
-          <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 font-medium text-xs">
-            Em atendimento
+          <Badge className="bg-info/15 text-info border-info/30 font-heading text-xs rounded-[1px]">
+            {stage}
           </Badge>
         )
       case 'Atendimento realizado':
-        return (
-          <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 font-medium text-xs">
-            Atendimento realizado
-          </Badge>
-        )
       case 'Imóvel disponível':
         return (
-          <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 font-medium text-xs">
-            Imóvel disponível
+          <Badge className="bg-success/15 text-success border-success/30 font-heading text-xs rounded-[1px]">
+            {stage}
           </Badge>
         )
       case 'Concluída':
         return (
-          <Badge className="bg-emerald-600/30 text-emerald-200 border-emerald-500/40 font-medium text-xs">
+          <Badge className="bg-success text-success-foreground font-heading text-xs rounded-[1px]">
             Concluída
           </Badge>
         )
       case 'Reconhecida':
         return (
-          <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 font-medium text-xs">
+          <Badge className="bg-gold-light text-primary font-heading text-xs rounded-[1px]">
             Reconhecida
           </Badge>
         )
       case 'Não aproveitada':
         return (
-          <Badge className="bg-slate-800 text-slate-400 border-slate-700 font-medium text-xs">
+          <Badge className="bg-secondary text-muted-foreground border-border font-heading text-xs rounded-[1px]">
             Não aproveitada
           </Badge>
         )
       default:
         return (
-          <Badge className="bg-slate-800 text-slate-300 border-slate-700 font-medium text-xs">
+          <Badge className="bg-secondary text-foreground border-border font-heading text-xs rounded-[1px]">
             {stage}
           </Badge>
         )
@@ -271,38 +261,31 @@ export default function DashboardPage() {
   const allowsDirectSubmission = participantCategory?.allowed_channels === 'link_and_direct'
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16 font-sans">
+    <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
       <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6 max-w-5xl">
         {/* Banner de Boas-Vindas e Link Pessoal */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/30 border border-slate-800 shadow-xl">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-5 sm:p-6 rounded-[1px] bg-card border border-border shadow-luxury">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-500 flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5" />
-                Painel do Indicador
-              </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs text-slate-400">Godoy Prime Realty</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
-              Olá, {user?.name || 'Indicador'}
+            <Eyebrow>PAINEL DO INDICADOR · GODOY PRIME REALTY</Eyebrow>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+              Olá, <em>{user?.name || 'Indicador'}</em>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-xl">
-              Acompanhe a etapa de cada indicação comunicada. Corretores com CRECI ativo realizam
-              todo o atendimento, visita, avaliação e contrato.
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-xl font-sans">
+              Acompanhe a etapa de cada indicação comunicada. Corretores credenciados com CRECI
+              ativo realizam todo o atendimento, visita, avaliação e contrato.
             </p>
           </div>
 
           {/* Cartão de Ação Rápida */}
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-slate-950/80 p-3 rounded-xl border border-amber-500/30">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 bg-secondary/50 p-3 rounded-[1px] border border-border">
             <div className="space-y-0.5 text-xs pr-2">
-              <div className="font-medium text-slate-200 flex items-center gap-1.5">
-                <QrCode className="h-3.5 w-3.5 text-amber-500" />
+              <div className="font-heading font-medium text-foreground flex items-center gap-1.5">
+                <QrCode className="h-3.5 w-3.5 text-gold-deep" strokeWidth={1.5} />
                 Seu link pessoal exclusivo:
               </div>
-              <p className="text-slate-500 font-mono text-[11px] truncate max-w-[240px]">
+              <p className="text-muted-foreground font-mono text-[11px] truncate max-w-[240px]">
                 {personalLink}
               </p>
             </div>
@@ -311,39 +294,30 @@ export default function DashboardPage() {
                 variant="outline"
                 size="sm"
                 onClick={copyPersonalLink}
-                className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs h-9"
+                className="text-xs h-9"
               >
                 {copiedLink ? (
                   <>
-                    <Check className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                    <Check className="h-3.5 w-3.5 mr-1 text-success" strokeWidth={1.5} />
                     Copiado!
                   </>
                 ) : (
                   <>
-                    <Copy className="h-3.5 w-3.5 mr-1" />
+                    <Copy className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                     Copiar Link
                   </>
                 )}
               </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="sm"
-                className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs h-9"
-              >
+              <Button asChild variant="outline" size="sm" className="text-xs h-9">
                 <Link to="/painel/materiais">
-                  <QrCode className="h-3.5 w-3.5 mr-1" />
+                  <QrCode className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                   Materiais
                 </Link>
               </Button>
               {allowsDirectSubmission && (
-                <Button
-                  asChild
-                  size="sm"
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs h-9"
-                >
+                <Button asChild size="sm" className="text-xs h-9">
                   <Link to="/nova-indicacao">
-                    <PlusCircle className="h-3.5 w-3.5 mr-1" />
+                    <PlusCircle className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                     Indicar
                   </Link>
                 </Button>
@@ -352,24 +326,22 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Cartão do Clube de Benefícios Godoy Prime (exibido para participante ativo quando a URL está preenchida) */}
+        {/* Cartão do Clube de Benefícios Godoy Prime (se houver) */}
         {clubeBeneficiosUrl && (
-          <Card className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border-amber-500/30 text-slate-100 shadow-lg overflow-hidden">
+          <Card className="bg-card border-border text-card-foreground shadow-sm rounded-[1px] overflow-hidden">
             <div className="p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div className="flex items-start sm:items-center gap-3.5">
-                <div className="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
-                  <Gift className="h-5 w-5" />
+                <div className="w-10 h-10 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center shrink-0 mt-0.5 sm:mt-0">
+                  <Gift className="h-5 w-5" strokeWidth={1.5} />
                 </div>
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-amber-400 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
-                      Exclusivo
-                    </span>
-                    <h3 className="text-base sm:text-lg font-bold text-white font-serif">
-                      Clube de benefícios Godoy Prime
+                    <Eyebrow>EXCLUSIVO</Eyebrow>
+                    <h3 className="text-base sm:text-lg font-serif font-bold text-foreground">
+                      Clube de benefícios <em>Godoy Prime</em>
                     </h3>
                   </div>
-                  <p className="text-xs text-slate-300 max-w-xl">
+                  <p className="text-xs text-muted-foreground max-w-xl font-sans">
                     Acesso a vantagens, descontos e experiências exclusivas para participantes
                     ativos do programa.
                   </p>
@@ -377,11 +349,12 @@ export default function DashboardPage() {
               </div>
               <Button
                 asChild
-                className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs sm:text-sm h-9 sm:h-10 px-4 shrink-0 shadow-md"
+                variant="outline"
+                className="text-xs sm:text-sm h-9 sm:h-10 px-4 shrink-0"
               >
                 <a href={clubeBeneficiosUrl} target="_blank" rel="noopener noreferrer">
                   Acessar Clube
-                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" strokeWidth={1.5} />
                 </a>
               </Button>
             </div>
@@ -390,46 +363,50 @@ export default function DashboardPage() {
 
         {/* Cartões A RECEBER e RECEBIDO — Recompensas por Indicação */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card className="bg-slate-900 border-slate-800 text-slate-100 shadow-md">
+          <Card className="bg-card border border-border text-card-foreground rounded-[1px] shadow-sm">
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider block">
+                <span className="text-xs font-heading font-semibold text-gold-deep uppercase tracking-wider block">
                   Recompensa por Indicação
                 </span>
-                <CardTitle className="text-sm font-semibold text-slate-300">A Receber</CardTitle>
+                <CardTitle className="text-sm font-heading font-semibold text-foreground">
+                  A Receber
+                </CardTitle>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center">
-                <Clock className="h-5 w-5" />
+              <div className="w-9 h-9 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center">
+                <Clock className="h-5 w-5" strokeWidth={1.5} />
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-1">
-              <div className="text-2xl sm:text-3xl font-bold font-mono text-amber-400">
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-foreground">
                 R$ {rewardsStats.aReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
                 Valor fixo de indicações que cumpriram o marco do regulamento (em análise, aprovada
                 ou em lote).
               </p>
             </CardContent>
           </Card>
 
-          <Card className="bg-slate-900 border-slate-800 text-slate-100 shadow-md">
+          <Card className="bg-card border border-border text-card-foreground rounded-[1px] shadow-sm">
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
               <div>
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wider block">
+                <span className="text-xs font-heading font-semibold text-success uppercase tracking-wider block">
                   Recompensa por Indicação
                 </span>
-                <CardTitle className="text-sm font-semibold text-slate-300">Recebido</CardTitle>
+                <CardTitle className="text-sm font-heading font-semibold text-foreground">
+                  Recebido
+                </CardTitle>
               </div>
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center">
-                <Coins className="h-5 w-5" />
+              <div className="w-9 h-9 rounded-[1px] bg-success/15 border border-success/30 text-success flex items-center justify-center">
+                <Coins className="h-5 w-5" strokeWidth={1.5} />
               </div>
             </CardHeader>
             <CardContent className="p-4 pt-0 space-y-1">
-              <div className="text-2xl sm:text-3xl font-bold font-mono text-emerald-400">
+              <div className="text-2xl sm:text-3xl font-bold font-mono text-success">
                 R$ {rewardsStats.recebido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
               </div>
-              <p className="text-[11px] text-slate-400 leading-relaxed">
+              <p className="text-[11px] text-muted-foreground leading-relaxed font-sans">
                 Total liquidado via Pix para chave em nome do indicador com comprovante.
               </p>
             </CardContent>
@@ -437,16 +414,18 @@ export default function DashboardPage() {
         </div>
 
         {/* Informação sobre os valores fixos do regulamento */}
-        <div className="p-3.5 bg-slate-900/60 border border-slate-800 rounded-xl text-xs text-slate-400 flex items-start gap-2.5">
-          <ShieldCheck className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+        <div className="p-3.5 bg-secondary/40 border border-border rounded-[1px] text-xs text-muted-foreground flex items-start gap-2.5 font-sans">
+          <ShieldCheck className="h-4 w-4 text-gold-deep shrink-0 mt-0.5" strokeWidth={1.5} />
           <div className="space-y-0.5">
-            <p className="text-slate-300 font-medium">Valores fixos da recompensa por indicação:</p>
+            <p className="text-foreground font-heading font-medium">
+              Valores fixos da recompensa por indicação:
+            </p>
             <p className="leading-relaxed text-[11px]">
-              <strong>R$ 100</strong> para indicação de proprietário (venda ou locação) com
-              assinatura de autorização ou decisão da Godoy Prime de não captar proprietário
-              qualificado. • <strong>R$ 500</strong> para indicação de comprador na primeira visita
-              com corretor e capacidade demonstrada. A recompensa paga a informação e não depende de
-              comissão nem de fechamento.
+              <strong className="font-mono">R$ 100</strong> para indicação de proprietário (venda ou
+              locação) com assinatura de autorização ou decisão da Godoy Prime de não prosseguir com
+              imóvel qualificado. • <strong className="font-mono">R$ 500</strong> para indicação de
+              comprador na primeira visita com corretor credenciado e capacidade demonstrada. A
+              recompensa remunera a informação e independe de fechamento.
             </p>
           </div>
         </div>
@@ -455,13 +434,16 @@ export default function DashboardPage() {
         <div className="space-y-3">
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+              <Search
+                className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                strokeWidth={1.5}
+              />
               <Input
                 type="text"
                 placeholder="Buscar por protocolo, primeiro nome ou bairro..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 bg-slate-900 border-slate-800 text-slate-100 placeholder:text-slate-500 focus-visible:ring-amber-500 text-xs sm:text-sm"
+                className="pl-9 text-xs sm:text-sm font-sans"
               />
             </div>
 
@@ -471,10 +453,11 @@ export default function DashboardPage() {
                 size="sm"
                 onClick={() => loadData(true)}
                 disabled={isRefreshing}
-                className="border-slate-800 bg-slate-900 text-slate-300 hover:text-white hover:bg-slate-800 text-xs"
+                className="text-xs"
               >
                 <RefreshCw
-                  className={`h-3.5 w-3.5 mr-1.5 ${isRefreshing ? 'animate-spin text-amber-500' : ''}`}
+                  className={`h-3.5 w-3.5 mr-1.5 ${isRefreshing ? 'animate-spin text-gold-deep' : ''}`}
+                  strokeWidth={1.5}
                 />
                 Atualizar
               </Button>
@@ -482,16 +465,12 @@ export default function DashboardPage() {
           </div>
 
           {/* Filtros por etapa */}
-          <div className="flex flex-wrap gap-1.5">
+          <div className="flex flex-wrap gap-1.5 font-heading">
             <Button
               size="sm"
               variant={filterStage === 'all' ? 'default' : 'outline'}
               onClick={() => setFilterStage('all')}
-              className={`text-xs h-8 ${
-                filterStage === 'all'
-                  ? 'bg-amber-500 text-slate-950 font-semibold hover:bg-amber-600'
-                  : 'border-slate-800 text-slate-400 hover:text-white'
-              }`}
+              className="text-xs h-8"
             >
               Todas ({referralItems.length})
             </Button>
@@ -499,11 +478,7 @@ export default function DashboardPage() {
               size="sm"
               variant={filterStage === 'nova' ? 'default' : 'outline'}
               onClick={() => setFilterStage('nova')}
-              className={`text-xs h-8 ${
-                filterStage === 'nova'
-                  ? 'bg-amber-500 text-slate-950 font-semibold hover:bg-amber-600'
-                  : 'border-slate-800 text-slate-400 hover:text-white'
-              }`}
+              className="text-xs h-8"
             >
               Novas
             </Button>
@@ -511,11 +486,7 @@ export default function DashboardPage() {
               size="sm"
               variant={filterStage === 'em_atendimento' ? 'default' : 'outline'}
               onClick={() => setFilterStage('em_atendimento')}
-              className={`text-xs h-8 ${
-                filterStage === 'em_atendimento'
-                  ? 'bg-amber-500 text-slate-950 font-semibold hover:bg-amber-600'
-                  : 'border-slate-800 text-slate-400 hover:text-white'
-              }`}
+              className="text-xs h-8"
             >
               Em Atendimento
             </Button>
@@ -523,51 +494,42 @@ export default function DashboardPage() {
               size="sm"
               variant={filterStage === 'concluida' ? 'default' : 'outline'}
               onClick={() => setFilterStage('concluida')}
-              className={`text-xs h-8 ${
-                filterStage === 'concluida'
-                  ? 'bg-amber-500 text-slate-950 font-semibold hover:bg-amber-600'
-                  : 'border-slate-800 text-slate-400 hover:text-white'
-              }`}
+              className="text-xs h-8"
             >
               Concluídas
             </Button>
           </div>
         </div>
 
-        {/* Lista de Indicações — Linha do Tempo e Privacidade LGPD */}
+        {/* Lista de Indicações */}
         <div className="space-y-3">
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-16 bg-slate-900/40 rounded-2xl border border-slate-800 text-center">
-              <RefreshCw className="h-8 w-8 animate-spin text-amber-500 mb-2" />
-              <p className="text-sm text-slate-400">Carregando indicações via my-referrals...</p>
+            <div className="flex flex-col items-center justify-center py-16 bg-card rounded-[1px] border border-border text-center">
+              <RefreshCw className="h-8 w-8 animate-spin text-gold-deep mb-2" strokeWidth={1.5} />
+              <p className="text-sm text-muted-foreground font-sans">Carregando indicações...</p>
             </div>
           ) : filteredItems.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 px-4 bg-slate-900/40 rounded-2xl border border-slate-800 border-dashed text-center">
-              <div className="h-14 w-14 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-500 flex items-center justify-center mb-3">
-                <Inbox className="h-7 w-7" />
+            <div className="flex flex-col items-center justify-center py-16 px-4 bg-card rounded-[1px] border border-border border-dashed text-center">
+              <div className="h-14 w-14 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center mb-3">
+                <Inbox className="h-7 w-7" strokeWidth={1.5} />
               </div>
-              <h3 className="text-base font-semibold text-white">Nenhuma indicação comunicada</h3>
-              <p className="text-xs sm:text-sm text-slate-400 max-w-md mt-1 mb-6 leading-relaxed">
+              <h3 className="text-base font-serif font-bold text-foreground">
+                Nenhuma indicação comunicada
+              </h3>
+              <p className="text-xs sm:text-sm text-muted-foreground max-w-md mt-1 mb-6 leading-relaxed font-sans">
                 {searchQuery || filterStage !== 'all'
                   ? 'Nenhuma indicação corresponde aos filtros aplicados.'
                   : 'Você ainda não possui indicações registradas. Compartilhe seu link pessoal ou entregue seu cartão com QR em mãos.'}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-3">
-                <Button
-                  onClick={copyPersonalLink}
-                  variant="outline"
-                  className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs"
-                >
-                  <Copy className="h-4 w-4 mr-1.5" />
+                <Button onClick={copyPersonalLink} variant="outline" className="text-xs">
+                  <Copy className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
                   Copiar Meu Link
                 </Button>
-                <Button
-                  asChild
-                  className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs"
-                >
+                <Button asChild className="text-xs">
                   <Link to="/painel/materiais">
-                    <QrCode className="h-4 w-4 mr-1.5" />
-                    Ver Materiais & QR
+                    <QrCode className="h-4 w-4 mr-1.5" strokeWidth={1.5} />
+                    Ver Materiais &amp; QR
                   </Link>
                 </Button>
               </div>
@@ -577,64 +539,62 @@ export default function DashboardPage() {
               {filteredItems.map((item) => {
                 const stage = item.timeline_stage || item.public_stage || 'Nova'
                 const isBuyer = item.referral_type === 'comprador'
-                const rewardExpected = isBuyer ? 'R$ 500' : 'R$ 100'
+                const rewardExpected = isBuyer ? 'R$ 500,00' : 'R$ 100,00'
 
                 return (
                   <Card
                     key={item.id}
-                    className="bg-slate-900/90 border-slate-800 hover:border-slate-700 transition-colors text-slate-100 overflow-hidden shadow-md"
+                    className="bg-card border-border hover:border-gold-deep transition-colors text-card-foreground overflow-hidden rounded-[1px] shadow-sm"
                   >
                     <div className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
-                      {/* Left: Protocolo, estágio da linha do tempo, resumo */}
+                      {/* Left */}
                       <div className="space-y-2.5 flex-1 min-w-0">
-                        {/* Linha de cabeçalho */}
                         <div className="flex flex-wrap items-center gap-2">
-                          <span className="font-mono text-xs font-bold text-amber-400 px-2 py-0.5 rounded bg-amber-500/10 border border-amber-500/20">
+                          <span className="font-mono text-xs font-bold text-gold-deep px-2 py-0.5 rounded-[1px] bg-secondary border border-border">
                             {item.protocol}
                           </span>
                           {renderStageBadge(stage)}
                           <Badge
                             variant="outline"
-                            className="border-slate-700 text-slate-400 text-[11px]"
+                            className="text-[11px] font-heading rounded-[1px]"
                           >
                             {isBuyer ? 'Comprador' : 'Proprietário'}
                           </Badge>
-                          <span className="text-[11px] text-slate-500 flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
+                          <span className="text-[11px] text-muted-foreground flex items-center gap-1 font-sans">
+                            <Calendar className="h-3 w-3" strokeWidth={1.5} />
                             {formatDate(item.created)}
                           </span>
                         </div>
 
-                        {/* Título com Primeiro Nome do Indicado e Bairro — Sem telefone/email/endereço completo (LGPD) */}
                         <div>
-                          <h4 className="text-sm sm:text-base font-semibold text-white">
-                            {item.indicated_first_name} •{' '}
-                            <span className="text-slate-400 font-normal">{item.neighborhood}</span>
+                          <h4 className="text-sm sm:text-base font-serif font-bold text-foreground">
+                            {item.indicated_first_name} ·{' '}
+                            <span className="text-muted-foreground font-sans font-normal">
+                              {item.neighborhood}
+                            </span>
                           </h4>
-                          <p className="text-xs text-slate-300 mt-0.5 leading-relaxed">
+                          <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed font-sans">
                             {item.public_summary || 'Indicação comunicada à Godoy Prime Realty.'}
                           </p>
                         </div>
 
-                        {/* Linha do Tempo de Etapas (Regulamento seção 4.3 / 10) */}
-                        <div className="pt-1 flex flex-wrap items-center gap-2 text-xs text-slate-400">
-                          <span className="text-[11px] uppercase font-semibold text-slate-500 tracking-wider">
+                        <div className="pt-1 flex flex-wrap items-center gap-2 text-xs text-muted-foreground font-sans">
+                          <span className="text-[11px] uppercase font-heading font-semibold text-gold-deep tracking-wider">
                             Linha do tempo:
                           </span>
-                          <span className="text-slate-300 font-medium">
+                          <span className="text-foreground font-medium">
                             {stage === 'Atendimento realizado' && item.primeira_visita_at
-                              ? `Atendimento realizado em ${formatDate(item.primeira_visita_at)} por corretor com CRECI ativo`
+                              ? `Atendimento realizado em ${formatDate(item.primeira_visita_at)} por corretor credenciado com CRECI ativo`
                               : stage}
                           </span>
                         </div>
 
-                        {/* Eventos visíveis */}
                         {item.events && item.events.length > 0 && (
-                          <div className="pt-1 border-t border-slate-800/60 space-y-1">
-                            <span className="text-[10px] text-slate-500 uppercase tracking-wider block">
+                          <div className="pt-1 border-t border-border space-y-1 font-sans">
+                            <span className="text-[10px] text-muted-foreground uppercase font-heading tracking-wider block">
                               Última atualização:
                             </span>
-                            <div className="text-[11px] text-slate-400">
+                            <div className="text-[11px] text-muted-foreground">
                               {item.events[item.events.length - 1].public_label} (
                               {formatDate(item.events[item.events.length - 1].created)})
                             </div>
@@ -642,15 +602,15 @@ export default function DashboardPage() {
                         )}
                       </div>
 
-                      {/* Right: Recompensa fixa prevista */}
+                      {/* Right */}
                       <div className="flex md:flex-col items-center md:items-end justify-between border-t md:border-t-0 pt-3 md:pt-0 shrink-0 gap-1.5">
-                        <span className="text-[10px] uppercase tracking-wider text-slate-400 font-medium">
+                        <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-heading font-medium">
                           Recompensa prevista
                         </span>
-                        <span className="text-base sm:text-lg font-mono font-bold text-amber-400">
+                        <span className="text-base sm:text-lg font-mono font-bold text-foreground">
                           {rewardExpected}
                         </span>
-                        <span className="text-[10px] text-slate-500">
+                        <span className="text-[10px] text-muted-foreground font-sans">
                           Valor fixo do regulamento
                         </span>
                       </div>

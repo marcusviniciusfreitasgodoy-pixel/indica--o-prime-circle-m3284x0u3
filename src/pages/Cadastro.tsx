@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams, Link } from 'react-router-dom'
 import {
-  Sparkles,
   CheckCircle2,
   AlertCircle,
   Loader2,
@@ -30,6 +29,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
+import { BrandPublicHeader, BrandPublicFooter, Eyebrow } from '@/components/brand'
 import {
   getPublicFormData,
   registerParticipant,
@@ -384,672 +384,693 @@ export default function CadastroPage() {
   // TELA DE SUCESSO
   if (successResult) {
     return (
-      <div className="flex min-h-screen flex-col justify-center bg-gradient-to-b from-stone-900 via-stone-950 to-black p-4 sm:p-6 lg:p-8">
-        <div className="mx-auto w-full max-w-md">
-          <div className="text-center mb-6">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-none bg-amber-500/10 border border-amber-500/30 text-amber-500 mb-3 shadow-inner">
-              <Sparkles className="w-7 h-7" />
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-serif tracking-tight text-white">
-              Prime Circle Indica
-            </h1>
+      <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <BrandPublicHeader />
+        <main className="flex flex-1 items-center justify-center p-4">
+          <div className="mx-auto w-full max-w-md">
+            <Card className="rounded-[1px] border border-border bg-card shadow-luxury text-card-foreground p-6 sm:p-8">
+              <div className="flex flex-col items-center text-center space-y-4">
+                <Eyebrow>ETAPA CONCLUÍDA</Eyebrow>
+                <div className="w-12 h-12 rounded-[1px] bg-success/15 border border-success/30 flex items-center justify-center text-success">
+                  <CheckCircle2 className="w-6 h-6" strokeWidth={1.5} />
+                </div>
+
+                <h2 className="text-xl sm:text-2xl font-serif text-foreground font-semibold">
+                  Cadastro <em>recebido</em>
+                </h2>
+                <p className="text-sm text-muted-foreground font-sans leading-relaxed">
+                  Cadastro recebido. Você receberá a confirmação por e-mail e WhatsApp.
+                </p>
+
+                <div className="pt-4 w-full">
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/entrar">Voltar para a Página de Login</Link>
+                  </Button>
+                </div>
+              </div>
+            </Card>
           </div>
-
-          <Card className="rounded-none border-stone-800 bg-stone-950/95 backdrop-blur shadow-2xl text-stone-100 p-6 sm:p-8">
-            <div className="flex flex-col items-center text-center space-y-4">
-              <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-                <CheckCircle2 className="w-6 h-6" />
-              </div>
-
-              <h2 className="text-xl sm:text-2xl font-serif text-white">Cadastro recebido</h2>
-              <p className="text-sm text-stone-300 leading-relaxed">
-                Cadastro recebido. Você receberá a confirmação por e-mail e WhatsApp.
-              </p>
-
-              <div className="pt-4 w-full">
-                <Button
-                  asChild
-                  variant="outline"
-                  className="w-full rounded-none border-stone-800 bg-stone-900 hover:bg-stone-800 text-stone-200"
-                >
-                  <Link to="/entrar">Voltar para a Página de Login</Link>
-                </Button>
-              </div>
-            </div>
-          </Card>
-        </div>
+        </main>
+        <BrandPublicFooter />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-stone-900 via-stone-950 to-black text-stone-100 py-6 px-3 sm:px-6 lg:px-8">
-      {/* Container responsivo mobile-first a partir de 360px */}
-      <div className="mx-auto w-full max-w-lg">
-        {/* Brand header */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-none bg-amber-500/10 border border-amber-500/30 text-amber-500 mb-3 shadow-inner">
-            <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <BrandPublicHeader />
+
+      <main className="flex-1 py-10 px-3 sm:px-6 lg:px-8">
+        <div className="mx-auto w-full max-w-lg space-y-6">
+          {/* Brand header */}
+          <div className="text-center space-y-2">
+            <Eyebrow className="justify-center">CADASTRO DE PARCEIRO</Eyebrow>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+              Cadastro de <em>Indicador</em>
+            </h1>
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans max-w-sm mx-auto">
+              Faça parte da rede de indicação imobiliária de alto padrão da Barra da Tijuca e
+              Recreio dos Bandeirantes.
+            </p>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-serif tracking-tight text-white">
-            Cadastro de Indicador
-          </h1>
-          <p className="mt-1.5 text-xs sm:text-sm text-stone-400 font-sans max-w-sm mx-auto">
-            Faça parte da rede exclusiva de indicação imobiliária de alto padrão da Barra da Tijuca
-            e Recreio.
-          </p>
-        </div>
 
-        <Card className="rounded-none border-stone-800 bg-stone-950/95 backdrop-blur shadow-2xl text-stone-100 overflow-hidden">
-          <form onSubmit={handleSubmit} noValidate>
-            {/* Campo Oculto Honeypot Anti-robô */}
-            <div className="hidden" aria-hidden="true">
-              <label htmlFor="website">Website (deixe em branco)</label>
-              <input
-                id="website"
-                name="website"
-                type="text"
-                tabIndex={-1}
-                autoComplete="off"
-                value={website}
-                onChange={(e) => setWebsite(e.target.value)}
-              />
-            </div>
+          <Card className="rounded-[1px] border border-border bg-card text-card-foreground shadow-sm overflow-hidden">
+            <form onSubmit={handleSubmit} noValidate>
+              {/* Campo Oculto Honeypot Anti-robô */}
+              <div className="hidden" aria-hidden="true">
+                <label htmlFor="website">Website (deixe em branco)</label>
+                <input
+                  id="website"
+                  name="website"
+                  type="text"
+                  tabIndex={-1}
+                  autoComplete="off"
+                  value={website}
+                  onChange={(e) => setWebsite(e.target.value)}
+                />
+              </div>
 
-            {/* PERGUNTA ÚNICA DE CATEGORIA EM LINGUAGEM COMUM */}
-            <div className="p-4 sm:p-5 border-b border-stone-800 bg-stone-900/50 space-y-3">
-              <div className="flex items-center justify-between">
-                <Label
-                  htmlFor="category-select"
-                  className="text-xs uppercase tracking-wider text-amber-500 font-semibold block"
+              {/* PERGUNTA ÚNICA DE CATEGORIA EM LINGUAGEM COMUM */}
+              <div className="p-4 sm:p-5 border-b border-border bg-secondary/50 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label
+                    htmlFor="category-select"
+                    className="text-xs uppercase tracking-wider text-gold-deep font-heading font-semibold block"
+                  >
+                    1. Como você conhece os imóveis que vai indicar?{' '}
+                    <span className="text-gold">*</span>
+                  </Label>
+                  {isLoadingData && (
+                    <span className="text-[11px] text-muted-foreground flex items-center shrink-0">
+                      <Loader2 className="w-3 h-3 animate-spin mr-1" strokeWidth={1.5} />
+                      Carregando...
+                    </span>
+                  )}
+                </div>
+
+                <select
+                  id="category-select"
+                  value={selectedCategoryId}
+                  onChange={(e) => setSelectedCategoryId(e.target.value)}
+                  disabled={isLoadingData}
+                  className="w-full h-11 px-3 text-xs sm:text-sm bg-background border border-input text-foreground rounded-[1px] focus:outline-none focus:ring-1 focus:ring-gold font-sans"
                 >
-                  1. Como você conhece os imóveis que vai indicar?{' '}
-                  <span className="text-amber-400">*</span>
-                </Label>
-                {isLoadingData && (
-                  <span className="text-[11px] text-stone-500 flex items-center shrink-0">
-                    <Loader2 className="w-3 h-3 animate-spin mr-1" />
-                    Carregando...
-                  </span>
+                  <option value="">Selecione uma opção...</option>
+                  {availableCategories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {CATEGORY_COMMON_LABELS[cat.slug] || cat.name}
+                    </option>
+                  ))}
+                </select>
+
+                {/* Linha explicando a recompensa da categoria escolhida */}
+                {selectedCategory && (
+                  <div className="p-3 bg-card border-l-2 border-gold-deep text-xs text-foreground font-sans">
+                    <div className="font-heading font-semibold text-foreground">
+                      {selectedCategory.front === 'comunidade'
+                        ? 'Você recebe recompensa em dinheiro por indicação convertida'
+                        : 'Você recebe benefícios e reciprocidade'}
+                    </div>
+                    {selectedCategory.description && (
+                      <div className="text-[11px] text-muted-foreground mt-1">
+                        {selectedCategory.description}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 
-              <select
-                id="category-select"
-                value={selectedCategoryId}
-                onChange={(e) => setSelectedCategoryId(e.target.value)}
-                disabled={isLoadingData}
-                className="w-full h-11 px-3 text-xs sm:text-sm bg-stone-900 border border-stone-800 text-stone-100 rounded-none focus:outline-none focus:ring-1 focus:ring-amber-500"
-              >
-                <option value="">Selecione uma opção...</option>
-                {availableCategories.map((cat) => (
-                  <option key={cat.id} value={cat.id}>
-                    {CATEGORY_COMMON_LABELS[cat.slug] || cat.name}
-                  </option>
-                ))}
-              </select>
-
-              {/* Linha explicando a recompensa da categoria escolhida */}
-              {selectedCategory && (
-                <div className="p-3 bg-stone-950/80 border-l-2 border-amber-500 text-xs text-stone-200">
-                  <div className="font-medium text-amber-400">
-                    {selectedCategory.front === 'comunidade'
-                      ? 'Você recebe em dinheiro por captação'
-                      : 'Você recebe benefícios e reciprocidade'}
-                  </div>
-                  {selectedCategory.description && (
-                    <div className="text-[11px] text-stone-400 mt-1">
-                      {selectedCategory.description}
-                    </div>
-                  )}
+              {/* Alerta de erro se houver */}
+              {errorMessage && (
+                <div className="p-4 pb-0">
+                  <Alert variant="destructive" className="rounded-[1px]">
+                    <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
+                    <AlertDescription className="text-xs font-sans">
+                      {errorMessage}
+                    </AlertDescription>
+                  </Alert>
                 </div>
               )}
-            </div>
 
-            {/* Alerta de erro se houver */}
-            {errorMessage && (
-              <div className="p-4 pb-0">
-                <Alert
-                  variant="destructive"
-                  className="rounded-none bg-red-950/60 border-red-800 text-red-200"
-                >
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertDescription className="text-xs">{errorMessage}</AlertDescription>
-                </Alert>
-              </div>
-            )}
-
-            <CardContent className="space-y-5 p-4 sm:p-6">
-              {/* DADOS BÁSICOS */}
-              <div className="space-y-3 pt-2 border-t border-stone-800/80">
-                <span className="text-xs uppercase tracking-wider text-amber-500 font-semibold block">
-                  2. Seus Dados Pessoais
-                </span>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="nome-input" className="text-xs text-stone-300 font-medium">
-                    Nome Completo <span className="text-amber-500">*</span>
-                  </Label>
-                  <Input
-                    id="nome-input"
-                    type="text"
-                    placeholder="Ex: Carlos Eduardo Silveira"
-                    value={nome}
-                    onChange={(e) => setNome(e.target.value)}
-                    required
-                    className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
-                  />
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="cpf-input" className="text-xs text-stone-300 font-medium">
-                      CPF
-                    </Label>
-                    <Input
-                      id="cpf-input"
-                      type="text"
-                      placeholder="000.000.000-00"
-                      value={cpf}
-                      onChange={(e) => handleCpfChange(e.target.value)}
-                      className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label htmlFor="telefone-input" className="text-xs text-stone-300 font-medium">
-                      Telefone / WhatsApp
-                    </Label>
-                    <Input
-                      id="telefone-input"
-                      type="text"
-                      placeholder="(21) 99999-9999"
-                      value={telefone}
-                      onChange={(e) => handlePhoneChange(e.target.value)}
-                      className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="email-input" className="text-xs text-stone-300 font-medium">
-                    E-mail <span className="text-amber-500">*</span>
-                  </Label>
-                  <Input
-                    id="email-input"
-                    type="email"
-                    placeholder="seu.email@exemplo.com.br"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    required
-                    className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="senha-input" className="text-xs text-stone-300 font-medium">
-                    Senha de Acesso <span className="text-amber-500">*</span>
-                  </Label>
-                  <Input
-                    id="senha-input"
-                    type="password"
-                    placeholder="Mínimo 8 caracteres"
-                    value={senha}
-                    onChange={(e) => setSenha(e.target.value)}
-                    required
-                    className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
-                  />
-                  <p className="text-[10px] text-stone-500">
-                    Você usará este e-mail e senha para entrar no seu painel.
-                  </p>
-                </div>
-              </div>
-
-              {/* CAMPOS CONDICIONAIS */}
-              {(exigeCondominio ||
-                exigeEntidadeEmpresa ||
-                exigeCreci ||
-                isSindico ||
-                isEntidadeCondominial) && (
-                <div className="space-y-3 pt-2 border-t border-stone-800/80">
-                  <span className="text-xs uppercase tracking-wider text-amber-500 font-semibold block">
-                    3. Informações da Categoria
+              <CardContent className="space-y-5 p-4 sm:p-6">
+                {/* DADOS BÁSICOS */}
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <span className="text-xs uppercase tracking-wider text-gold-deep font-heading font-semibold block">
+                    2. Seus Dados Pessoais
                   </span>
 
-                  {/* Condomínio Obrigatório para porteiros, zeladores, síndicos e entidades condominiais */}
-                  {exigeCondominio && (
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="nome-input"
+                      className="text-xs text-foreground font-heading font-medium"
+                    >
+                      Nome Completo <span className="text-gold">*</span>
+                    </Label>
+                    <Input
+                      id="nome-input"
+                      type="text"
+                      placeholder="Ex: Carlos Eduardo Silveira"
+                      value={nome}
+                      onChange={(e) => setNome(e.target.value)}
+                      required
+                      className="h-10 text-xs sm:text-sm"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label
-                        htmlFor="condo-select"
-                        className="text-xs text-stone-300 font-medium flex items-center gap-1.5"
+                        htmlFor="cpf-input"
+                        className="text-xs text-foreground font-heading font-medium"
                       >
-                        <Building2 className="w-3.5 h-3.5 text-amber-500" />
-                        Condomínio Associado <span className="text-amber-500">*</span>
-                      </Label>
-                      <select
-                        id="condo-select"
-                        value={condominiumId}
-                        onChange={(e) => setCondominiumId(e.target.value)}
-                        className="w-full h-10 px-3 text-xs sm:text-sm bg-stone-900 border border-stone-800 text-stone-100 rounded-none focus:outline-none focus:ring-1 focus:ring-amber-500"
-                        required
-                      >
-                        <option value="">Selecione o condomínio...</option>
-                        {condominiums.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name} {c.neighborhood ? `(${c.neighborhood})` : ''}
-                          </option>
-                        ))}
-                      </select>
-                      <p className="text-[10px] text-stone-500">
-                        Obrigatório para a categoria selecionada para correta apuração e aprovação.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Síndico: Data em que comunicou a adesão ao conselho fiscal */}
-                  {isSindico && (
-                    <div className="space-y-1.5">
-                      <Label
-                        htmlFor="conselho-fiscal-date"
-                        className="text-xs text-stone-300 font-medium"
-                      >
-                        Data em que comunicou a adesão ao conselho fiscal{' '}
-                        <span className="text-amber-500">*</span>
+                        CPF
                       </Label>
                       <Input
-                        id="conselho-fiscal-date"
-                        type="date"
-                        value={conselhoFiscalNotifiedAt}
-                        onChange={(e) => setConselhoFiscalNotifiedAt(e.target.value)}
-                        required
-                        className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm focus-visible:ring-amber-500 h-10"
-                      />
-                      <p className="text-[10px] text-stone-500">
-                        Exigido para validação de transparência e governança condominial.
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Entidade Condominial: Upload da Ata de Assembleia */}
-                  {isEntidadeCondominial && (
-                    <div className="space-y-2 p-3 bg-stone-900/60 border border-stone-800">
-                      <Label
-                        htmlFor="ata-upload"
-                        className="text-xs text-stone-300 font-medium block"
-                      >
-                        Ata de Assembleia Geral <span className="text-amber-500">*</span>
-                      </Label>
-                      <Input
-                        id="ata-upload"
-                        type="file"
-                        accept=".pdf,.png,.jpg,.jpeg"
-                        onChange={handleAtaUpload}
-                        required
-                        className="rounded-none bg-stone-900 border-stone-800 text-stone-300 text-xs file:bg-stone-800 file:text-stone-200 file:border-0 file:mr-2 file:px-2 file:py-1 file:text-xs"
-                      />
-                      <p className="text-[10px] text-stone-400">
-                        Envie a ata de eleição ou ata de assembleia autorizando a representação
-                        condominial (PDF ou imagem). O registro fica pendente de verificação.
-                      </p>
-                      {ataFile && (
-                        <div className="text-[11px] text-emerald-400">
-                          Arquivo selecionado: {ataFile.name} ({(ataFile.size / 1024).toFixed(1)}{' '}
-                          KB)
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* CNPJ e Cargo para Entidades Condominiais, Administradoras e Empresas Parceiras */}
-                  {exigeEntidadeEmpresa && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="cnpj-input" className="text-xs text-stone-300 font-medium">
-                          CNPJ da Entidade / Empresa <span className="text-amber-500">*</span>
-                        </Label>
-                        <Input
-                          id="cnpj-input"
-                          type="text"
-                          placeholder="00.000.000/0000-00"
-                          value={cnpj}
-                          onChange={(e) => handleCnpjChange(e.target.value)}
-                          required
-                          className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label htmlFor="cargo-input" className="text-xs text-stone-300 font-medium">
-                          Cargo / Função
-                        </Label>
-                        <Input
-                          id="cargo-input"
-                          type="text"
-                          placeholder="Ex: Diretor, Gerente Predial"
-                          value={roleTitle}
-                          onChange={(e) => setRoleTitle(e.target.value)}
-                          className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* CRECI para Corretor Parceiro */}
-                  {exigeCreci && (
-                    <div className="space-y-1.5">
-                      <Label htmlFor="creci-input" className="text-xs text-stone-300 font-medium">
-                        Número de Registro CRECI <span className="text-amber-500">*</span>
-                      </Label>
-                      <Input
-                        id="creci-input"
+                        id="cpf-input"
                         type="text"
-                        placeholder="Ex: CRECI-RJ 12345/F"
-                        value={creci}
-                        onChange={(e) => setCreci(e.target.value)}
-                        required
-                        className="rounded-none bg-stone-900 border-stone-800 text-stone-100 text-xs sm:text-sm placeholder:text-stone-600 focus-visible:ring-amber-500 h-10"
+                        placeholder="000.000.000-00"
+                        value={cpf}
+                        onChange={(e) => handleCpfChange(e.target.value)}
+                        className="h-10 text-xs sm:text-sm font-mono"
                       />
-                      <p className="text-[10px] text-stone-500">
-                        O cadastro de corretor parceiro passa por validação do registro profissional
-                        ativo.
-                      </p>
                     </div>
-                  )}
-                </div>
-              )}
 
-              {/* DECLARAÇÕES OBRIGATÓRIAS DO TERMO DE ADESÃO PARA PORTEIRO, PRESTADOR E SÍNDICO */}
-              {isPorteiroPrestadorSindico && (
-                <div className="space-y-3 pt-2 border-t border-amber-600/40 bg-amber-950/20 p-3">
-                  <span className="text-xs uppercase tracking-wider text-amber-400 font-semibold block">
-                    Declarações do Termo de Adesão ({selectedCategory?.name})
+                    <div className="space-y-1.5">
+                      <Label
+                        htmlFor="telefone-input"
+                        className="text-xs text-foreground font-heading font-medium"
+                      >
+                        Telefone / WhatsApp
+                      </Label>
+                      <Input
+                        id="telefone-input"
+                        type="text"
+                        placeholder="(21) 99999-9999"
+                        value={telefone}
+                        onChange={(e) => handlePhoneChange(e.target.value)}
+                        className="h-10 text-xs sm:text-sm font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="email-input"
+                      className="text-xs text-foreground font-heading font-medium"
+                    >
+                      E-mail <span className="text-gold">*</span>
+                    </Label>
+                    <Input
+                      id="email-input"
+                      type="email"
+                      placeholder="seu.email@exemplo.com.br"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      className="h-10 text-xs sm:text-sm font-mono"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <Label
+                      htmlFor="senha-input"
+                      className="text-xs text-foreground font-heading font-medium"
+                    >
+                      Senha de Acesso <span className="text-gold">*</span>
+                    </Label>
+                    <Input
+                      id="senha-input"
+                      type="password"
+                      placeholder="Mínimo 8 caracteres"
+                      value={senha}
+                      onChange={(e) => setSenha(e.target.value)}
+                      required
+                      className="h-10 text-xs sm:text-sm"
+                    />
+                    <p className="text-[11px] text-muted-foreground font-sans">
+                      Você usará este e-mail e senha para entrar no seu painel.
+                    </p>
+                  </div>
+                </div>
+
+                {/* CAMPOS CONDICIONAIS */}
+                {(exigeCondominio ||
+                  exigeEntidadeEmpresa ||
+                  exigeCreci ||
+                  isSindico ||
+                  isEntidadeCondominial) && (
+                  <div className="space-y-3 pt-2 border-t border-border">
+                    <span className="text-xs uppercase tracking-wider text-gold-deep font-heading font-semibold block">
+                      3. Informações da Categoria
+                    </span>
+
+                    {/* Condomínio Obrigatório */}
+                    {exigeCondominio && (
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="condo-select"
+                          className="text-xs text-foreground font-heading font-medium flex items-center gap-1.5"
+                        >
+                          <Building2 className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
+                          Condomínio Associado <span className="text-gold">*</span>
+                        </Label>
+                        <select
+                          id="condo-select"
+                          value={condominiumId}
+                          onChange={(e) => setCondominiumId(e.target.value)}
+                          className="w-full h-10 px-3 text-xs sm:text-sm bg-background border border-input text-foreground rounded-[1px] focus:outline-none focus:ring-1 focus:ring-gold font-sans"
+                          required
+                        >
+                          <option value="">Selecione o condomínio...</option>
+                          {condominiums.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name} {c.neighborhood ? `(${c.neighborhood})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-[11px] text-muted-foreground font-sans">
+                          Obrigatório para a categoria selecionada para correta apuração e
+                          aprovação.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Síndico */}
+                    {isSindico && (
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="conselho-fiscal-date"
+                          className="text-xs text-foreground font-heading font-medium"
+                        >
+                          Data em que comunicou a adesão ao conselho fiscal{' '}
+                          <span className="text-gold">*</span>
+                        </Label>
+                        <Input
+                          id="conselho-fiscal-date"
+                          type="date"
+                          value={conselhoFiscalNotifiedAt}
+                          onChange={(e) => setConselhoFiscalNotifiedAt(e.target.value)}
+                          required
+                          className="h-10 text-xs sm:text-sm"
+                        />
+                        <p className="text-[11px] text-muted-foreground font-sans">
+                          Exigido para validação de transparência e governança condominial.
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Entidade Condominial: Upload da Ata */}
+                    {isEntidadeCondominial && (
+                      <div className="space-y-2 p-3 bg-secondary/40 border border-border">
+                        <Label
+                          htmlFor="ata-upload"
+                          className="text-xs text-foreground font-heading font-medium block"
+                        >
+                          Ata de Assembleia Geral <span className="text-gold">*</span>
+                        </Label>
+                        <Input
+                          id="ata-upload"
+                          type="file"
+                          accept=".pdf,.png,.jpg,.jpeg"
+                          onChange={handleAtaUpload}
+                          required
+                          className="text-xs"
+                        />
+                        <p className="text-[11px] text-muted-foreground font-sans">
+                          Envie a ata de eleição ou ata de assembleia autorizando a representação
+                          condominial (PDF ou imagem). O registro fica pendente de verificação.
+                        </p>
+                        {ataFile && (
+                          <div className="text-[11px] text-success font-mono">
+                            Arquivo selecionado: {ataFile.name} ({(ataFile.size / 1024).toFixed(1)}{' '}
+                            KB)
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {/* CNPJ e Cargo */}
+                    {exigeEntidadeEmpresa && (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="cnpj-input"
+                            className="text-xs text-foreground font-heading font-medium"
+                          >
+                            CNPJ da Entidade / Empresa <span className="text-gold">*</span>
+                          </Label>
+                          <Input
+                            id="cnpj-input"
+                            type="text"
+                            placeholder="00.000.000/0000-00"
+                            value={cnpj}
+                            onChange={(e) => handleCnpjChange(e.target.value)}
+                            required
+                            className="h-10 text-xs sm:text-sm font-mono"
+                          />
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="cargo-input"
+                            className="text-xs text-foreground font-heading font-medium"
+                          >
+                            Cargo / Função
+                          </Label>
+                          <Input
+                            id="cargo-input"
+                            type="text"
+                            placeholder="Ex: Diretor, Gerente Predial"
+                            value={roleTitle}
+                            onChange={(e) => setRoleTitle(e.target.value)}
+                            className="h-10 text-xs sm:text-sm"
+                          />
+                        </div>
+                      </div>
+                    )}
+
+                    {/* CRECI */}
+                    {exigeCreci && (
+                      <div className="space-y-1.5">
+                        <Label
+                          htmlFor="creci-input"
+                          className="text-xs text-foreground font-heading font-medium"
+                        >
+                          Número de Registro CRECI <span className="text-gold">*</span>
+                        </Label>
+                        <Input
+                          id="creci-input"
+                          type="text"
+                          placeholder="Ex: CRECI-RJ 12345/F"
+                          value={creci}
+                          onChange={(e) => setCreci(e.target.value)}
+                          required
+                          className="h-10 text-xs sm:text-sm font-mono"
+                        />
+                        <p className="text-[11px] text-muted-foreground font-sans">
+                          O cadastro de corretor parceiro passa por validação do registro
+                          profissional ativo no CRECI-RJ.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* DECLARAÇÕES OBRIGATÓRIAS DO TERMO DE ADESÃO */}
+                {isPorteiroPrestadorSindico && (
+                  <div className="space-y-3 pt-2 border-t border-border bg-secondary/40 p-3">
+                    <span className="text-xs uppercase tracking-wider text-gold-deep font-heading font-semibold block">
+                      Declarações do Termo de Adesão ({selectedCategory?.name})
+                    </span>
+
+                    <div className="flex items-start space-x-2.5">
+                      <Checkbox
+                        id="dec-vinculo"
+                        checked={declarouVinculoEmpregador}
+                        onCheckedChange={(c) => setDeclarouVinculoEmpregador(c === true)}
+                        className="mt-0.5 rounded-[1px]"
+                      />
+                      <label
+                        htmlFor="dec-vinculo"
+                        className="text-foreground text-xs cursor-pointer font-sans leading-relaxed"
+                      >
+                        Declaro que meu contrato de trabalho e o regimento do condomínio ou
+                        empregador não vedam esta atividade. <span className="text-gold">*</span>
+                      </label>
+                    </div>
+
+                    <div className="flex items-start space-x-2.5">
+                      <Checkbox
+                        id="dec-sistemas"
+                        checked={declarouNaoUsoSistemas}
+                        onCheckedChange={(c) => setDeclarouNaoUsoSistemas(c === true)}
+                        className="mt-0.5 rounded-[1px]"
+                      />
+                      <label
+                        htmlFor="dec-sistemas"
+                        className="text-foreground text-xs cursor-pointer font-sans leading-relaxed"
+                      >
+                        Declaro que não usarei dados, cadastros, sistemas ou câmeras do condomínio
+                        ou do empregador. <span className="text-gold">*</span>
+                      </label>
+                    </div>
+
+                    <div className="flex items-start space-x-2.5">
+                      <Checkbox
+                        id="dec-entrega"
+                        checked={declarouEntregaEmMaos}
+                        onCheckedChange={(c) => setDeclarouEntregaEmMaos(c === true)}
+                        className="mt-0.5 rounded-[1px]"
+                      />
+                      <label
+                        htmlFor="dec-entrega"
+                        className="text-foreground text-xs cursor-pointer font-sans leading-relaxed"
+                      >
+                        Declaro que apenas entregarei o link de indicação em mãos.{' '}
+                        <span className="text-gold">*</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+
+                {/* TERMOS LEGAIS E CONSENTIMENTO */}
+                <div className="space-y-3 pt-2 border-t border-border">
+                  <span className="text-xs uppercase tracking-wider text-gold-deep font-heading font-semibold block">
+                    4. Termos e Elegibilidade
                   </span>
 
-                  <div className="flex items-start space-x-2.5">
+                  {/* Declaração de Maioridade */}
+                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
                     <Checkbox
-                      id="dec-vinculo"
-                      checked={declarouVinculoEmpregador}
-                      onCheckedChange={(c) => setDeclarouVinculoEmpregador(c === true)}
-                      className="mt-0.5 rounded-none border-amber-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                      id="maioridade-check"
+                      checked={declarouMaioridade}
+                      onCheckedChange={(c) => setDeclarouMaioridade(c === true)}
+                      className="mt-0.5 rounded-[1px]"
                     />
-                    <label
-                      htmlFor="dec-vinculo"
-                      className="text-stone-200 text-xs cursor-pointer font-medium leading-relaxed"
-                    >
-                      Declaro que meu contrato de trabalho e o regimento do condomínio ou empregador
-                      não vedam esta atividade. <span className="text-amber-500">*</span>
-                    </label>
+                    <div className="grid gap-1 leading-none text-xs">
+                      <label
+                        htmlFor="maioridade-check"
+                        className="text-foreground cursor-pointer font-sans"
+                      >
+                        Declaro ter 18 anos ou mais. <span className="text-gold">*</span>
+                      </label>
+                    </div>
                   </div>
 
-                  <div className="flex items-start space-x-2.5">
+                  {/* 1. Termos de Uso */}
+                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
                     <Checkbox
-                      id="dec-sistemas"
-                      checked={declarouNaoUsoSistemas}
-                      onCheckedChange={(c) => setDeclarouNaoUsoSistemas(c === true)}
-                      className="mt-0.5 rounded-none border-amber-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                      id="terms-check"
+                      checked={acceptedTerms}
+                      onCheckedChange={(c) => setAcceptedTerms(c === true)}
+                      className="mt-0.5 rounded-[1px]"
                     />
-                    <label
-                      htmlFor="dec-sistemas"
-                      className="text-stone-200 text-xs cursor-pointer font-medium leading-relaxed"
-                    >
-                      Declaro que não usarei dados, cadastros, sistemas ou câmeras do condomínio ou
-                      do empregador. <span className="text-amber-500">*</span>
-                    </label>
+                    <div className="grid gap-1 leading-none text-xs">
+                      <label
+                        htmlFor="terms-check"
+                        className="text-foreground cursor-pointer font-sans"
+                      >
+                        Li e concordo com os{' '}
+                        <button
+                          type="button"
+                          onClick={() => setActiveDocModal(legalDocs['termos_de_uso'] || null)}
+                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                        >
+                          Termos de Uso da Plataforma
+                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                        </button>
+                      </label>
+                    </div>
                   </div>
 
-                  <div className="flex items-start space-x-2.5">
+                  {/* 2. Privacidade */}
+                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
                     <Checkbox
-                      id="dec-entrega"
-                      checked={declarouEntregaEmMaos}
-                      onCheckedChange={(c) => setDeclarouEntregaEmMaos(c === true)}
-                      className="mt-0.5 rounded-none border-amber-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
+                      id="privacy-check"
+                      checked={acceptedPrivacy}
+                      onCheckedChange={(c) => setAcceptedPrivacy(c === true)}
+                      className="mt-0.5 rounded-[1px]"
                     />
-                    <label
-                      htmlFor="dec-entrega"
-                      className="text-stone-200 text-xs cursor-pointer font-medium leading-relaxed"
-                    >
-                      Declaro que apenas entregarei o link de indicação em mãos.{' '}
-                      <span className="text-amber-500">*</span>
-                    </label>
-                  </div>
-                </div>
-              )}
-
-              {/* CAIXAS SEPARADAS DE TERMOS LEGAIS E CONSENTIMENTO */}
-              <div className="space-y-3 pt-2 border-t border-stone-800/80">
-                <span className="text-xs uppercase tracking-wider text-amber-500 font-semibold block">
-                  4. Termos e Elegibilidade
-                </span>
-
-                {/* Declaração de Maioridade Civil (Item 4) */}
-                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/60 border border-amber-500/30">
-                  <Checkbox
-                    id="maioridade-check"
-                    checked={declarouMaioridade}
-                    onCheckedChange={(c) => setDeclarouMaioridade(c === true)}
-                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <div className="grid gap-1 leading-none text-xs">
-                    <label
-                      htmlFor="maioridade-check"
-                      className="text-stone-100 cursor-pointer font-medium"
-                    >
-                      Declaro ter 18 anos ou mais. <span className="text-amber-500">*</span>
-                    </label>
-                  </div>
-                </div>
-
-                {/* 1. Termos de Uso */}
-                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/40 border border-stone-800/80">
-                  <Checkbox
-                    id="terms-check"
-                    checked={acceptedTerms}
-                    onCheckedChange={(c) => setAcceptedTerms(c === true)}
-                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <div className="grid gap-1 leading-none text-xs">
-                    <label
-                      htmlFor="terms-check"
-                      className="text-stone-200 cursor-pointer font-medium"
-                    >
-                      Li e concordo com os{' '}
-                      <button
-                        type="button"
-                        onClick={() => setActiveDocModal(legalDocs['termos_de_uso'] || null)}
-                        className="text-amber-400 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                    <div className="grid gap-1 leading-none text-xs">
+                      <label
+                        htmlFor="privacy-check"
+                        className="text-foreground cursor-pointer font-sans"
                       >
-                        Termos de Uso da Plataforma
-                        <ExternalLink className="w-3 h-3 ml-0.5" />
-                      </button>
-                    </label>
+                        Li e concordo com a{' '}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveDocModal(legalDocs['politica_de_privacidade'] || null)
+                          }
+                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                        >
+                          Política de Privacidade (LGPD)
+                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                        </button>
+                      </label>
+                    </div>
                   </div>
-                </div>
 
-                {/* 2. Privacidade */}
-                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/40 border border-stone-800/80">
-                  <Checkbox
-                    id="privacy-check"
-                    checked={acceptedPrivacy}
-                    onCheckedChange={(c) => setAcceptedPrivacy(c === true)}
-                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <div className="grid gap-1 leading-none text-xs">
-                    <label
-                      htmlFor="privacy-check"
-                      className="text-stone-200 cursor-pointer font-medium"
-                    >
-                      Li e concordo com a{' '}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveDocModal(legalDocs['politica_de_privacidade'] || null)
-                        }
-                        className="text-amber-400 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                  {/* 3. Regulamento */}
+                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
+                    <Checkbox
+                      id="regulamento-check"
+                      checked={acceptedRegulamento}
+                      onCheckedChange={(c) => setAcceptedRegulamento(c === true)}
+                      className="mt-0.5 rounded-[1px]"
+                    />
+                    <div className="grid gap-1 leading-none text-xs">
+                      <label
+                        htmlFor="regulamento-check"
+                        className="text-foreground cursor-pointer font-sans"
                       >
-                        Política de Privacidade (LGPD)
-                        <ExternalLink className="w-3 h-3 ml-0.5" />
-                      </button>
-                    </label>
+                        Li e aceito o{' '}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveDocModal(legalDocs['regulamento_do_programa'] || null)
+                          }
+                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                        >
+                          Regulamento Geral do Programa
+                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                        </button>
+                      </label>
+                    </div>
                   </div>
-                </div>
 
-                {/* 3. Regulamento */}
-                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/40 border border-stone-800/80">
-                  <Checkbox
-                    id="regulamento-check"
-                    checked={acceptedRegulamento}
-                    onCheckedChange={(c) => setAcceptedRegulamento(c === true)}
-                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <div className="grid gap-1 leading-none text-xs">
-                    <label
-                      htmlFor="regulamento-check"
-                      className="text-stone-200 cursor-pointer font-medium"
-                    >
-                      Li e aceito o{' '}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveDocModal(legalDocs['regulamento_do_programa'] || null)
-                        }
-                        className="text-amber-400 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                  {/* 4. Declaração de Ausência de Impedimento */}
+                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
+                    <Checkbox
+                      id="impedimento-check"
+                      checked={acceptedImpedimento}
+                      onCheckedChange={(c) => setAcceptedImpedimento(c === true)}
+                      className="mt-0.5 rounded-[1px]"
+                    />
+                    <div className="grid gap-1 leading-none text-xs">
+                      <label
+                        htmlFor="impedimento-check"
+                        className="text-foreground cursor-pointer font-sans"
                       >
-                        Regulamento Geral do Programa
-                        <ExternalLink className="w-3 h-3 ml-0.5" />
-                      </button>
-                    </label>
+                        Declaro sob as penas da lei a{' '}
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setActiveDocModal(legalDocs['declaracao_ausencia_impedimento'] || null)
+                          }
+                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                        >
+                          Ausência de Impedimento Legal e Ético
+                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                        </button>
+                      </label>
+                    </div>
                   </div>
-                </div>
 
-                {/* 4. Declaração de Ausência de Impedimento */}
-                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/40 border border-stone-800/80">
-                  <Checkbox
-                    id="impedimento-check"
-                    checked={acceptedImpedimento}
-                    onCheckedChange={(c) => setAcceptedImpedimento(c === true)}
-                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <div className="grid gap-1 leading-none text-xs">
-                    <label
-                      htmlFor="impedimento-check"
-                      className="text-stone-200 cursor-pointer font-medium"
-                    >
-                      Declaro sob as penas da lei a{' '}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setActiveDocModal(legalDocs['declaracao_ausencia_impedimento'] || null)
-                        }
-                        className="text-amber-400 hover:underline inline-flex items-center gap-0.5 font-semibold"
+                  {/* 5. Opt-in de WhatsApp */}
+                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
+                    <Checkbox
+                      id="wa-optin-check"
+                      checked={whatsappOptin}
+                      onCheckedChange={(c) => setWhatsappOptin(c === true)}
+                      className="mt-0.5 rounded-[1px]"
+                    />
+                    <div className="grid gap-1 leading-none text-xs font-sans">
+                      <label htmlFor="wa-optin-check" className="text-foreground cursor-pointer">
+                        Aceito receber atualizações operacionais e avisos sobre minhas indicações
+                        via WhatsApp.
+                      </label>
+                    </div>
+                  </div>
+
+                  {/* 6. Consentimento de Marketing */}
+                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
+                    <Checkbox
+                      id="mkt-optin-check"
+                      checked={marketingOptin}
+                      onCheckedChange={(c) => setMarketingOptin(c === true)}
+                      className="mt-0.5 rounded-[1px]"
+                    />
+                    <div className="grid gap-1 leading-none text-xs font-sans">
+                      <label
+                        htmlFor="mkt-optin-check"
+                        className="text-muted-foreground cursor-pointer"
                       >
-                        Ausência de Impedimento Legal e Ético
-                        <ExternalLink className="w-3 h-3 ml-0.5" />
-                      </button>
-                    </label>
+                        Desejo receber novidades, campanhas especiais de incentivo e comunicações de
+                        marketing do Prime Circle.
+                      </label>
+                    </div>
                   </div>
                 </div>
+              </CardContent>
 
-                {/* 5. Opt-in de WhatsApp (separado) */}
-                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/40 border border-stone-800/80">
-                  <Checkbox
-                    id="wa-optin-check"
-                    checked={whatsappOptin}
-                    onCheckedChange={(c) => setWhatsappOptin(c === true)}
-                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <div className="grid gap-1 leading-none text-xs">
-                    <label htmlFor="wa-optin-check" className="text-stone-200 cursor-pointer">
-                      Aceito receber atualizações operacionais e avisos sobre minhas indicações via
-                      WhatsApp.
-                    </label>
-                  </div>
+              <CardFooter className="flex flex-col space-y-3 p-4 sm:p-6 pt-0">
+                <Button type="submit" disabled={isSubmitting} className="w-full h-11 text-sm">
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" strokeWidth={1.5} />
+                      Processando Cadastro...
+                    </>
+                  ) : (
+                    <>
+                      Concluir Meu Cadastro
+                      <ArrowRight className="ml-2 h-4 w-4" strokeWidth={1.5} />
+                    </>
+                  )}
+                </Button>
+
+                <div className="text-center text-xs text-muted-foreground font-sans">
+                  Já possui uma conta de indicador?{' '}
+                  <Link
+                    to="/entrar"
+                    className="text-gold-deep hover:underline font-heading font-medium"
+                  >
+                    Faça login aqui
+                  </Link>
                 </div>
-
-                {/* 6. Consentimento de Marketing (separado e desmarcado por padrão) */}
-                <div className="flex items-start space-x-2.5 p-2.5 bg-stone-900/40 border border-stone-800/80">
-                  <Checkbox
-                    id="mkt-optin-check"
-                    checked={marketingOptin}
-                    onCheckedChange={(c) => setMarketingOptin(c === true)}
-                    className="mt-0.5 rounded-none border-stone-700 data-[state=checked]:bg-amber-600 data-[state=checked]:border-amber-600"
-                  />
-                  <div className="grid gap-1 leading-none text-xs">
-                    <label htmlFor="mkt-optin-check" className="text-stone-300 cursor-pointer">
-                      Desejo receber novidades, campanhas especiais de premiação e comunicações de
-                      marketing do Prime Circle.
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </CardContent>
-
-            <CardFooter className="flex flex-col space-y-3 p-4 sm:p-6 pt-0">
-              <Button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full h-11 rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold shadow-md text-sm"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processando Cadastro...
-                  </>
-                ) : (
-                  <>
-                    Concluir Meu Cadastro
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </>
-                )}
-              </Button>
-
-              <div className="text-center text-xs text-stone-400">
-                Já possui uma conta de indicador?{' '}
-                <Link
-                  to="/entrar"
-                  className="text-amber-500 hover:text-amber-400 font-medium underline"
-                >
-                  Faça login aqui
-                </Link>
-              </div>
-            </CardFooter>
-          </form>
-        </Card>
-      </div>
+              </CardFooter>
+            </form>
+          </Card>
+        </div>
+      </main>
 
       {/* DIALOG DE LEITURA DO TEXTO VIGENTE DO DOCUMENTO LEGAL */}
       <Dialog open={!!activeDocModal} onOpenChange={(open) => !open && setActiveDocModal(null)}>
-        <DialogContent className="max-w-lg w-[92vw] max-h-[85vh] flex flex-col rounded-none bg-stone-950 border border-stone-800 text-stone-100 p-4 sm:p-6">
-          <DialogHeader className="border-b border-stone-800 pb-3">
-            <DialogTitle className="text-base sm:text-lg font-serif text-white flex items-center gap-2">
-              <FileText className="w-5 h-5 text-amber-500 shrink-0" />
+        <DialogContent className="max-w-lg w-[92vw] max-h-[85vh] flex flex-col rounded-[1px] bg-card border border-border text-card-foreground p-4 sm:p-6 font-sans">
+          <DialogHeader className="border-b border-border pb-3">
+            <DialogTitle className="text-base sm:text-lg font-serif text-foreground flex items-center gap-2">
+              <FileText className="w-5 h-5 text-gold-deep shrink-0" strokeWidth={1.5} />
               <span className="truncate">{activeDocModal?.title || 'Documento Legal'}</span>
             </DialogTitle>
-            <DialogDescription className="text-xs text-stone-400">
+            <DialogDescription className="text-xs text-muted-foreground font-sans">
               Versão vigente: {activeDocModal?.version || 1} • Programa Prime Circle Indica
             </DialogDescription>
           </DialogHeader>
 
           {activeDocModal?.is_provisional && (
-            <div className="bg-amber-500/10 border-l-2 border-amber-500 text-amber-400 px-3 py-2 text-xs font-semibold">
+            <div className="bg-warning/15 border-l-2 border-warning text-warning px-3 py-2 text-xs font-medium">
               Texto provisório, em revisão jurídica.
             </div>
           )}
 
-          <div className="my-3 flex-1 overflow-y-auto pr-1 text-xs text-stone-300 leading-relaxed space-y-3 whitespace-pre-wrap font-sans bg-stone-900/50 p-3.5 border border-stone-800/80">
+          <div className="my-3 flex-1 overflow-y-auto pr-1 text-xs text-foreground leading-relaxed space-y-3 whitespace-pre-wrap font-sans bg-secondary/40 p-3.5 border border-border">
             {activeDocModal?.content || 'Conteúdo do documento em carregamento...'}
           </div>
 
           <div className="pt-2 flex justify-end">
             <Button
               type="button"
+              variant="outline"
               onClick={() => setActiveDocModal(null)}
-              className="rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold text-xs h-9 px-4"
+              className="text-xs h-9 px-4"
             >
               Compreendi e Fechar
             </Button>
           </div>
         </DialogContent>
       </Dialog>
+
+      <BrandPublicFooter />
     </div>
   )
 }

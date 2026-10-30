@@ -8,7 +8,6 @@ import { Textarea } from '@/components/ui/textarea'
 import { Badge } from '@/components/ui/badge'
 import { useToast } from '@/hooks/use-toast'
 import {
-  Sparkles,
   Building,
   MapPin,
   ExternalLink,
@@ -20,6 +19,7 @@ import {
   Mail,
   User,
 } from 'lucide-react'
+import { BrandPublicHeader, BrandPublicFooter, Eyebrow } from '@/components/brand'
 
 export function PublicVitrinePage() {
   const { codigo, imovel } = useParams<{ codigo: string; imovel: string }>()
@@ -103,21 +103,27 @@ export function PublicVitrinePage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex items-center justify-center font-sans">
-        <Loader2 className="w-8 h-8 animate-spin text-amber-500 mr-3" />
-        <span className="text-stone-400">Carregando imóvel da vitrine...</span>
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center font-sans">
+        <Loader2 className="w-8 h-8 animate-spin text-gold-deep mr-3" strokeWidth={1.5} />
+        <span className="text-muted-foreground text-xs">Carregando imóvel da vitrine...</span>
       </div>
     )
   }
 
   if (notFound || !property) {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col items-center justify-center p-6 text-center font-sans">
-        <Building className="w-12 h-12 text-stone-600 mb-4" />
-        <h1 className="font-serif text-2xl text-white font-medium">Imóvel não encontrado</h1>
-        <p className="text-stone-400 text-sm mt-2 max-w-md">
-          Este imóvel pode ter sido negociado, retirado ou o link informado está incorreto.
-        </p>
+      <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <BrandPublicHeader />
+        <main className="flex-1 flex flex-col items-center justify-center p-6 text-center font-sans">
+          <Building className="w-12 h-12 text-muted-foreground mb-4" strokeWidth={1.5} />
+          <h1 className="font-serif text-2xl text-foreground font-semibold">
+            Imóvel <em>não encontrado</em>
+          </h1>
+          <p className="text-muted-foreground text-xs mt-2 max-w-md">
+            Este imóvel pode ter sido negociado, retirado ou o link informado está incorreto.
+          </p>
+        </main>
+        <BrandPublicFooter />
       </div>
     )
   }
@@ -127,160 +133,147 @@ export function PublicVitrinePage() {
   const photos = property.public_photos || []
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
-      {/* Brand Header */}
-      <header className="border-b border-stone-800 bg-stone-900/90 py-4 px-6 backdrop-blur sticky top-0 z-30">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="font-serif text-lg text-white font-semibold tracking-wide block">
-                Godoy Prime
-              </span>
-              <span className="text-[10px] text-amber-400 uppercase tracking-widest block">
-                Imóveis Exclusivos
-              </span>
-            </div>
-          </div>
-
-          <Badge
-            variant="outline"
-            className="border-amber-500/40 text-amber-300 rounded-none text-xs"
-          >
-            Parceria Oficial • Código #{codigo}
-          </Badge>
-        </div>
-      </header>
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+      <BrandPublicHeader />
 
       {/* Main Content */}
       <main className="flex-1 max-w-5xl mx-auto w-full px-4 sm:px-6 py-8 space-y-8">
+        <div className="flex items-center justify-between border-b border-border pb-4">
+          <Eyebrow>VITRINE DE IMÓVEIS · BARRA &amp; RECREIO</Eyebrow>
+          <Badge variant="outline" className="rounded-[1px] text-xs font-mono">
+            Parceria Oficial · Código #{codigo}
+          </Badge>
+        </div>
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Left 2 Cols: Imóvel Resumo e Fotos */}
           <div className="lg:col-span-2 space-y-6">
             <div className="space-y-2">
               <div className="flex items-center gap-2">
-                <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/30 rounded-none text-xs">
+                <Badge className="bg-secondary text-foreground border-border rounded-[1px] text-xs font-heading">
                   Disponível para Visitas
                 </Badge>
-                <span className="text-xs text-stone-500 flex items-center gap-1">
-                  <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  <MapPin className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
                   {neighborhood}
                 </span>
               </div>
-              <h1 className="font-serif text-3xl sm:text-4xl text-white font-normal leading-tight">
+              <h1 className="font-serif text-3xl sm:text-4xl text-foreground font-bold leading-tight">
                 {condoName}
               </h1>
-              <p className="text-sm text-stone-400">
+              <p className="text-sm text-muted-foreground font-sans">
                 Região nobre da {neighborhood}, Rio de Janeiro - RJ
               </p>
             </div>
 
             {/* Photos carousel or fallback image */}
-            <div className="aspect-video bg-stone-900 border border-stone-800 overflow-hidden relative">
+            <div className="aspect-video bg-secondary/40 border border-border overflow-hidden relative rounded-[1px]">
               {photos.length > 0 ? (
                 <img src={photos[0]} alt={condoName} className="w-full h-full object-cover" />
               ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-stone-900/80 p-6 text-center space-y-2">
-                  <Building className="w-12 h-12 text-stone-700" />
-                  <span className="text-sm text-stone-400 font-serif">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-secondary/30 p-6 text-center space-y-2">
+                  <Building className="w-12 h-12 text-muted-foreground" strokeWidth={1.5} />
+                  <span className="text-sm text-foreground font-serif">
                     Imóvel de Alto Padrão em {condoName}
                   </span>
-                  <span className="text-xs text-stone-600 max-w-sm">
-                    Fotos e tour privativo sob consulta com nossos especialistas.
+                  <span className="text-xs text-muted-foreground max-w-sm font-sans">
+                    Fotos e tour privativo sob consulta com nossos corretores credenciados.
                   </span>
                 </div>
               )}
             </div>
 
             {/* Public Summary */}
-            <div className="space-y-3 bg-stone-900/60 p-6 border border-stone-800 rounded-none">
-              <h2 className="font-serif text-lg text-amber-200">Sobre o Imóvel</h2>
-              <p className="text-stone-300 text-sm whitespace-pre-wrap leading-relaxed">
+            <div className="space-y-3 bg-card p-6 border border-border rounded-[1px]">
+              <h2 className="font-serif text-lg font-bold text-foreground">
+                Sobre o <em>Imóvel</em>
+              </h2>
+              <p className="text-muted-foreground text-sm whitespace-pre-wrap leading-relaxed font-sans">
                 {property.public_summary ||
                   'Excelente oportunidade em condomínio de prestígio com infraestrutura completa e segurança 24h.'}
               </p>
 
               {property.listing_link && (
-                <div className="pt-3 border-t border-stone-800/80">
+                <div className="pt-3 border-t border-border">
                   <a
                     href={property.listing_link}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center text-xs text-amber-400 hover:text-amber-300 underline font-medium"
+                    className="inline-flex items-center text-xs text-gold-deep hover:underline font-heading font-medium"
                   >
                     Ver anúncio completo no portal Godoy Prime
-                    <ExternalLink className="w-3.5 h-3.5 ml-1" />
+                    <ExternalLink className="w-3.5 h-3.5 ml-1" strokeWidth={1.5} />
                   </a>
                 </div>
               )}
             </div>
 
-            <div className="flex items-center gap-2 text-xs text-stone-500">
-              <ShieldCheck className="w-4 h-4 text-emerald-500" />
+            <div className="flex items-center gap-2 text-xs text-muted-foreground font-sans">
+              <ShieldCheck className="w-4 h-4 text-gold-deep shrink-0" strokeWidth={1.5} />
               <span>
                 Por questões de privacidade e segurança dos proprietários, o número exato da unidade
-                é disponibilizado apenas mediante agendamento de visita.
+                é disponibilizado apenas mediante agendamento de visita com corretor credenciado.
               </span>
             </div>
           </div>
 
           {/* Right 1 Col: Formulário Tenho Interesse */}
           <div className="space-y-6">
-            <Card className="bg-stone-900 border-amber-500/30 rounded-none sticky top-24">
+            <Card className="bg-card border-border rounded-[1px] sticky top-24 shadow-luxury">
               <CardHeader>
-                <CardTitle className="font-serif text-xl text-white">Tenho Interesse</CardTitle>
-                <CardDescription className="text-stone-400 text-xs">
+                <CardTitle className="font-serif text-xl font-bold text-foreground">
+                  Tenho <em>Interesse</em>
+                </CardTitle>
+                <CardDescription className="text-muted-foreground text-xs font-sans">
                   Preencha o formulário para receber a ficha técnica completa e agendar uma visita
-                  guiada.
+                  guiada com corretor habilitado no CRECI-RJ.
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 {submitted ? (
-                  <div className="py-6 text-center space-y-3">
-                    <CheckCircle2 className="w-12 h-12 text-emerald-400 mx-auto" />
-                    <h3 className="font-serif text-lg text-white font-medium">
+                  <div className="py-6 text-center space-y-3 font-sans">
+                    <CheckCircle2 className="w-12 h-12 text-success mx-auto" strokeWidth={1.5} />
+                    <h3 className="font-serif text-lg text-foreground font-bold">
                       Obrigado pelo contato!
                     </h3>
-                    <p className="text-xs text-stone-300">
-                      Recebemos seu interesse no <strong>{condoName}</strong>. Nossa equipe entrará
-                      em contato nas próximas horas.
+                    <p className="text-xs text-muted-foreground">
+                      Recebemos seu interesse no <strong>{condoName}</strong>. Nossa equipe de
+                      corretores credenciados entrará em contato nas próximas horas.
                     </p>
                   </div>
                 ) : (
-                  <form onSubmit={handleSubmitLead} className="space-y-4 text-xs">
+                  <form onSubmit={handleSubmitLead} className="space-y-4 text-xs font-sans">
                     <div className="space-y-1.5">
-                      <label className="text-stone-300 font-medium flex items-center gap-1">
-                        <User className="w-3.5 h-3.5 text-stone-500" />
+                      <label className="text-foreground font-heading font-medium flex items-center gap-1">
+                        <User className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
                         Seu Nome Completo:
                       </label>
                       <Input
                         value={buyerName}
                         onChange={(e) => setBuyerName(e.target.value)}
                         placeholder="Ex: Carlos Eduardo Silveira"
-                        className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                        className="text-xs"
                         required
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-stone-300 font-medium flex items-center gap-1">
-                        <Phone className="w-3.5 h-3.5 text-stone-500" />
+                      <label className="text-foreground font-heading font-medium flex items-center gap-1">
+                        <Phone className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
                         WhatsApp / Telefone:
                       </label>
                       <Input
                         value={buyerPhone}
                         onChange={(e) => setBuyerPhone(e.target.value)}
                         placeholder="(21) 99999-9999"
-                        className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                        className="text-xs font-mono"
                         required
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-stone-300 font-medium flex items-center gap-1">
-                        <Mail className="w-3.5 h-3.5 text-stone-500" />
+                      <label className="text-foreground font-heading font-medium flex items-center gap-1">
+                        <Mail className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
                         E-mail para Contato:
                       </label>
                       <Input
@@ -288,43 +281,39 @@ export function PublicVitrinePage() {
                         value={buyerEmail}
                         onChange={(e) => setBuyerEmail(e.target.value)}
                         placeholder="seuemail@exemplo.com"
-                        className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                        className="text-xs font-mono"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-stone-300 font-medium">
+                      <label className="text-foreground font-heading font-medium">
                         Melhor horário ou dúvidas (opcional):
                       </label>
                       <Textarea
                         value={buyerNotes}
                         onChange={(e) => setBuyerNotes(e.target.value)}
                         placeholder="Ex: Gostaria de agendar visita para sábado pela manhã..."
-                        className="bg-stone-950 border-stone-800 text-xs rounded-none h-20"
+                        className="text-xs min-h-[80px]"
                       />
                     </div>
 
-                    <Button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs py-5"
-                    >
+                    <Button type="submit" disabled={submitting} className="w-full text-xs py-5">
                       {submitting ? (
                         <>
-                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                          <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" strokeWidth={1.5} />
                           Enviando...
                         </>
                       ) : (
                         <>
-                          <Send className="w-3.5 h-3.5 mr-1.5" />
+                          <Send className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
                           Solicitar Atendimento
                         </>
                       )}
                     </Button>
 
-                    <p className="text-[10px] text-stone-500 text-center">
+                    <p className="text-[10px] text-muted-foreground text-center">
                       Ao enviar, seus dados são protegidos conforme a LGPD e compartilhados apenas
-                      com a equipe Godoy Prime.
+                      com corretores credenciados Godoy Prime.
                     </p>
                   </form>
                 )}
@@ -334,10 +323,7 @@ export function PublicVitrinePage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="border-t border-stone-900 bg-stone-950 py-6 text-center text-xs text-stone-600">
-        © {new Date().getFullYear()} Godoy Prime Negócios Imobiliários • Barra da Tijuca & Recreio
-      </footer>
+      <BrandPublicFooter />
     </div>
   )
 }
