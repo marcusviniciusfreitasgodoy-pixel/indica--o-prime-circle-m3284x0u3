@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { AdminNavbar } from '@/components/AdminNavbar'
 import { useAuth } from '@/contexts/AuthContext'
 import pb from '@/lib/pocketbase/client'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
@@ -135,88 +136,86 @@ export default function AdminTeamPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
-      {/* Top Header */}
-      <header className="border-b border-stone-800 bg-stone-900/90 sticky top-0 z-30 backdrop-blur">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button
-              asChild
-              variant="ghost"
-              size="sm"
-              className="rounded-none text-stone-400 hover:text-white"
-            >
-              <Link to="/admin">
-                <ArrowLeft className="w-4 h-4 mr-1.5" />
-                Voltar ao Admin
-              </Link>
-            </Button>
-            <div className="h-4 w-[1px] bg-stone-800" />
-            <h1 className="font-serif text-lg text-white font-semibold">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+      <AdminNavbar />
+
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div>
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Governança & Acessos
+            </span>
+            <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold flex items-center gap-2">
+              <Users className="w-6 h-6 text-gold-deep" strokeWidth={1.5} />
               Gestão de Equipe e Papéis
             </h1>
+            <p className="text-sm text-muted-foreground mt-1 font-sans">
+              Atribuição e revogação de papéis internos (admin, operador, financeiro) com registro
+              auditado.
+            </p>
           </div>
 
-          <Badge variant="outline" className="rounded-none border-amber-600/40 text-amber-400">
+          <Badge
+            variant="outline"
+            className="rounded-[1px] border-border text-gold-deep font-heading text-[11px]"
+          >
             Auditado em audit_logs
           </Badge>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {errorMsg && (
           <Alert
             variant="destructive"
-            className="rounded-none bg-red-950/60 border-red-800 text-red-200"
+            className="rounded-[1px] bg-destructive/10 border-destructive/40 text-destructive font-sans"
           >
-            <AlertCircle className="h-4 w-4" />
+            <AlertCircle className="h-4 w-4" strokeWidth={1.5} />
             <AlertDescription className="text-xs">{errorMsg}</AlertDescription>
           </Alert>
         )}
 
         {successMsg && (
-          <Alert className="rounded-none bg-emerald-950/60 border-emerald-800 text-emerald-200">
-            <CheckCircle2 className="h-4 w-4 text-emerald-400" />
+          <Alert className="rounded-[1px] bg-success/10 border-success/40 text-success font-sans">
+            <CheckCircle2 className="h-4 w-4 text-success" strokeWidth={1.5} />
             <AlertDescription className="text-xs">{successMsg}</AlertDescription>
           </Alert>
         )}
 
         {/* Info card */}
-        <div className="p-4 bg-stone-900/60 border border-stone-800 text-xs text-stone-300 space-y-2">
-          <div className="flex items-center gap-2 text-amber-500 font-semibold font-serif text-sm">
-            <Shield className="w-4 h-4" />
+        <div className="p-4 bg-secondary/60 border border-border text-xs text-foreground space-y-2 rounded-[1px] font-sans">
+          <div className="flex items-center gap-2 text-gold-deep font-semibold font-serif text-sm">
+            <Shield className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
             Políticas de Controle de Acesso Baseado em Papéis (RBAC)
           </div>
-          <p className="text-stone-400 leading-relaxed">
+          <p className="text-muted-foreground leading-relaxed">
             Papéis atribuídos ficam estritamente na coleção{' '}
-            <code className="text-amber-400">user_roles</code>. Usuários comuns não podem alterar
-            papéis nem conceder privilégios a si próprios. Administradores não podem remover seu
-            próprio papel de admin para prevenir bloqueio acidental. Toda concessão e revogação é
-            gravada com carimbo de data, IP e identificador em{' '}
-            <code className="text-amber-400">audit_logs</code>.
+            <code className="text-gold-deep font-mono">user_roles</code>. Usuários comuns não podem
+            alterar papéis nem conceder privilégios a si próprios. Administradores não podem remover
+            seu próprio papel de admin para prevenir bloqueio acidental. Toda concessão e revogação
+            é gravada com carimbo de data, IP e identificador em{' '}
+            <code className="text-gold-deep font-mono">audit_logs</code>.
           </p>
         </div>
 
         {/* Team Members List */}
-        <Card className="rounded-none border-stone-800 bg-stone-900/80">
+        <Card className="rounded-[1px] border-border bg-card shadow-subtle">
           <CardHeader>
-            <CardTitle className="text-xl font-serif text-white flex items-center gap-2">
-              <Users className="w-5 h-5 text-amber-500" />
+            <CardTitle className="text-lg font-serif text-foreground font-semibold flex items-center gap-2">
+              <Users className="w-5 h-5 text-gold-deep" strokeWidth={1.5} />
               Usuários Registrados na Plataforma ({team.length})
             </CardTitle>
-            <CardDescription className="text-xs text-stone-400">
+            <CardDescription className="text-xs text-muted-foreground font-sans">
               Atribua ou revogue os papéis internos: <strong>admin</strong>,{' '}
               <strong>operador</strong> ou <strong>financeiro</strong>.
             </CardDescription>
           </CardHeader>
           <CardContent>
             {loading ? (
-              <div className="py-12 flex flex-col items-center justify-center space-y-2">
-                <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
-                <p className="text-xs text-stone-400">Carregando usuários e papéis...</p>
+              <div className="py-12 flex flex-col items-center justify-center space-y-2 font-sans">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" strokeWidth={1.5} />
+                <p className="text-xs text-muted-foreground">Carregando usuários e papéis...</p>
               </div>
             ) : (
-              <div className="divide-y divide-stone-800/80">
+              <div className="divide-y divide-border/60">
                 {team.map((member) => {
                   const hasAdmin = member.roles.some((r) => r.role === 'admin')
                   const hasOperador = member.roles.some((r) => r.role === 'operador')
@@ -226,21 +225,23 @@ export default function AdminTeamPage() {
                   return (
                     <div
                       key={member.id}
-                      className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4"
+                      className="py-4 flex flex-col md:flex-row md:items-center justify-between gap-4 font-sans"
                     >
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <span className="font-semibold text-white text-sm">{member.name}</span>
+                          <span className="font-semibold text-foreground text-sm font-sans">
+                            {member.name}
+                          </span>
                           {isSelf && (
-                            <Badge className="rounded-none bg-stone-800 text-amber-400 border border-stone-700 text-[10px]">
+                            <Badge className="rounded-[1px] bg-secondary text-gold-deep border border-border text-[10px] font-heading">
                               Você
                             </Badge>
                           )}
                         </div>
-                        <p className="text-xs text-stone-400">
+                        <p className="text-xs text-muted-foreground">
                           {member.email} {member.phone ? `• ${member.phone}` : ''}
                         </p>
-                        <p className="text-[11px] text-stone-500">
+                        <p className="text-[11px] text-muted-foreground font-mono">
                           Cadastro em:{' '}
                           {new Date(member.created).toLocaleDateString('pt-BR', {
                             day: '2-digit',
@@ -254,8 +255,8 @@ export default function AdminTeamPage() {
                       <div className="flex flex-wrap items-center gap-2">
                         {/* ADMIN ROLE */}
                         {hasAdmin ? (
-                          <div className="flex items-center bg-amber-950/40 border border-amber-800/60 pl-2 pr-1 py-1">
-                            <span className="text-xs text-amber-400 font-semibold mr-1.5">
+                          <div className="flex items-center bg-secondary border border-border pl-2 pr-1 py-1 rounded-[1px]">
+                            <span className="text-xs text-gold-deep font-heading font-semibold mr-1.5">
                               Admin
                             </span>
                             <Button
@@ -263,12 +264,12 @@ export default function AdminTeamPage() {
                               size="sm"
                               disabled={isSelf || actionLoading === `remove-${member.id}-admin`}
                               onClick={() => handleRemoveRole(member.id, 'admin')}
-                              className="h-6 w-6 p-0 rounded-none text-stone-400 hover:text-red-400"
+                              className="h-6 w-6 p-0 rounded-[1px] text-muted-foreground hover:text-destructive"
                               title={
                                 isSelf ? 'Você não pode remover seu próprio papel' : 'Remover papel'
                               }
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                             </Button>
                           </div>
                         ) : (
@@ -277,16 +278,16 @@ export default function AdminTeamPage() {
                             size="sm"
                             disabled={actionLoading === `assign-${member.id}-admin`}
                             onClick={() => handleAssignRole(member.id, 'admin')}
-                            className="rounded-none border-stone-800 text-stone-300 hover:border-amber-600 text-xs h-8"
+                            className="rounded-[1px] border-border text-foreground hover:border-gold-deep text-xs h-8 font-heading"
                           >
-                            <Plus className="w-3 h-3 mr-1" />+ Admin
+                            <Plus className="w-3 h-3 mr-1" strokeWidth={1.5} />+ Admin
                           </Button>
                         )}
 
                         {/* OPERADOR ROLE */}
                         {hasOperador ? (
-                          <div className="flex items-center bg-blue-950/40 border border-blue-800/60 pl-2 pr-1 py-1">
-                            <span className="text-xs text-blue-400 font-semibold mr-1.5">
+                          <div className="flex items-center bg-info/10 border border-info/30 pl-2 pr-1 py-1 rounded-[1px]">
+                            <span className="text-xs text-info font-heading font-semibold mr-1.5">
                               Operador
                             </span>
                             <Button
@@ -294,10 +295,10 @@ export default function AdminTeamPage() {
                               size="sm"
                               disabled={actionLoading === `remove-${member.id}-operador`}
                               onClick={() => handleRemoveRole(member.id, 'operador')}
-                              className="h-6 w-6 p-0 rounded-none text-stone-400 hover:text-red-400"
+                              className="h-6 w-6 p-0 rounded-[1px] text-muted-foreground hover:text-destructive"
                               title="Remover papel de operador"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                             </Button>
                           </div>
                         ) : (
@@ -306,16 +307,16 @@ export default function AdminTeamPage() {
                             size="sm"
                             disabled={actionLoading === `assign-${member.id}-operador`}
                             onClick={() => handleAssignRole(member.id, 'operador')}
-                            className="rounded-none border-stone-800 text-stone-300 hover:border-blue-600 text-xs h-8"
+                            className="rounded-[1px] border-border text-foreground hover:border-info text-xs h-8 font-heading"
                           >
-                            <Plus className="w-3 h-3 mr-1" />+ Operador
+                            <Plus className="w-3 h-3 mr-1" strokeWidth={1.5} />+ Operador
                           </Button>
                         )}
 
                         {/* FINANCEIRO ROLE */}
                         {hasFinanceiro ? (
-                          <div className="flex items-center bg-emerald-950/40 border border-emerald-800/60 pl-2 pr-1 py-1">
-                            <span className="text-xs text-emerald-400 font-semibold mr-1.5">
+                          <div className="flex items-center bg-success/10 border border-success/30 pl-2 pr-1 py-1 rounded-[1px]">
+                            <span className="text-xs text-success font-heading font-semibold mr-1.5">
                               Financeiro
                             </span>
                             <Button
@@ -323,10 +324,10 @@ export default function AdminTeamPage() {
                               size="sm"
                               disabled={actionLoading === `remove-${member.id}-financeiro`}
                               onClick={() => handleRemoveRole(member.id, 'financeiro')}
-                              className="h-6 w-6 p-0 rounded-none text-stone-400 hover:text-red-400"
+                              className="h-6 w-6 p-0 rounded-[1px] text-muted-foreground hover:text-destructive"
                               title="Remover papel de financeiro"
                             >
-                              <Trash2 className="w-3.5 h-3.5" />
+                              <Trash2 className="w-3.5 h-3.5" strokeWidth={1.5} />
                             </Button>
                           </div>
                         ) : (
@@ -335,9 +336,9 @@ export default function AdminTeamPage() {
                             size="sm"
                             disabled={actionLoading === `assign-${member.id}-financeiro`}
                             onClick={() => handleAssignRole(member.id, 'financeiro')}
-                            className="rounded-none border-stone-800 text-stone-300 hover:border-emerald-600 text-xs h-8"
+                            className="rounded-[1px] border-border text-foreground hover:border-success text-xs h-8 font-heading"
                           >
-                            <Plus className="w-3 h-3 mr-1" />+ Financeiro
+                            <Plus className="w-3 h-3 mr-1" strokeWidth={1.5} />+ Financeiro
                           </Button>
                         )}
                       </div>

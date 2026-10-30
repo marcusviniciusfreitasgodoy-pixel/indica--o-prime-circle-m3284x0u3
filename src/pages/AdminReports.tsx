@@ -397,7 +397,9 @@ export default function AdminReportsPage() {
               <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep">
                 Relatórios Avançados
               </span>
-              <span className="text-xs text-muted-foreground font-mono">Exportação CSV Disponível</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                Exportação CSV Disponível
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif text-foreground font-semibold">
               Inteligência de Rede & Conversões
@@ -410,10 +412,14 @@ export default function AdminReportsPage() {
 
           <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
             <div className="flex items-center bg-secondary border border-border p-1 text-xs rounded-[1px]">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground mr-1.5 ml-1" strokeWidth={1.5} />
+              <Calendar
+                className="w-3.5 h-3.5 text-muted-foreground mr-1.5 ml-1"
+                strokeWidth={1.5}
+              />
               {(['30', '90', '180', 'all'] as const).map((pKey) => {
                 const isSelected = period === pKey
-                const label = pKey === '30' ? '30d' : pKey === '90' ? '90d' : pKey === '180' ? '180d' : 'Tudo'
+                const label =
+                  pKey === '30' ? '30d' : pKey === '90' ? '90d' : pKey === '180' ? '180d' : 'Tudo'
                 return (
                   <button
                     key={pKey}

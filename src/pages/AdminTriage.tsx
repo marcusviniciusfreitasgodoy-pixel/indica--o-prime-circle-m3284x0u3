@@ -251,10 +251,7 @@ export function AdminTriagePage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {pendingAttributions.map((p) => (
-                <Card
-                  key={p.id}
-                  className="bg-card border-border rounded-[1px] shadow-subtle"
-                >
+                <Card key={p.id} className="bg-card border-border rounded-[1px] shadow-subtle">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
                       <Badge className="bg-secondary text-foreground border-border rounded-[1px] text-xs font-heading">
@@ -275,7 +272,9 @@ export function AdminTriagePage() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0 space-y-3">
-                    <p className="text-xs text-muted-foreground line-clamp-2 font-sans">{p.description}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 font-sans">
+                      {p.description}
+                    </p>
                     <div className="flex gap-2 justify-end">
                       <Button
                         size="sm"
@@ -283,7 +282,10 @@ export function AdminTriagePage() {
                         className="rounded-[1px] text-xs font-heading"
                         onClick={() => handleOpenActionModal(p, 'resolve_attribution')}
                       >
-                        <UserCheck className="w-3.5 h-3.5 mr-1.5 text-gold-deep" strokeWidth={1.5} />
+                        <UserCheck
+                          className="w-3.5 h-3.5 mr-1.5 text-gold-deep"
+                          strokeWidth={1.5}
+                        />
                         Resolver Atribuição
                       </Button>
                     </div>
@@ -380,19 +382,28 @@ export function AdminTriagePage() {
                           <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-1 font-sans">
                             {(ref.owner_phone || ref.buyer_phone || ref.referrer_phone) && (
                               <span className="flex items-center gap-1 font-mono">
-                                <Phone className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+                                <Phone
+                                  className="w-3.5 h-3.5 text-muted-foreground"
+                                  strokeWidth={1.5}
+                                />
                                 {ref.owner_phone || ref.buyer_phone || ref.referrer_phone}
                               </span>
                             )}
                             {(ref.owner_email || ref.buyer_email || ref.return_contact) && (
                               <span className="flex items-center gap-1">
-                                <Mail className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
+                                <Mail
+                                  className="w-3.5 h-3.5 text-muted-foreground"
+                                  strokeWidth={1.5}
+                                />
                                 {ref.owner_email || ref.buyer_email || ref.return_contact}
                               </span>
                             )}
                             {(ref.expand?.condominium_id || ref.unit) && (
                               <span className="flex items-center gap-1 text-gold-deep font-heading">
-                                <Building className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
+                                <Building
+                                  className="w-3.5 h-3.5 text-gold-deep"
+                                  strokeWidth={1.5}
+                                />
                                 {ref.expand?.condominium_id?.name || 'Condomínio'}
                                 {ref.unit ? ` - Unidade ${ref.unit}` : ''}
                               </span>
@@ -418,7 +429,10 @@ export function AdminTriagePage() {
                       {hasFlags && (
                         <div className="lg:max-w-md w-full bg-secondary border border-warning/40 p-4 space-y-2.5 rounded-[1px]">
                           <div className="flex items-center gap-2 text-warning font-heading font-medium text-xs">
-                            <AlertTriangle className="w-4 h-4 text-warning shrink-0" strokeWidth={1.5} />
+                            <AlertTriangle
+                              className="w-4 h-4 text-warning shrink-0"
+                              strokeWidth={1.5}
+                            />
                             <span>Alerta de Duplicidade Detectado:</span>
                           </div>
 
@@ -428,9 +442,7 @@ export function AdminTriagePage() {
                                 key={flag.id}
                                 className="text-xs text-foreground bg-card p-2.5 border border-border rounded-[1px] space-y-1 font-sans"
                               >
-                                <p className="font-medium text-warning">
-                                  {flag.conflict_details}
-                                </p>
+                                <p className="font-medium text-warning">{flag.conflict_details}</p>
                                 {flag.expand?.conflicting_referral_id && (
                                   <div className="text-[11px] text-muted-foreground flex items-center gap-1">
                                     <span>Conflito com:</span>
@@ -548,7 +560,9 @@ export function AdminTriagePage() {
             ) : (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-xs text-foreground font-heading">Código de Motivo Público:</label>
+                  <label className="text-xs text-foreground font-heading">
+                    Código de Motivo Público:
+                  </label>
                   <Select value={selectedReasonCode} onValueChange={setSelectedReasonCode}>
                     <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                       <SelectValue placeholder="Selecione o motivo que o indicador verá..." />

@@ -106,16 +106,20 @@ export function AdminCondominiumsPage() {
     : []
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="font-serif text-2xl sm:text-3xl text-white font-medium">
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Base Patrimonial
+            </span>
+            <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold flex items-center gap-2">
+              <Building className="w-6 h-6 text-gold-deep" strokeWidth={1.5} />
               Condomínios & Empreendimentos
             </h1>
-            <p className="text-sm text-stone-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1 font-sans">
               Base de condomínios semeada na Barra da Tijuca e Recreio dos Bandeirantes com
               histórico de captações.
             </p>
@@ -124,35 +128,34 @@ export function AdminCondominiumsPage() {
           <Button
             size="sm"
             onClick={() => setCreateModalOpen(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
+            className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading font-semibold"
           >
-            <Plus className="w-3.5 h-3.5 mr-1" />
+            <Plus className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
             Novo Condomínio
           </Button>
         </div>
 
         {/* Filters */}
-        <div className="bg-stone-900 border border-stone-800 p-4 flex flex-col sm:flex-row gap-3 items-center justify-between">
+        <div className="bg-card border border-border p-4 flex flex-col sm:flex-row gap-3 items-center justify-between rounded-[1px]">
           <div className="relative w-full sm:w-80">
-            <Search className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
+            <Search
+              className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5"
+              strokeWidth={1.5}
+            />
             <Input
               placeholder="Buscar por nome do condomínio..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-stone-950 border-stone-800 pl-9 rounded-none text-xs"
+              className="bg-background border-border pl-9 rounded-[1px] text-xs text-foreground placeholder:text-muted-foreground"
             />
           </div>
 
-          <div className="flex gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap gap-2 w-full sm:w-auto">
             <Button
               variant={selectedNeighborhood === 'all' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedNeighborhood('all')}
-              className={`rounded-none text-xs ${
-                selectedNeighborhood === 'all'
-                  ? 'bg-amber-600 text-white'
-                  : 'border-stone-800 text-stone-400'
-              }`}
+              className="rounded-[1px] text-xs font-heading"
             >
               Todos os Bairros
             </Button>
@@ -160,11 +163,7 @@ export function AdminCondominiumsPage() {
               variant={selectedNeighborhood === 'Barra da Tijuca' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedNeighborhood('Barra da Tijuca')}
-              className={`rounded-none text-xs ${
-                selectedNeighborhood === 'Barra da Tijuca'
-                  ? 'bg-amber-600 text-white'
-                  : 'border-stone-800 text-stone-400'
-              }`}
+              className="rounded-[1px] text-xs font-heading"
             >
               Barra da Tijuca
             </Button>
@@ -172,11 +171,7 @@ export function AdminCondominiumsPage() {
               variant={selectedNeighborhood === 'Recreio dos Bandeirantes' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedNeighborhood('Recreio dos Bandeirantes')}
-              className={`rounded-none text-xs ${
-                selectedNeighborhood === 'Recreio dos Bandeirantes'
-                  ? 'bg-amber-600 text-white'
-                  : 'border-stone-800 text-stone-400'
-              }`}
+              className="rounded-[1px] text-xs font-heading"
             >
               Recreio
             </Button>
@@ -185,12 +180,12 @@ export function AdminCondominiumsPage() {
 
         {/* Condos Grid */}
         {loading ? (
-          <div className="py-20 flex justify-center text-stone-400 text-sm">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-500 mr-2" />
+          <div className="py-20 flex justify-center text-muted-foreground text-sm font-sans">
+            <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" strokeWidth={1.5} />
             Carregando condomínios...
           </div>
         ) : filtered.length === 0 ? (
-          <Card className="bg-stone-900 border-stone-800 rounded-none p-12 text-center text-stone-500 text-xs">
+          <Card className="bg-card border-border rounded-[1px] p-12 text-center text-muted-foreground text-xs font-sans">
             Nenhum condomínio encontrado.
           </Card>
         ) : (
@@ -201,33 +196,36 @@ export function AdminCondominiumsPage() {
                 <Card
                   key={c.id}
                   onClick={() => setSelectedCondo(c)}
-                  className="bg-stone-900 border-stone-800 hover:border-amber-500/40 cursor-pointer transition-all rounded-none"
+                  className="bg-card border-border hover:border-gold-deep cursor-pointer transition-all rounded-[1px] shadow-subtle"
                 >
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <Badge
                         variant="outline"
-                        className="rounded-none border-stone-700 text-amber-300 text-[10px]"
+                        className="rounded-[1px] border-border text-gold-deep text-[10px] font-heading font-medium"
                       >
                         {c.neighborhood}
                       </Badge>
-                      <span className="text-xs text-stone-400 font-mono">
+                      <span className="text-xs text-muted-foreground font-mono">
                         {refsCount} indicações
                       </span>
                     </div>
-                    <CardTitle className="text-base text-stone-100 font-serif font-medium mt-1">
+                    <CardTitle className="text-base text-foreground font-serif font-semibold mt-1">
                       {c.name}
                     </CardTitle>
                   </CardHeader>
-                  <CardContent className="pt-0 text-xs text-stone-400 space-y-2">
+                  <CardContent className="pt-0 text-xs text-muted-foreground space-y-2 font-sans">
                     <p className="flex items-center gap-1 line-clamp-1">
-                      <MapPin className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                      <MapPin
+                        className="w-3.5 h-3.5 text-muted-foreground shrink-0"
+                        strokeWidth={1.5}
+                      />
                       {c.address || `${c.neighborhood}, Rio de Janeiro - RJ`}
                     </p>
                     <div className="flex justify-end pt-1">
-                      <span className="text-[11px] text-amber-400 hover:text-amber-300 flex items-center">
+                      <span className="text-[11px] text-gold-deep hover:text-gold-deep/80 flex items-center font-heading font-medium">
                         Ver histórico do prédio
-                        <ArrowRight className="w-3 h-3 ml-1" />
+                        <ArrowRight className="w-3 h-3 ml-1" strokeWidth={1.5} />
                       </span>
                     </div>
                   </CardContent>
@@ -240,28 +238,28 @@ export function AdminCondominiumsPage() {
 
       {/* MODAL: Detalhes do Condomínio com indicações e participantes vinculados */}
       <Dialog open={!!selectedCondo} onOpenChange={(open) => !open && setSelectedCondo(null)}>
-        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-xl max-h-[85vh] overflow-y-auto">
+        <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-xl max-h-[85vh] overflow-y-auto">
           {selectedCondo && (
             <>
               <DialogHeader>
-                <DialogTitle className="font-serif text-xl text-white">
+                <DialogTitle className="font-serif text-xl text-foreground font-semibold">
                   {selectedCondo.name}
                 </DialogTitle>
-                <DialogDescription className="text-stone-400 text-xs flex items-center gap-1 mt-1">
-                  <MapPin className="w-3.5 h-3.5 text-amber-400" />
+                <DialogDescription className="text-muted-foreground text-xs flex items-center gap-1 mt-1 font-sans">
+                  <MapPin className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
                   {selectedCondo.address || `${selectedCondo.neighborhood}, Rio de Janeiro - RJ`}
                 </DialogDescription>
               </DialogHeader>
 
-              <div className="space-y-4 py-3 text-xs">
-                <div className="flex justify-between items-center border-b border-stone-800 pb-2">
-                  <span className="font-semibold text-stone-200">
+              <div className="space-y-4 py-3 text-xs font-sans">
+                <div className="flex justify-between items-center border-b border-border pb-2 font-heading">
+                  <span className="font-semibold text-foreground uppercase tracking-label text-[11px]">
                     Indicações Vinculadas ({condoReferrals.length})
                   </span>
                 </div>
 
                 {condoReferrals.length === 0 ? (
-                  <p className="text-stone-500 py-4 text-center italic">
+                  <p className="text-muted-foreground py-4 text-center italic font-sans">
                     Nenhuma indicação cadastrada para este condomínio até o momento.
                   </p>
                 ) : (
@@ -269,13 +267,13 @@ export function AdminCondominiumsPage() {
                     {condoReferrals.map((r) => (
                       <div
                         key={r.id}
-                        className="p-3 bg-stone-950 border border-stone-800 rounded-none flex justify-between items-center"
+                        className="p-3 bg-secondary/50 border border-border rounded-[1px] flex justify-between items-center"
                       >
                         <div>
-                          <p className="font-medium text-stone-200">
+                          <p className="font-medium text-foreground">
                             {r.owner_name || 'Proprietário'} {r.unit ? `(Unidade ${r.unit})` : ''}
                           </p>
-                          <span className="text-[10px] text-stone-500">
+                          <span className="text-[10px] text-muted-foreground font-mono">
                             Indicado por: {r.expand?.current_owner_id?.name || 'Membro'} •{' '}
                             {new Date(r.created).toLocaleDateString('pt-BR')}
                           </span>
@@ -283,7 +281,7 @@ export function AdminCondominiumsPage() {
                         <div className="flex items-center gap-2">
                           <Badge
                             variant="outline"
-                            className="rounded-none border-stone-700 text-stone-300 text-[10px]"
+                            className="rounded-[1px] border-border text-foreground text-[10px] font-mono"
                           >
                             {r.status}
                           </Badge>
@@ -291,7 +289,7 @@ export function AdminCondominiumsPage() {
                             asChild
                             size="sm"
                             variant="ghost"
-                            className="text-amber-400 hover:text-amber-300 rounded-none text-xs"
+                            className="text-gold-deep hover:text-gold-deep/80 rounded-[1px] text-xs font-heading"
                           >
                             <Link to={`/admin/indicacoes/${r.id}`}>Abrir</Link>
                           </Button>
@@ -306,7 +304,7 @@ export function AdminCondominiumsPage() {
                 <Button
                   variant="outline"
                   onClick={() => setSelectedCondo(null)}
-                  className="rounded-none text-xs border-stone-800 text-stone-300"
+                  className="rounded-[1px] text-xs font-heading"
                 >
                   Fechar
                 </Button>
@@ -318,43 +316,47 @@ export function AdminCondominiumsPage() {
 
       {/* MODAL: Novo Condomínio */}
       <Dialog open={createModalOpen} onOpenChange={setCreateModalOpen}>
-        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+        <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
           <form onSubmit={handleCreateCondo}>
             <DialogHeader>
-              <DialogTitle className="font-serif text-lg text-white">
+              <DialogTitle className="font-serif text-lg text-foreground font-semibold">
                 Cadastrar Condomínio
               </DialogTitle>
             </DialogHeader>
-            <div className="space-y-3 py-3 text-xs">
+            <div className="space-y-3 py-3 text-xs font-sans">
               <div className="space-y-1">
-                <label className="text-stone-300 font-medium">Nome do Condomínio / Edifício:</label>
+                <label className="text-foreground font-heading font-medium">
+                  Nome do Condomínio / Edifício:
+                </label>
                 <Input
                   placeholder="Ex: Condomínio Península Bernini"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                  className="bg-background border-border text-xs rounded-[1px] text-foreground"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-stone-300 font-medium">Bairro:</label>
+                <label className="text-foreground font-heading font-medium">Bairro:</label>
                 <Input
                   value={neighborhood}
                   onChange={(e) => setNeighborhood(e.target.value)}
                   placeholder="Barra da Tijuca, Recreio dos Bandeirantes..."
-                  className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                  className="bg-background border-border text-xs rounded-[1px] text-foreground"
                   required
                 />
               </div>
 
               <div className="space-y-1">
-                <label className="text-stone-300 font-medium">Endereço Completo:</label>
+                <label className="text-foreground font-heading font-medium">
+                  Endereço Completo:
+                </label>
                 <Input
                   placeholder="Av. dos Flamboyants, 500"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                  className="bg-background border-border text-xs rounded-[1px] text-foreground"
                 />
               </div>
             </div>
@@ -363,16 +365,20 @@ export function AdminCondominiumsPage() {
                 type="button"
                 variant="ghost"
                 onClick={() => setCreateModalOpen(false)}
-                className="rounded-none text-xs text-stone-400"
+                className="rounded-[1px] text-xs font-heading text-muted-foreground hover:text-foreground"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={submitting || !name.trim()}
-                className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading font-semibold"
               >
-                {submitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : 'Cadastrar'}
+                {submitting ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" strokeWidth={1.5} />
+                ) : (
+                  'Cadastrar'
+                )}
               </Button>
             </DialogFooter>
           </form>

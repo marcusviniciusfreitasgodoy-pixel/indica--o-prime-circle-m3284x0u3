@@ -156,16 +156,20 @@ export function AdminOwnersPage() {
   })
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="font-serif text-2xl sm:text-3xl text-white font-medium">
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Carteira & Precedência
+            </span>
+            <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold flex items-center gap-2">
+              <UserSquare2 className="w-6 h-6 text-gold-deep" strokeWidth={1.5} />
               Proprietários & Imóveis Conhecidos
             </h1>
-            <p className="text-sm text-stone-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1 font-sans">
               Busca unificada de proprietários, histórico por imóvel e base de precedência (180
               dias).
             </p>
@@ -174,40 +178,43 @@ export function AdminOwnersPage() {
           <Button
             size="sm"
             onClick={() => setAddModalOpen(true)}
-            className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
+            className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading font-semibold"
           >
-            <Plus className="w-3.5 h-3.5 mr-1" />
+            <Plus className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
             Adicionar à Base Conhecida
           </Button>
         </div>
 
         {/* Search Bar */}
-        <div className="bg-stone-900 border border-stone-800 p-4">
+        <div className="bg-card border border-border p-4 rounded-[1px]">
           <div className="relative max-w-md">
-            <Search className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
+            <Search
+              className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5"
+              strokeWidth={1.5}
+            />
             <Input
               placeholder="Buscar proprietário, condomínio, unidade ou telefone..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="bg-stone-950 border-stone-800 pl-9 rounded-none text-xs"
+              className="bg-background border-border pl-9 rounded-[1px] text-xs text-foreground placeholder:text-muted-foreground"
             />
           </div>
         </div>
 
         {/* Owners Table */}
         {loading ? (
-          <div className="py-20 flex justify-center text-stone-400 text-sm">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-500 mr-2" />
+          <div className="py-20 flex justify-center text-muted-foreground text-sm font-sans">
+            <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" strokeWidth={1.5} />
             Carregando base de proprietários...
           </div>
         ) : filteredOwners.length === 0 ? (
-          <Card className="bg-stone-900 border-stone-800 rounded-none p-12 text-center text-stone-500 text-xs">
+          <Card className="bg-card border-border rounded-[1px] p-12 text-center text-muted-foreground text-xs font-sans">
             Nenhum proprietário encontrado com os termos pesquisados.
           </Card>
         ) : (
-          <div className="bg-stone-900 border border-stone-800 overflow-x-auto">
+          <div className="bg-card border border-border overflow-x-auto rounded-[1px]">
             <table className="w-full text-left text-xs">
-              <thead className="bg-stone-950 border-b border-stone-800 text-stone-400">
+              <thead className="bg-secondary/60 border-b border-border text-muted-foreground font-heading text-[11px] uppercase tracking-label">
                 <tr>
                   <th className="p-3">Proprietário</th>
                   <th className="p-3">Contato</th>
@@ -216,25 +223,31 @@ export function AdminOwnersPage() {
                   <th className="p-3 text-right">Ação</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800/60">
+              <tbody className="divide-y divide-border/60">
                 {filteredOwners.map((owner, idx) => (
                   <tr
                     key={`${owner.id}-${idx}`}
-                    className="hover:bg-stone-800/30 transition-colors"
+                    className={`hover:bg-accent/40 transition-colors ${
+                      idx % 2 === 1 ? 'bg-secondary/40' : 'bg-card'
+                    }`}
                   >
-                    <td className="p-3 font-medium text-stone-200">{owner.name}</td>
-                    <td className="p-3 text-stone-400">
-                      <div>{owner.phone || 'Sem telefone'}</div>
-                      <div className="text-[11px] text-stone-500">{owner.email}</div>
+                    <td className="p-3 font-medium text-foreground">{owner.name}</td>
+                    <td className="p-3 text-muted-foreground">
+                      <div className="font-mono text-foreground">
+                        {owner.phone || 'Sem telefone'}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground font-mono">
+                        {owner.email}
+                      </div>
                     </td>
                     <td className="p-3">
                       {owner.displayCondo ? (
-                        <span className="text-amber-300">
+                        <span className="text-gold-deep font-heading">
                           {owner.displayCondo}
                           {owner.unit ? ` (${owner.unit})` : ''}
                         </span>
                       ) : (
-                        <span className="text-stone-400">
+                        <span className="text-muted-foreground font-sans">
                           {owner.address || 'Não especificado'}
                         </span>
                       )}
@@ -243,14 +256,14 @@ export function AdminOwnersPage() {
                       {owner.isKnownBase ? (
                         <Badge
                           variant="outline"
-                          className="rounded-none border-stone-700 text-amber-400 text-[10px]"
+                          className="rounded-[1px] border-border text-gold-deep text-[10px] font-heading font-medium"
                         >
                           Base Conhecida (Precedência)
                         </Badge>
                       ) : (
                         <Badge
                           variant="outline"
-                          className="rounded-none border-stone-700 text-sky-400 text-[10px]"
+                          className="rounded-[1px] border-border text-info text-[10px] font-mono"
                         >
                           Indicação #{owner.rawReferral?.id.substring(0, 6)} (
                           {owner.rawReferral?.status})
@@ -263,11 +276,11 @@ export function AdminOwnersPage() {
                           asChild
                           size="sm"
                           variant="ghost"
-                          className="text-amber-400 hover:text-amber-300 rounded-none text-xs"
+                          className="text-gold-deep hover:text-gold-deep/80 rounded-[1px] text-xs font-heading"
                         >
                           <Link to={`/admin/indicacoes/${owner.rawReferral.id}`}>
                             Ver Indicação
-                            <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                            <ChevronRight className="w-3.5 h-3.5 ml-1" strokeWidth={1.5} />
                           </Link>
                         </Button>
                       ) : (
@@ -275,7 +288,7 @@ export function AdminOwnersPage() {
                           size="sm"
                           variant="ghost"
                           onClick={() => setSelectedOwner(owner)}
-                          className="text-stone-400 hover:text-white rounded-none text-xs"
+                          className="text-muted-foreground hover:text-foreground rounded-[1px] text-xs font-heading"
                         >
                           Detalhes
                         </Button>
@@ -291,57 +304,61 @@ export function AdminOwnersPage() {
 
       {/* MODAL: Adicionar à Base Conhecida */}
       <Dialog open={addModalOpen} onOpenChange={setAddModalOpen}>
-        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+        <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
           <form onSubmit={handleAddKnownOwner}>
             <DialogHeader>
-              <DialogTitle className="font-serif text-lg text-white">
+              <DialogTitle className="font-serif text-lg text-foreground font-semibold">
                 Adicionar à Base Conhecida
               </DialogTitle>
-              <DialogDescription className="text-stone-400 text-xs">
+              <DialogDescription className="text-muted-foreground text-xs font-sans">
                 Proprietários com conversa real cadastrada acionam a regra de precedência de 180
                 dias contra duplicações.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-3 text-xs">
+            <div className="space-y-3 py-3 text-xs font-sans">
               <div className="space-y-1">
-                <label className="text-stone-300 font-medium">Nome do Proprietário:</label>
+                <label className="text-foreground font-heading font-medium">
+                  Nome do Proprietário:
+                </label>
                 <Input
                   value={ownerName}
                   onChange={(e) => setOwnerName(e.target.value)}
                   placeholder="Nome completo..."
-                  className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                  className="bg-background border-border text-xs rounded-[1px] text-foreground"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-stone-300 font-medium">Telefone:</label>
+                  <label className="text-foreground font-heading font-medium">Telefone:</label>
                   <Input
                     value={ownerPhone}
                     onChange={(e) => setOwnerPhone(e.target.value)}
                     placeholder="(21) 99999-9999"
-                    className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                    className="bg-background border-border text-xs rounded-[1px] font-mono text-foreground"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-stone-300 font-medium">E-mail:</label>
+                  <label className="text-foreground font-heading font-medium">E-mail:</label>
                   <Input
                     value={ownerEmail}
                     onChange={(e) => setOwnerEmail(e.target.value)}
                     placeholder="email@exemplo.com"
-                    className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                    className="bg-background border-border text-xs rounded-[1px] text-foreground"
                   />
                 </div>
               </div>
 
               <div className="space-y-1">
-                <label className="text-stone-300 font-medium">Condomínio (se houver):</label>
+                <label className="text-foreground font-heading font-medium">
+                  Condomínio (se houver):
+                </label>
                 <select
                   value={ownerCondoId}
                   onChange={(e) => setOwnerCondoId(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-none p-2 text-xs text-stone-200"
+                  className="w-full bg-background border border-border rounded-[1px] p-2 text-xs text-foreground font-sans"
                 >
                   <option value="">(Nenhum condomínio cadastrado)</option>
                   {condos.map((c) => (
@@ -354,21 +371,23 @@ export function AdminOwnersPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <label className="text-stone-300 font-medium">Unidade / Apto:</label>
+                  <label className="text-foreground font-heading font-medium">
+                    Unidade / Apto:
+                  </label>
                   <Input
                     value={ownerUnit}
                     onChange={(e) => setOwnerUnit(e.target.value)}
                     placeholder="Ex: Bloco 2 / 401"
-                    className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                    className="bg-background border-border text-xs rounded-[1px] text-foreground"
                   />
                 </div>
                 <div className="space-y-1">
-                  <label className="text-stone-300 font-medium">Endereço:</label>
+                  <label className="text-foreground font-heading font-medium">Endereço:</label>
                   <Input
                     value={ownerAddress}
                     onChange={(e) => setOwnerAddress(e.target.value)}
                     placeholder="Av. das Américas..."
-                    className="bg-stone-950 border-stone-800 text-xs rounded-none"
+                    className="bg-background border-border text-xs rounded-[1px] text-foreground"
                   />
                 </div>
               </div>
@@ -379,16 +398,20 @@ export function AdminOwnersPage() {
                 type="button"
                 variant="ghost"
                 onClick={() => setAddModalOpen(false)}
-                className="rounded-none text-xs text-stone-400"
+                className="rounded-[1px] text-xs font-heading text-muted-foreground hover:text-foreground"
               >
                 Cancelar
               </Button>
               <Button
                 type="submit"
                 disabled={submitting || !ownerName.trim()}
-                className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading font-semibold"
               >
-                {submitting ? <Loader2 className="w-3 h-3 animate-spin mr-1" /> : 'Salvar na Base'}
+                {submitting ? (
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" strokeWidth={1.5} />
+                ) : (
+                  'Salvar na Base'
+                )}
               </Button>
             </DialogFooter>
           </form>

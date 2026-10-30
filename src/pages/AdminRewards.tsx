@@ -282,34 +282,76 @@ export function AdminRewardsPage() {
     switch (st) {
       case 'aguardando_comissao':
         return (
-          <Badge className="bg-amber-950 text-amber-300 border-amber-800">
+          <Badge
+            variant="outline"
+            className="border-warning/40 bg-warning/10 text-warning rounded-[1px] font-heading text-[10px]"
+          >
             Aguardando Comissão
           </Badge>
         )
       case 'em_analise':
-        return <Badge className="bg-blue-950 text-blue-300 border-blue-800">Em Análise</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="border-info/40 bg-info/10 text-info rounded-[1px] font-heading text-[10px]"
+          >
+            Em Análise
+          </Badge>
+        )
       case 'em_revisao_admin':
         return (
-          <Badge className="bg-rose-950 text-rose-300 border-rose-800 animate-pulse">
+          <Badge
+            variant="outline"
+            className="border-destructive/40 bg-destructive/10 text-destructive rounded-[1px] font-heading text-[10px]"
+          >
             Revisão Admin (Laranja)
           </Badge>
         )
       case 'pendente_dados':
         return (
-          <Badge className="bg-purple-950 text-purple-300 border-purple-800">
+          <Badge
+            variant="outline"
+            className="border-border bg-secondary text-gold-deep rounded-[1px] font-heading text-[10px]"
+          >
             Pendente Dados (CPF/Pix)
           </Badge>
         )
       case 'aprovada':
         return (
-          <Badge className="bg-emerald-950 text-emerald-300 border-emerald-800">Aprovada</Badge>
+          <Badge
+            variant="outline"
+            className="border-success/40 bg-success/10 text-success rounded-[1px] font-heading text-[10px]"
+          >
+            Aprovada
+          </Badge>
         )
       case 'em_lote':
-        return <Badge className="bg-cyan-950 text-cyan-300 border-cyan-800">Em Lote do Mês</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="border-info/40 bg-info/10 text-info rounded-[1px] font-heading text-[10px]"
+          >
+            Em Lote do Mês
+          </Badge>
+        )
       case 'paga':
-        return <Badge className="bg-emerald-900 text-white border-emerald-600">Paga</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="border-success/60 bg-success/20 text-success rounded-[1px] font-heading text-[10px]"
+          >
+            Paga
+          </Badge>
+        )
       case 'cancelada':
-        return <Badge className="bg-stone-900 text-stone-500 border-stone-800">Cancelada</Badge>
+        return (
+          <Badge
+            variant="outline"
+            className="border-border bg-background text-muted-foreground rounded-[1px] font-heading text-[10px]"
+          >
+            Cancelada
+          </Badge>
+        )
     }
   }
 
@@ -405,13 +447,15 @@ export function AdminRewardsPage() {
 
         {/* Lista de Recompensas */}
         {loading ? (
-          <div className="p-12 text-center text-xs text-stone-500">Carregando recompensas...</div>
+          <div className="p-12 text-center text-xs text-muted-foreground font-sans">
+            Carregando recompensas...
+          </div>
         ) : filteredRewards.length === 0 ? (
-          <div className="p-12 text-center border border-dashed border-stone-800 text-stone-500 text-xs">
+          <div className="p-12 text-center border border-dashed border-border text-muted-foreground text-xs rounded-[1px] font-sans">
             Nenhuma recompensa encontrada nesta fila.
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-3">
+          <div className="grid grid-cols-1 gap-3 font-sans">
             {filteredRewards.map((rew) => {
               const rule = rew.expand?.rule_id
               const isRuleReleased = !!rule?.released_for_use
@@ -422,33 +466,48 @@ export function AdminRewardsPage() {
               return (
                 <Card
                   key={rew.id}
-                  className="bg-stone-900/60 border-stone-800/80 rounded-none hover:border-stone-700 transition-colors"
+                  className="bg-card border-border rounded-[1px] hover:border-gold-deep/60 transition-colors shadow-subtle"
                 >
-                  <CardContent className="p-4 space-y-3">
-                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-800/60 pb-3">
-                      <div className="flex items-center gap-2 flex-wrap">
+                  <CardContent className="p-4 space-y-3 font-sans">
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-border pb-3">
+                      <div className="flex items-center gap-2 flex-wrap font-heading">
                         {getStatusBadge(rew.status)}
-                        <Badge className="bg-stone-800 text-stone-300 text-[10px] uppercase rounded-none">
+                        <Badge
+                          variant="outline"
+                          className="border-border text-muted-foreground text-[10px] uppercase rounded-[1px] font-mono"
+                        >
                           Marco: {rew.milestone}
                         </Badge>
-                        <Badge className="bg-stone-800 text-stone-300 text-[10px] uppercase rounded-none">
+                        <Badge
+                          variant="outline"
+                          className="border-border text-foreground text-[10px] uppercase rounded-[1px]"
+                        >
                           {rew.beneficiary_type}
                         </Badge>
                         {rew.via_decline && (
-                          <Badge className="bg-rose-950 text-rose-300 border-rose-800 text-[10px] rounded-none">
+                          <Badge
+                            variant="outline"
+                            className="border-destructive/40 bg-destructive/10 text-destructive text-[10px] rounded-[1px]"
+                          >
                             Via Declínio Godoy
                           </Badge>
                         )}
                         {!isRuleReleased && (
-                          <Badge className="bg-amber-950/70 text-amber-400 border-amber-800/60 text-[10px] rounded-none flex items-center gap-1">
-                            <AlertTriangle className="w-3 h-3" /> Regra Não Liberada (Draft)
+                          <Badge
+                            variant="outline"
+                            className="border-warning/40 bg-warning/10 text-warning text-[10px] rounded-[1px] flex items-center gap-1 font-heading"
+                          >
+                            <AlertTriangle className="w-3 h-3" strokeWidth={1.5} /> Regra Não
+                            Liberada (Draft)
                           </Badge>
                         )}
                       </div>
 
                       <div className="text-right">
-                        <span className="text-xs text-stone-400 mr-2">Valor Final:</span>
-                        <span className="text-base font-mono font-bold text-emerald-400">
+                        <span className="text-xs text-muted-foreground mr-2 font-sans">
+                          Valor Final:
+                        </span>
+                        <span className="text-base font-mono font-bold text-gold-deep">
                           R${' '}
                           {Number(rew.final_amount_brl || 0).toLocaleString('pt-BR', {
                             minimumFractionDigits: 2,
@@ -457,53 +516,55 @@ export function AdminRewardsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs font-sans">
                       {/* Beneficiário */}
-                      <div className="space-y-1 bg-stone-950/50 p-2.5 border border-stone-800/50">
-                        <div className="text-[10px] font-semibold text-stone-400 flex items-center gap-1 uppercase">
-                          <User className="w-3 h-3 text-amber-500" /> Beneficiário
+                      <div className="space-y-1 bg-secondary/50 p-2.5 border border-border rounded-[1px]">
+                        <div className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1 uppercase font-heading tracking-label">
+                          <User className="w-3 h-3 text-gold-deep" strokeWidth={1.5} /> Beneficiário
                         </div>
-                        <div className="font-medium text-stone-200">
+                        <div className="font-medium text-foreground">
                           {userObj?.name || referral?.referrer_name || 'Participante'}
                         </div>
-                        <div className="text-stone-400 text-[11px]">
+                        <div className="text-muted-foreground text-[11px] font-mono">
                           CPF:{' '}
                           {participant?.cpf || (
-                            <span className="text-amber-400">Não informado</span>
+                            <span className="text-gold-deep">Não informado</span>
                           )}
                         </div>
-                        <div className="text-stone-400 text-[11px]">
+                        <div className="text-muted-foreground text-[11px] font-mono">
                           Pix:{' '}
                           {participant?.pix_key || (
-                            <span className="text-amber-400">Não informada</span>
+                            <span className="text-gold-deep">Não informada</span>
                           )}
                         </div>
                       </div>
 
                       {/* Indicação / Imóvel */}
-                      <div className="space-y-1 bg-stone-950/50 p-2.5 border border-stone-800/50">
-                        <div className="text-[10px] font-semibold text-stone-400 flex items-center gap-1 uppercase">
-                          <Building className="w-3 h-3 text-amber-500" /> Indicação Vinculada
+                      <div className="space-y-1 bg-secondary/50 p-2.5 border border-border rounded-[1px]">
+                        <div className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1 uppercase font-heading tracking-label">
+                          <Building className="w-3 h-3 text-gold-deep" strokeWidth={1.5} />{' '}
+                          Indicação Vinculada
                         </div>
-                        <div className="font-medium text-stone-200">
+                        <div className="font-medium text-foreground">
                           {referral?.expand?.condominium_id?.name || 'Condomínio não informado'}
                         </div>
-                        <div className="text-stone-400 text-[11px]">
+                        <div className="text-muted-foreground text-[11px] font-sans">
                           Tipo: {referral?.referral_type || referral?.type || '-'}
                         </div>
-                        <div className="text-stone-400 text-[11px] font-mono">
+                        <div className="text-muted-foreground text-[11px] font-mono">
                           ID: #{rew.referral_id?.substring(0, 8)}
                         </div>
                       </div>
 
                       {/* Regra & Ajustes */}
-                      <div className="space-y-1 bg-stone-950/50 p-2.5 border border-stone-800/50">
-                        <div className="text-[10px] font-semibold text-stone-400 flex items-center gap-1 uppercase">
-                          <Coins className="w-3 h-3 text-amber-500" /> Regra & Conformidade
+                      <div className="space-y-1 bg-secondary/50 p-2.5 border border-border rounded-[1px]">
+                        <div className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1 uppercase font-heading tracking-label">
+                          <Coins className="w-3 h-3 text-gold-deep" strokeWidth={1.5} /> Regra &
+                          Conformidade
                         </div>
-                        <div className="text-stone-300 text-[11px]">
+                        <div className="text-foreground text-[11px]">
                           Cálculo Base:{' '}
-                          <span className="font-mono">
+                          <span className="font-mono text-gold-deep">
                             R${' '}
                             {Number(rew.calculated_amount_brl || 0).toLocaleString('pt-BR', {
                               minimumFractionDigits: 2,
@@ -511,12 +572,12 @@ export function AdminRewardsPage() {
                           </span>
                         </div>
                         {rew.adjustment_reason && (
-                          <div className="text-amber-300 text-[11px] italic">
+                          <div className="text-gold-deep text-[11px] italic">
                             Motivo Ajuste: {rew.adjustment_reason}
                           </div>
                         )}
                         {rew.orange_flag_reason && (
-                          <div className="text-rose-400 text-[11px] font-semibold">
+                          <div className="text-destructive text-[11px] font-semibold">
                             {rew.orange_flag_reason}
                           </div>
                         )}
@@ -524,8 +585,8 @@ export function AdminRewardsPage() {
                     </div>
 
                     {/* Ações da Recompensa */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-stone-800/60 text-xs">
-                      <div className="text-[11px] text-stone-400">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-2 border-t border-border text-xs">
+                      <div className="text-[11px] text-muted-foreground font-mono">
                         {rew.approved_at && (
                           <span>
                             Aprovada em {new Date(rew.approved_at).toLocaleDateString('pt-BR')}
@@ -533,28 +594,28 @@ export function AdminRewardsPage() {
                           </span>
                         )}
                         {rew.paid_at && (
-                          <span className="ml-2 text-emerald-400">
+                          <span className="ml-2 text-success">
                             Paga via {rew.payment_method?.toUpperCase()} em{' '}
                             {new Date(rew.paid_at).toLocaleDateString('pt-BR')}
                           </span>
                         )}
                       </div>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 font-heading">
                         {/* Botão de Aprovação */}
                         {rew.status === 'em_analise' && (
                           <Button
                             size="sm"
                             disabled={!canApproveOrPay || !isRuleReleased}
                             onClick={() => handleOpenApprove(rew)}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-semibold text-xs rounded-none h-7 px-3 disabled:opacity-40"
+                            className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs rounded-[1px] h-7 px-3 disabled:opacity-40"
                             title={
                               !isRuleReleased
                                 ? 'Regra não liberada para uso (released_for_use = false)'
                                 : ''
                             }
                           >
-                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                             Aprovar
                           </Button>
                         )}
@@ -565,9 +626,10 @@ export function AdminRewardsPage() {
                             size="sm"
                             disabled={!canApproveOrPay}
                             onClick={() => handleOpenPayment(rew)}
-                            className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-xs rounded-none h-7 px-3"
+                            variant="outline"
+                            className="text-gold-deep border-border hover:bg-secondary text-xs rounded-[1px] h-7 px-3 font-semibold"
                           >
-                            <Upload className="w-3.5 h-3.5 mr-1" />
+                            <Upload className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                             Registrar Pagamento
                           </Button>
                         )}
@@ -582,22 +644,22 @@ export function AdminRewardsPage() {
 
         {/* Modal de Aprovação */}
         <Dialog open={approveModalOpen} onOpenChange={setApproveModalOpen}>
-          <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-base text-white flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+              <DialogTitle className="text-base text-foreground font-serif font-semibold flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-success" strokeWidth={1.5} />
                 Aprovar Recompensa
               </DialogTitle>
-              <DialogDescription className="text-xs text-stone-400">
+              <DialogDescription className="text-xs text-muted-foreground font-sans">
                 A aprovação exige conformidade e justificativa formal de auditoria.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-xs">
-              <div className="bg-stone-950 p-3 border border-stone-800 space-y-1">
+            <div className="space-y-3 py-2 text-xs font-sans">
+              <div className="bg-secondary/50 p-3 border border-border space-y-1 rounded-[1px]">
                 <div className="flex justify-between">
-                  <span className="text-stone-400">Valor Final:</span>
-                  <span className="font-mono font-bold text-emerald-400">
+                  <span className="text-muted-foreground">Valor Final:</span>
+                  <span className="font-mono font-bold text-gold-deep">
                     R${' '}
                     {Number(selectedReward?.final_amount_brl || 0).toLocaleString('pt-BR', {
                       minimumFractionDigits: 2,
@@ -605,8 +667,8 @@ export function AdminRewardsPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-400">Beneficiário:</span>
-                  <span className="text-stone-200">
+                  <span className="text-muted-foreground">Beneficiário:</span>
+                  <span className="text-foreground font-medium">
                     {selectedReward?.expand?.participant_id?.expand?.user_id?.name ||
                       'Participante'}
                   </span>
@@ -614,14 +676,14 @@ export function AdminRewardsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">
+                <Label className="text-xs text-foreground font-heading font-medium">
                   Justificativa de Aprovação (Obrigatória)
                 </Label>
                 <Textarea
                   value={justification}
                   onChange={(e) => setJustification(e.target.value)}
                   placeholder="Ex: Documentação conferida, matrícula validada e conformidade aprovada pelo financeiro."
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs text-foreground placeholder:text-muted-foreground"
                   rows={3}
                 />
               </div>
@@ -632,7 +694,7 @@ export function AdminRewardsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setApproveModalOpen(false)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="rounded-[1px] text-xs font-heading"
               >
                 Cancelar
               </Button>
@@ -640,7 +702,7 @@ export function AdminRewardsPage() {
                 size="sm"
                 disabled={approving || !justification.trim()}
                 onClick={handleConfirmApprove}
-                className="bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-semibold rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold rounded-[1px] text-xs font-heading"
               >
                 {approving ? 'Aprovando...' : 'Confirmar Aprovação'}
               </Button>
@@ -650,24 +712,26 @@ export function AdminRewardsPage() {
 
         {/* Modal Registrar Pagamento */}
         <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-          <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-base text-white flex items-center gap-2">
-                <Upload className="w-4 h-4 text-amber-500" />
+              <DialogTitle className="text-base text-foreground font-serif font-semibold flex items-center gap-2">
+                <Upload className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                 Registrar Pagamento de Recompensa
               </DialogTitle>
-              <DialogDescription className="text-xs text-stone-400">
+              <DialogDescription className="text-xs text-muted-foreground font-sans">
                 Exige método, data e comprovante emitido pela instituição pagadora.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-3 py-2 text-xs font-sans">
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Método de Pagamento</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Método de Pagamento
+                </Label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                  className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                 >
                   <option value="pix">Pix</option>
                   <option value="transferencia">Transferência Bancária (TED/DOC)</option>
@@ -679,43 +743,49 @@ export function AdminRewardsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Data do Pagamento</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Data do Pagamento
+                </Label>
                 <Input
                   type="date"
                   value={paidAt}
                   onChange={(e) => setPaidAt(e.target.value)}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">
+                <Label className="text-xs text-foreground font-heading font-medium">
                   Comprovante de Pagamento (Upload Obrigatório)
                 </Label>
                 <Input
                   type="file"
                   onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs cursor-pointer"
+                  className="bg-background border-border rounded-[1px] text-xs cursor-pointer text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Referência / Código da Transação</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Referência / Código da Transação
+                </Label>
                 <Input
                   value={paymentRef}
                   onChange={(e) => setPaymentRef(e.target.value)}
                   placeholder="Ex: E2E123456789..."
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Observações</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Observações
+                </Label>
                 <Input
                   value={paymentNotes}
                   onChange={(e) => setPaymentNotes(e.target.value)}
                   placeholder="Notas internas..."
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs text-foreground"
                 />
               </div>
             </div>
@@ -725,7 +795,7 @@ export function AdminRewardsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setPaymentModalOpen(false)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="rounded-[1px] text-xs font-heading"
               >
                 Cancelar
               </Button>
@@ -733,7 +803,7 @@ export function AdminRewardsPage() {
                 size="sm"
                 disabled={paying || (!proofFile && !selectedReward?.payment_proof_file)}
                 onClick={handleConfirmPayment}
-                className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold rounded-[1px] text-xs font-heading"
               >
                 {paying ? 'Salvando...' : 'Registrar Pagamento'}
               </Button>
@@ -743,47 +813,53 @@ export function AdminRewardsPage() {
 
         {/* Modal Registrar Comissão Recebida */}
         <Dialog open={commissionModalOpen} onOpenChange={setCommissionModalOpen}>
-          <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-base text-white flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-amber-500" />
+              <DialogTitle className="text-base text-foreground font-serif font-semibold flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                 Registrar Comissão Recebida do Negócio
               </DialogTitle>
-              <DialogDescription className="text-xs text-stone-400">
+              <DialogDescription className="text-xs text-muted-foreground font-sans">
                 Aplica o teto de 10% por lado sobre o valor recebido e move para Em Análise ou
                 Alerta Laranja.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-3 py-2 text-xs font-sans">
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">ID do Negócio (Deal ID)</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  ID do Negócio (Deal ID)
+                </Label>
                 <Input
                   value={commissionDealId}
                   onChange={(e) => setCommissionDealId(e.target.value)}
                   placeholder="ID da tabela deals"
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Data de Recebimento da Comissão</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Data de Recebimento da Comissão
+                </Label>
                 <Input
                   type="date"
                   value={commissionDate}
                   onChange={(e) => setCommissionDate(e.target.value)}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Valor da Comissão Recebida (R$)</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Valor da Comissão Recebida (R$)
+                </Label>
                 <Input
                   type="number"
                   value={commissionValue}
                   onChange={(e) => setCommissionValue(e.target.value)}
                   placeholder="Ex: 60000"
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
             </div>
@@ -793,7 +869,7 @@ export function AdminRewardsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setCommissionModalOpen(false)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="rounded-[1px] text-xs font-heading"
               >
                 Cancelar
               </Button>
@@ -801,7 +877,7 @@ export function AdminRewardsPage() {
                 size="sm"
                 disabled={submittingCommission || !commissionDealId || !commissionValue}
                 onClick={handleConfirmCommission}
-                className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold rounded-[1px] text-xs font-heading"
               >
                 {submittingCommission ? 'Processando...' : 'Aplicar e Calcular'}
               </Button>
@@ -811,35 +887,37 @@ export function AdminRewardsPage() {
 
         {/* Modal Resolver Indicador Laranja */}
         <Dialog open={orangeModalOpen} onOpenChange={setOrangeModalOpen}>
-          <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-base text-white flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-rose-500" />
+              <DialogTitle className="text-base text-foreground font-serif font-semibold flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-destructive" strokeWidth={1.5} />
                 Decisão de Indicador Laranja (Admin)
               </DialogTitle>
-              <DialogDescription className="text-xs text-stone-400">
+              <DialogDescription className="text-xs text-muted-foreground font-sans">
                 Confirmação de independência entre indicadores coincidentes ou aplicação da regra de
                 indicador único.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-3 py-2 text-xs font-sans">
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">ID do Negócio (Deal ID)</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  ID do Negócio (Deal ID)
+                </Label>
                 <Input
                   value={orangeDealId}
                   onChange={(e) => setOrangeDealId(e.target.value)}
                   placeholder="ID do negócio em revisão"
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Decisão</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">Decisão</Label>
                 <select
                   value={orangeDecision}
                   onChange={(e) => setOrangeDecision(e.target.value as any)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                  className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                 >
                   <option value="confirmar_independencia">
                     Confirmar Independência (Libera os dois)
@@ -851,12 +929,14 @@ export function AdminRewardsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Motivo / Parecer do Administrador</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Motivo / Parecer do Administrador
+                </Label>
                 <Textarea
                   value={orangeReason}
                   onChange={(e) => setOrangeReason(e.target.value)}
                   placeholder="Parecer formal detalhando o motivo da decisão..."
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs text-foreground placeholder:text-muted-foreground"
                   rows={3}
                 />
               </div>
@@ -867,7 +947,7 @@ export function AdminRewardsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setOrangeModalOpen(false)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="rounded-[1px] text-xs font-heading"
               >
                 Cancelar
               </Button>
@@ -875,7 +955,7 @@ export function AdminRewardsPage() {
                 size="sm"
                 disabled={resolvingOrange || !orangeDealId || !orangeReason.trim()}
                 onClick={handleConfirmOrange}
-                className="bg-rose-600 hover:bg-rose-500 text-white font-semibold rounded-none text-xs"
+                className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-semibold rounded-[1px] text-xs font-heading"
               >
                 {resolvingOrange ? 'Salvando...' : 'Registrar Decisão'}
               </Button>

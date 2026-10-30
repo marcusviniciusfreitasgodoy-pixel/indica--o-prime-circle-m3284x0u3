@@ -241,15 +241,17 @@ export function AdminBatchesPage() {
         {/* Layout: Lista de Lotes na Esquerda, Detalhes na Direita */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Coluna Lotes */}
-          <div className="space-y-3">
-            <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+          <div className="space-y-3 font-sans">
+            <h2 className="text-xs font-semibold uppercase tracking-label font-heading text-muted-foreground">
               Lotes Cadastrados ({batches.length})
             </h2>
 
             {loading ? (
-              <div className="p-8 text-center text-xs text-stone-500">Carregando lotes...</div>
+              <div className="p-8 text-center text-xs text-muted-foreground font-sans">
+                Carregando lotes...
+              </div>
             ) : batches.length === 0 ? (
-              <div className="p-8 text-center border border-dashed border-stone-800 text-stone-500 text-xs">
+              <div className="p-8 text-center border border-dashed border-border text-muted-foreground text-xs rounded-[1px] font-sans">
                 Nenhum lote gerado ainda. Clique em "Montar Lote do Mês" para iniciar.
               </div>
             ) : (
@@ -259,31 +261,35 @@ export function AdminBatchesPage() {
                   <Card
                     key={b.id}
                     onClick={() => handleSelectBatch(b)}
-                    className={`cursor-pointer transition-all rounded-none border ${
+                    className={`cursor-pointer transition-all rounded-[1px] border ${
                       isSelected
-                        ? 'bg-stone-900 border-amber-500/50 shadow-md shadow-amber-950/20'
-                        : 'bg-stone-900/60 border-stone-800 hover:border-stone-700'
+                        ? 'bg-card border-gold-deep shadow-subtle'
+                        : 'bg-card border-border hover:border-gold-deep/60'
                     }`}
                   >
-                    <CardContent className="p-4 space-y-2 text-xs">
+                    <CardContent className="p-4 space-y-2 text-xs font-sans">
                       <div className="flex items-center justify-between">
-                        <span className="font-mono font-bold text-sm text-white">
+                        <span className="font-mono font-semibold text-sm text-foreground">
                           {b.month_ref}
                         </span>
                         <Badge
-                          className={`text-[10px] rounded-none ${
+                          variant="outline"
+                          className={`text-[10px] rounded-[1px] font-heading ${
                             b.status === 'fechado'
-                              ? 'bg-stone-800 text-stone-400 border-stone-700'
-                              : 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                              ? 'border-border text-muted-foreground bg-secondary'
+                              : 'border-success/30 text-success bg-success/10'
                           }`}
                         >
                           {b.status.toUpperCase()}
                         </Badge>
                       </div>
 
-                      <div className="flex justify-between text-stone-400 text-[11px]">
-                        <span>Itens: {b.item_count}</span>
-                        <span className="font-mono font-semibold text-emerald-400">
+                      <div className="flex justify-between text-muted-foreground text-[11px]">
+                        <span>
+                          Itens:{' '}
+                          <strong className="font-mono text-foreground">{b.item_count}</strong>
+                        </span>
+                        <span className="font-mono font-semibold text-gold-deep">
                           R${' '}
                           {Number(b.total_amount_brl || 0).toLocaleString('pt-BR', {
                             minimumFractionDigits: 2,
@@ -291,7 +297,7 @@ export function AdminBatchesPage() {
                         </span>
                       </div>
 
-                      <div className="text-[10px] text-stone-500 pt-1 border-t border-stone-800">
+                      <div className="text-[10px] text-muted-foreground pt-1 border-t border-border font-mono">
                         Vencimento:{' '}
                         {b.due_date
                           ? new Date(b.due_date).toLocaleDateString('pt-BR')
@@ -305,27 +311,33 @@ export function AdminBatchesPage() {
           </div>
 
           {/* Coluna Detalhes do Lote Selecionado */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className="lg:col-span-2 space-y-4 font-sans">
             {selectedBatch ? (
               <>
-                <Card className="bg-stone-900/60 border-stone-800 rounded-none">
-                  <CardHeader className="pb-3 border-b border-stone-800/60">
+                <Card className="bg-card border-border rounded-[1px] shadow-subtle">
+                  <CardHeader className="pb-3 border-b border-border">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                       <div>
                         <div className="flex items-center gap-2">
-                          <CardTitle className="text-base text-white font-mono">
+                          <CardTitle className="text-base text-foreground font-mono font-semibold">
                             Lote {selectedBatch.month_ref}
                           </CardTitle>
-                          <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none uppercase">
+                          <Badge
+                            variant="outline"
+                            className="text-foreground border-border text-[10px] rounded-[1px] uppercase font-mono"
+                          >
                             {selectedBatch.status}
                           </Badge>
                         </div>
-                        <CardDescription className="text-xs text-stone-400 mt-0.5">
-                          Total acumulado: R${' '}
-                          {Number(selectedBatch.total_amount_brl || 0).toLocaleString('pt-BR', {
-                            minimumFractionDigits: 2,
-                          })}{' '}
-                          em {batchItems.length} recompensas.
+                        <CardDescription className="text-xs text-muted-foreground mt-0.5 font-sans">
+                          Total acumulado:{' '}
+                          <span className="font-mono text-gold-deep font-semibold">
+                            R${' '}
+                            {Number(selectedBatch.total_amount_brl || 0).toLocaleString('pt-BR', {
+                              minimumFractionDigits: 2,
+                            })}
+                          </span>{' '}
+                          em <span className="font-mono">{batchItems.length}</span> recompensas.
                         </CardDescription>
                       </div>
 
@@ -334,27 +346,27 @@ export function AdminBatchesPage() {
                           size="sm"
                           disabled={closing || batchItems.length === 0}
                           onClick={handleCloseBatch}
-                          className="bg-emerald-600 hover:bg-emerald-500 text-stone-950 font-semibold text-xs rounded-none h-8"
+                          className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs rounded-[1px] h-8 font-heading"
                           title="Exige que todos os itens tenham comprovante anexado"
                         >
-                          <Lock className="w-3.5 h-3.5 mr-1" />
+                          <Lock className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                           {closing ? 'Fechando...' : 'Fechar Lote'}
                         </Button>
                       )}
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-4 space-y-4 text-xs">
-                    <div className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+                  <CardContent className="p-4 space-y-4 text-xs font-sans">
+                    <div className="text-[11px] font-semibold uppercase tracking-label text-muted-foreground font-heading">
                       Recompensas Incluídas neste Lote
                     </div>
 
                     {loadingItems ? (
-                      <div className="p-12 text-center text-xs text-stone-500">
+                      <div className="p-12 text-center text-xs text-muted-foreground font-sans">
                         Carregando itens...
                       </div>
                     ) : batchItems.length === 0 ? (
-                      <div className="p-8 text-center border border-dashed border-stone-800 text-stone-500 text-xs">
+                      <div className="p-8 text-center border border-dashed border-border text-muted-foreground text-xs rounded-[1px] font-sans">
                         Nenhuma recompensa incluída neste lote.
                       </div>
                     ) : (
@@ -363,33 +375,45 @@ export function AdminBatchesPage() {
                           const part = item.expand?.participant_id
                           const userObj = part?.expand?.user_id
                           const isPaid = item.status === 'paga'
-                          const hasProof = !!item.payment_proof_file
 
                           return (
                             <div
                               key={item.id}
-                              className="bg-stone-950/60 p-3 border border-stone-800 flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs"
+                              className="bg-secondary/40 p-3 border border-border flex flex-col md:flex-row md:items-center justify-between gap-3 text-xs rounded-[1px]"
                             >
                               <div className="space-y-1">
                                 <div className="flex items-center gap-2">
-                                  <span className="font-semibold text-stone-200">
+                                  <span className="font-semibold text-foreground font-sans">
                                     {userObj?.name || 'Participante'}
                                   </span>
-                                  <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none uppercase">
+                                  <Badge
+                                    variant="outline"
+                                    className="border-border text-muted-foreground text-[10px] rounded-[1px] uppercase font-mono"
+                                  >
                                     {item.milestone}
                                   </Badge>
                                   {isPaid ? (
-                                    <Badge className="bg-emerald-950 text-emerald-300 border-emerald-800 text-[10px] rounded-none flex items-center gap-1">
-                                      <CheckCircle2 className="w-3 h-3" /> Pago
+                                    <Badge
+                                      variant="outline"
+                                      className="border-success/40 bg-success/10 text-success text-[10px] rounded-[1px] flex items-center gap-1 font-heading"
+                                    >
+                                      <CheckCircle2
+                                        className="w-3 h-3 text-success"
+                                        strokeWidth={1.5}
+                                      />{' '}
+                                      Pago
                                     </Badge>
                                   ) : (
-                                    <Badge className="bg-amber-950 text-amber-300 border-amber-800 text-[10px] rounded-none">
+                                    <Badge
+                                      variant="outline"
+                                      className="border-warning/40 bg-warning/10 text-warning text-[10px] rounded-[1px] font-heading"
+                                    >
                                       Pendente Liquidação
                                     </Badge>
                                   )}
                                 </div>
 
-                                <div className="text-[11px] text-stone-400">
+                                <div className="text-[11px] text-muted-foreground font-mono">
                                   Pix: {part?.pix_key || 'Não informado'} | CPF:{' '}
                                   {part?.cpf || 'Não informado'}
                                 </div>
@@ -397,7 +421,7 @@ export function AdminBatchesPage() {
 
                               <div className="flex items-center gap-3">
                                 <div className="text-right">
-                                  <span className="font-mono font-bold text-sm text-emerald-400">
+                                  <span className="font-mono font-bold text-sm text-gold-deep">
                                     R${' '}
                                     {Number(item.final_amount_brl || 0).toLocaleString('pt-BR', {
                                       minimumFractionDigits: 2,
@@ -409,9 +433,10 @@ export function AdminBatchesPage() {
                                   <Button
                                     size="sm"
                                     onClick={() => handleOpenItemPayment(item)}
-                                    className="bg-stone-900 border border-stone-700 hover:bg-stone-800 text-stone-200 font-semibold text-xs rounded-none h-7 px-2.5"
+                                    variant="outline"
+                                    className="border-border hover:bg-secondary text-foreground font-semibold text-xs rounded-[1px] h-7 px-2.5 font-heading"
                                   >
-                                    <Upload className="w-3 h-3 mr-1" />
+                                    <Upload className="w-3 h-3 mr-1" strokeWidth={1.5} />
                                     {isPaid ? 'Atualizar Comprovante' : 'Liquidar'}
                                   </Button>
                                 )}
@@ -425,7 +450,7 @@ export function AdminBatchesPage() {
                 </Card>
               </>
             ) : (
-              <div className="p-12 text-center border border-dashed border-stone-800 text-stone-500 text-xs">
+              <div className="p-12 text-center border border-dashed border-border text-muted-foreground text-xs rounded-[1px] font-sans">
                 Selecione um lote ao lado para conferir os itens.
               </div>
             )}
@@ -434,26 +459,28 @@ export function AdminBatchesPage() {
 
         {/* Modal Montar Lote */}
         <Dialog open={buildModalOpen} onOpenChange={setBuildModalOpen}>
-          <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-base text-white flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-amber-500" />
+              <DialogTitle className="text-base text-foreground font-serif font-semibold flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                 Montar ou Atualizar Lote do Mês
               </DialogTitle>
-              <DialogDescription className="text-xs text-stone-400">
+              <DialogDescription className="text-xs text-muted-foreground font-sans">
                 Coleta todas as recompensas em status 'Aprovada' e adiciona ao lote do mês de
                 apuração.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-3 py-2 text-xs font-sans">
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Mês de Referência (YYYY-MM)</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Mês de Referência (YYYY-MM)
+                </Label>
                 <Input
                   type="month"
                   value={monthRef}
                   onChange={(e) => setMonthRef(e.target.value)}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
             </div>
@@ -463,7 +490,7 @@ export function AdminBatchesPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setBuildModalOpen(false)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="rounded-[1px] text-xs font-heading"
               >
                 Cancelar
               </Button>
@@ -471,7 +498,7 @@ export function AdminBatchesPage() {
                 size="sm"
                 disabled={building || !monthRef}
                 onClick={handleBuildBatch}
-                className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold rounded-[1px] text-xs font-heading"
               >
                 {building ? 'Montando...' : 'Montar Lote'}
               </Button>
@@ -481,22 +508,22 @@ export function AdminBatchesPage() {
 
         {/* Modal Liquidar Item do Lote */}
         <Dialog open={paymentModalOpen} onOpenChange={setPaymentModalOpen}>
-          <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+          <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-base text-white flex items-center gap-2">
-                <Upload className="w-4 h-4 text-amber-500" />
+              <DialogTitle className="text-base text-foreground font-serif font-semibold flex items-center gap-2">
+                <Upload className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                 Liquidar Recompensa do Lote
               </DialogTitle>
-              <DialogDescription className="text-xs text-stone-400">
+              <DialogDescription className="text-xs text-muted-foreground font-sans">
                 O lote não fecha com item sem comprovante anexado.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-xs">
-              <div className="bg-stone-950 p-3 border border-stone-800 space-y-1">
+            <div className="space-y-3 py-2 text-xs font-sans">
+              <div className="bg-secondary/50 p-3 border border-border space-y-1 rounded-[1px]">
                 <div className="flex justify-between">
-                  <span className="text-stone-400">Valor Final:</span>
-                  <span className="font-mono font-bold text-emerald-400">
+                  <span className="text-muted-foreground">Valor Final:</span>
+                  <span className="font-mono font-bold text-gold-deep">
                     R${' '}
                     {Number(selectedItem?.final_amount_brl || 0).toLocaleString('pt-BR', {
                       minimumFractionDigits: 2,
@@ -504,19 +531,21 @@ export function AdminBatchesPage() {
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-stone-400">Participante:</span>
-                  <span className="text-stone-200">
+                  <span className="text-muted-foreground">Participante:</span>
+                  <span className="text-foreground font-medium">
                     {selectedItem?.expand?.participant_id?.expand?.user_id?.name || 'Participante'}
                   </span>
                 </div>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Método de Pagamento</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Método de Pagamento
+                </Label>
                 <select
                   value={paymentMethod}
                   onChange={(e) => setPaymentMethod(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                  className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                 >
                   <option value="pix">Pix</option>
                   <option value="transferencia">Transferência Bancária (TED/DOC)</option>
@@ -528,31 +557,37 @@ export function AdminBatchesPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Data do Pagamento</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Data do Pagamento
+                </Label>
                 <Input
                   type="date"
                   value={paidAt}
                   onChange={(e) => setPaidAt(e.target.value)}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Comprovante de Pagamento (Upload)</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Comprovante de Pagamento (Upload)
+                </Label>
                 <Input
                   type="file"
                   onChange={(e) => setProofFile(e.target.files?.[0] || null)}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs cursor-pointer"
+                  className="bg-background border-border rounded-[1px] text-xs cursor-pointer text-foreground"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Código da Transação</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Código da Transação
+                </Label>
                 <Input
                   value={paymentRef}
                   onChange={(e) => setPaymentRef(e.target.value)}
                   placeholder="Ex: Pix E2E..."
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
               </div>
             </div>
@@ -562,7 +597,7 @@ export function AdminBatchesPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setPaymentModalOpen(false)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="rounded-[1px] text-xs font-heading"
               >
                 Cancelar
               </Button>
@@ -570,7 +605,7 @@ export function AdminBatchesPage() {
                 size="sm"
                 disabled={paying || (!proofFile && !selectedItem?.payment_proof_file)}
                 onClick={handleConfirmItemPayment}
-                className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold rounded-[1px] text-xs font-heading"
               >
                 {paying ? 'Salvando...' : 'Salvar Pagamento'}
               </Button>

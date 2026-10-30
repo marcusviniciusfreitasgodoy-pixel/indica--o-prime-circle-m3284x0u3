@@ -384,7 +384,9 @@ export default function AdminDashboardPage() {
               <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep">
                 Gestão Executiva
               </span>
-              <span className="text-xs text-muted-foreground font-mono">Dados Reais em Tempo Real</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                Dados Reais em Tempo Real
+              </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-serif text-foreground font-semibold">
               Painel de Indicadores e Funis
@@ -397,9 +399,19 @@ export default function AdminDashboardPage() {
 
           <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
             <div className="flex items-center bg-secondary border border-border p-1 text-xs rounded-[1px]">
-              <Calendar className="w-3.5 h-3.5 text-muted-foreground mr-1.5 ml-1" strokeWidth={1.5} />
+              <Calendar
+                className="w-3.5 h-3.5 text-muted-foreground mr-1.5 ml-1"
+                strokeWidth={1.5}
+              />
               {(['30', '90', '365', 'all'] as const).map((pKey) => {
-                const label = pKey === '30' ? '30 dias' : pKey === '90' ? '90 dias' : pKey === '365' ? '12 meses' : 'Tudo'
+                const label =
+                  pKey === '30'
+                    ? '30 dias'
+                    : pKey === '90'
+                      ? '90 dias'
+                      : pKey === '365'
+                        ? '12 meses'
+                        : 'Tudo'
                 const isSelected = period === pKey
                 return (
                   <button
@@ -427,12 +439,7 @@ export default function AdminDashboardPage() {
               Exportar CSV
             </Button>
 
-            <Button
-              asChild
-              size="sm"
-              variant="default"
-              className="rounded-[1px] text-xs"
-            >
+            <Button asChild size="sm" variant="default" className="rounded-[1px] text-xs">
               <Link to="/admin/relatorios">
                 <BarChart2 className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
                 Relatórios Detalhados &rarr;
@@ -447,7 +454,9 @@ export default function AdminDashboardPage() {
             <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               Indicações no Período
             </span>
-            <div className="text-2xl font-serif text-foreground font-semibold mt-1 font-mono">{totalReferrals}</div>
+            <div className="text-2xl font-serif text-foreground font-semibold mt-1 font-mono">
+              {totalReferrals}
+            </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">
               <span className="font-mono">{activeReferrals}</span> ativas em andamento
             </p>
@@ -457,9 +466,14 @@ export default function AdminDashboardPage() {
             <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               Captações Efetivas
             </span>
-            <div className="text-2xl font-serif text-success font-semibold mt-1 font-mono">{capturedReferrals}</div>
+            <div className="text-2xl font-serif text-success font-semibold mt-1 font-mono">
+              {capturedReferrals}
+            </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              <span className="font-mono">{totalReferrals > 0 ? ((capturedReferrals / totalReferrals) * 100).toFixed(0) : 0}%</span> de conversão
+              <span className="font-mono">
+                {totalReferrals > 0 ? ((capturedReferrals / totalReferrals) * 100).toFixed(0) : 0}%
+              </span>{' '}
+              de conversão
             </p>
           </Card>
 
@@ -467,9 +481,12 @@ export default function AdminDashboardPage() {
             <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               Negócios Fechados
             </span>
-            <div className="text-2xl font-serif text-foreground font-semibold mt-1 font-mono">{closedDealsCount}</div>
+            <div className="text-2xl font-serif text-foreground font-semibold mt-1 font-mono">
+              {closedDealsCount}
+            </div>
             <p className="text-[10px] text-muted-foreground mt-0.5">
-              VGV <span className="font-mono font-medium">R$ {totalVgv.toLocaleString('pt-BR')}</span>
+              VGV{' '}
+              <span className="font-mono font-medium">R$ {totalVgv.toLocaleString('pt-BR')}</span>
             </p>
           </Card>
 
@@ -629,7 +646,9 @@ export default function AdminDashboardPage() {
 
             <div className="h-64 mt-4 w-full flex items-center justify-center">
               {frontData.length === 0 ? (
-                <div className="text-xs text-muted-foreground">Sem dados no período selecionado.</div>
+                <div className="text-xs text-muted-foreground">
+                  Sem dados no período selecionado.
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -679,7 +698,9 @@ export default function AdminDashboardPage() {
 
             <div className="h-64 mt-4 w-full flex items-center justify-center">
               {statusData.length === 0 ? (
-                <div className="text-xs text-muted-foreground">Sem dados no período selecionado.</div>
+                <div className="text-xs text-muted-foreground">
+                  Sem dados no período selecionado.
+                </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -744,12 +765,7 @@ export default function AdminDashboardPage() {
                 </span>
               </div>
             </div>
-            <Button
-              asChild
-              size="sm"
-              variant="outline"
-              className="w-full rounded-[1px] text-xs"
-            >
+            <Button asChild size="sm" variant="outline" className="w-full rounded-[1px] text-xs">
               <Link to="/admin/recompensas">
                 Ver Módulo de Recompensas
                 <ArrowRight className="w-3.5 h-3.5 ml-1.5" strokeWidth={1.5} />
@@ -772,12 +788,7 @@ export default function AdminDashboardPage() {
               dados conforme retenção legal de 24 meses.
             </p>
             <div className="pt-2 flex flex-col gap-2">
-              <Button
-                asChild
-                size="sm"
-                variant="outline"
-                className="rounded-[1px] text-xs"
-              >
+              <Button asChild size="sm" variant="outline" className="rounded-[1px] text-xs">
                 <Link to="/admin/base-conhecida">
                   Importar CSV de Base Conhecida
                   <ArrowRight className="w-3.5 h-3.5 ml-1.5" strokeWidth={1.5} />
@@ -799,7 +810,9 @@ export default function AdminDashboardPage() {
             {isAdmin ? (
               <div className="space-y-2">
                 {recentAudits.length === 0 ? (
-                  <p className="text-xs text-muted-foreground py-2 font-sans">Nenhum evento auditado recente.</p>
+                  <p className="text-xs text-muted-foreground py-2 font-sans">
+                    Nenhum evento auditado recente.
+                  </p>
                 ) : (
                   recentAudits.slice(0, 3).map((a: any) => (
                     <div

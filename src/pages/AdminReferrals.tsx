@@ -242,7 +242,10 @@ export function AdminReferralsPage() {
           <div className="bg-card border border-border p-4 space-y-3 rounded-[1px]">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" strokeWidth={1.5} />
+                <Search
+                  className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5"
+                  strokeWidth={1.5}
+                />
                 <Input
                   placeholder="Buscar nome, condomínio, unidade..."
                   value={search}
@@ -315,7 +318,11 @@ export function AdminReferralsPage() {
               </label>
 
               <span className="text-xs text-muted-foreground font-sans">
-                Total filtrado: <strong className="text-foreground font-mono">{filteredReferrals.length}</strong> indicações
+                Total filtrado:{' '}
+                <strong className="text-foreground font-mono">
+                  {filteredReferrals.length}
+                </strong>{' '}
+                indicações
               </span>
             </div>
           </div>
@@ -337,7 +344,9 @@ export function AdminReferralsPage() {
                   >
                     {/* Header */}
                     <div className="p-3 border-b border-border bg-secondary/60 flex justify-between items-center sticky top-0 z-10 font-heading">
-                      <span className="text-xs font-semibold text-foreground tracking-wide uppercase">{stage.label}</span>
+                      <span className="text-xs font-semibold text-foreground tracking-wide uppercase">
+                        {stage.label}
+                      </span>
                       <Badge
                         variant="outline"
                         className="rounded-[1px] border-border text-muted-foreground text-[10px] font-mono"
@@ -349,7 +358,9 @@ export function AdminReferralsPage() {
                     {/* Cards list */}
                     <div className="p-2 space-y-2.5 overflow-y-auto flex-1">
                       {stageRefs.length === 0 ? (
-                        <div className="py-8 text-center text-muted-foreground text-xs italic font-sans">Vazio</div>
+                        <div className="py-8 text-center text-muted-foreground text-xs italic font-sans">
+                          Vazio
+                        </div>
                       ) : (
                         stageRefs.map((r) => {
                           const stalled = isStalled(r)
@@ -358,9 +369,7 @@ export function AdminReferralsPage() {
                               key={r.id}
                               to={`/admin/indicacoes/${r.id}`}
                               className={`block p-3 bg-card border transition-colors hover:border-gold-deep rounded-[1px] shadow-subtle ${
-                                stalled
-                                  ? 'border-warning/60 bg-warning/5'
-                                  : 'border-border'
+                                stalled ? 'border-warning/60 bg-warning/5' : 'border-border'
                               }`}
                             >
                               <div className="flex justify-between items-start gap-1">

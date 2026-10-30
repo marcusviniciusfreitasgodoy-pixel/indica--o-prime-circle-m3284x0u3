@@ -320,19 +320,22 @@ export function AdminSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-5">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <div>
-            <div className="flex items-center gap-2 mb-1">
-              <Settings className="w-5 h-5 text-amber-500" />
-              <h1 className="text-xl font-bold tracking-tight text-white uppercase">
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Políticas & Regulamento
+            </span>
+            <div className="flex items-center gap-2">
+              <Settings className="w-5 h-5 text-gold-deep" strokeWidth={1.5} />
+              <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold">
                 Configurações do Godoy Prime Indica
               </h1>
             </div>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-muted-foreground mt-1 font-sans">
               Versionamento de regras de recompensas, parâmetros de apuração e limites do
               regulamento.
             </p>
@@ -343,9 +346,9 @@ export function AdminSettingsPage() {
               <Button
                 size="sm"
                 onClick={handleOpenCreateRule}
-                className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-xs rounded-none"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs rounded-[1px] font-heading"
               >
-                <Plus className="w-3.5 h-3.5 mr-1" />
+                <Plus className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                 Nova Regra de Recompensa
               </Button>
             )}
@@ -353,41 +356,41 @@ export function AdminSettingsPage() {
         </div>
 
         {/* Abas */}
-        <div className="flex items-center gap-2 border-b border-stone-800 pb-2 text-xs">
+        <div className="flex items-center gap-2 border-b border-border pb-2 text-xs font-heading">
           <button
             onClick={() => setActiveTab('recompensas')}
-            className={`px-3 py-1.5 transition-colors flex items-center gap-2 ${
+            className={`px-3 py-1.5 transition-colors flex items-center gap-2 rounded-[1px] ${
               activeTab === 'recompensas'
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 font-medium'
-                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
+                ? 'bg-secondary text-gold-deep border border-border font-semibold'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
             }`}
           >
-            <Coins className="w-3.5 h-3.5" />
+            <Coins className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span>Regras de Recompensas ({rules.length})</span>
           </button>
           <button
             onClick={() => setActiveTab('geral')}
-            className={`px-3 py-1.5 transition-colors flex items-center gap-2 ${
+            className={`px-3 py-1.5 transition-colors flex items-center gap-2 rounded-[1px] ${
               activeTab === 'geral'
-                ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 font-medium'
-                : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
+                ? 'bg-secondary text-gold-deep border border-border font-semibold'
+                : 'text-muted-foreground hover:text-foreground hover:bg-secondary/40'
             }`}
           >
-            <Layers className="w-3.5 h-3.5" />
+            <Layers className="w-3.5 h-3.5" strokeWidth={1.5} />
             <span>Parâmetros de Apuração e Prazos</span>
           </button>
         </div>
 
         {/* Conteúdo Aba Recompensas */}
         {activeTab === 'recompensas' && (
-          <div className="space-y-4">
-            <div className="bg-stone-900/40 p-3 border border-stone-800 text-xs text-stone-400 flex items-start gap-2">
-              <ShieldAlert className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
-              <span>
-                <strong>Regras de Governança:</strong> Recompensas criadas mantêm o valor histórico
-                gravado no momento da criação. Nenhuma regra pode depender de exclusividade da
-                captação. Apenas regras com{' '}
-                <span className="text-emerald-400 font-semibold">
+          <div className="space-y-4 font-sans">
+            <div className="bg-secondary/50 p-3 border border-border text-xs text-foreground flex items-start gap-2 rounded-[1px]">
+              <ShieldAlert className="w-4 h-4 text-gold-deep shrink-0 mt-0.5" strokeWidth={1.5} />
+              <span className="leading-relaxed">
+                <strong className="font-heading">Regras de Governança:</strong> Recompensas criadas
+                mantêm o valor histórico gravado no momento da criação. Nenhuma regra pode depender
+                de exclusividade da captação. Apenas regras com{' '}
+                <span className="text-success font-semibold font-heading">
                   Liberada para Uso (released_for_use)
                 </span>{' '}
                 podem ter recompensas aprovadas pelo financeiro.
@@ -395,9 +398,11 @@ export function AdminSettingsPage() {
             </div>
 
             {loading ? (
-              <div className="p-12 text-center text-xs text-stone-500">Carregando regras...</div>
+              <div className="p-12 text-center text-xs text-muted-foreground font-sans">
+                Carregando regras...
+              </div>
             ) : rules.length === 0 ? (
-              <div className="p-12 text-center border border-dashed border-stone-800 text-stone-500 text-xs">
+              <div className="p-12 text-center border border-dashed border-border text-muted-foreground text-xs rounded-[1px] font-sans">
                 Nenhuma regra cadastrada.
               </div>
             ) : (
@@ -410,47 +415,68 @@ export function AdminSettingsPage() {
                   return (
                     <Card
                       key={r.id}
-                      className="bg-stone-900/60 border-stone-800 rounded-none hover:border-stone-700 transition-colors"
+                      className="bg-card border-border rounded-[1px] hover:border-gold-deep/60 transition-colors shadow-subtle"
                     >
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-stone-800/60 pb-3">
+                      <CardContent className="p-4 space-y-3 font-sans">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-border pb-3">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <Badge className="bg-amber-950 text-amber-300 border-amber-800 text-[10px] rounded-none font-mono">
+                            <Badge
+                              variant="outline"
+                              className="border-border text-gold-deep text-[10px] rounded-[1px] font-mono"
+                            >
                               v{r.version}
                             </Badge>
-                            <Badge className="bg-stone-800 text-stone-200 text-[10px] rounded-none">
+                            <Badge
+                              variant="outline"
+                              className="border-border text-foreground text-[10px] rounded-[1px] font-heading"
+                            >
                               {cat?.name || 'Categoria'}
                             </Badge>
-                            <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none uppercase">
+                            <Badge
+                              variant="outline"
+                              className="border-border text-muted-foreground text-[10px] rounded-[1px] uppercase font-mono"
+                            >
                               Marco: {r.milestone}
                             </Badge>
-                            <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none uppercase">
+                            <Badge
+                              variant="outline"
+                              className="border-border text-muted-foreground text-[10px] rounded-[1px] uppercase font-heading"
+                            >
                               Beneficiário: {r.beneficiary_type}
                             </Badge>
-                            <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none uppercase">
+                            <Badge
+                              variant="outline"
+                              className="border-border text-muted-foreground text-[10px] rounded-[1px] uppercase font-mono"
+                            >
                               Tipo Ref: {r.referral_type}
                             </Badge>
                             {camp && (
-                              <Badge className="bg-purple-950 text-purple-300 border-purple-800 text-[10px] rounded-none">
+                              <Badge
+                                variant="outline"
+                                className="border-border text-gold-deep text-[10px] rounded-[1px] font-heading"
+                              >
                                 Campanha: {camp.name}
                               </Badge>
                             )}
                             {condo && (
-                              <Badge className="bg-blue-950 text-blue-300 border-blue-800 text-[10px] rounded-none">
+                              <Badge
+                                variant="outline"
+                                className="border-border text-info text-[10px] rounded-[1px] font-heading"
+                              >
                                 Condomínio: {condo.name}
                               </Badge>
                             )}
                           </div>
 
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-2 font-heading">
                             {/* Status de Liberação */}
                             <button
                               disabled={!isAdmin}
                               onClick={() => handleToggleReleased(r)}
-                              className={`text-[11px] font-semibold px-2.5 py-1 border flex items-center gap-1.5 transition-colors ${
+                              className={`text-[11px] font-semibold px-2.5 py-1 border rounded-[1px] flex items-center gap-1.5 transition-colors ${
                                 r.released_for_use
-                                  ? 'bg-emerald-950/80 text-emerald-300 border-emerald-800 hover:bg-emerald-900/50'
-                                  : 'bg-amber-950/60 text-amber-400 border-amber-800/80 hover:bg-amber-900/50'
+                                  ? 'bg-success/10 text-success border-success/40 hover:bg-success/20'
+                                  : 'bg-warning/10 text-warning border-warning/40 hover:bg-warning/20'
                               } disabled:opacity-50`}
                               title={
                                 isAdmin
@@ -460,12 +486,12 @@ export function AdminSettingsPage() {
                             >
                               {r.released_for_use ? (
                                 <>
-                                  <Lock className="w-3 h-3 text-emerald-400" />
+                                  <Lock className="w-3 h-3 text-success" strokeWidth={1.5} />
                                   <span>Liberada para Uso</span>
                                 </>
                               ) : (
                                 <>
-                                  <Unlock className="w-3 h-3 text-amber-400" />
+                                  <Unlock className="w-3 h-3 text-warning" strokeWidth={1.5} />
                                   <span>Rascunho (Não Liberada)</span>
                                 </>
                               )}
@@ -476,9 +502,9 @@ export function AdminSettingsPage() {
                                 size="sm"
                                 variant="outline"
                                 onClick={() => handleOpenVersionRule(r)}
-                                className="bg-stone-900 border-stone-800 text-xs rounded-none h-7 px-2.5 text-stone-300"
+                                className="text-xs rounded-[1px] h-7 px-2.5 font-heading"
                               >
-                                <Copy className="w-3 h-3 mr-1" />
+                                <Copy className="w-3 h-3 mr-1" strokeWidth={1.5} />
                                 Nova Versão
                               </Button>
                             )}
@@ -487,19 +513,19 @@ export function AdminSettingsPage() {
 
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-xs">
                           <div className="space-y-1">
-                            <span className="text-[10px] uppercase font-semibold text-stone-500">
+                            <span className="text-[10px] uppercase font-semibold text-muted-foreground font-heading tracking-label">
                               Tipo de Recompensa
                             </span>
-                            <div className="font-mono text-stone-200 uppercase">
+                            <div className="font-mono text-foreground uppercase">
                               {r.reward_type}
                             </div>
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[10px] uppercase font-semibold text-stone-500">
+                            <span className="text-[10px] uppercase font-semibold text-muted-foreground font-heading tracking-label">
                               Valor ou Parâmetro
                             </span>
-                            <div className="font-mono text-emerald-400 font-bold">
+                            <div className="font-mono text-gold-deep font-bold">
                               {r.reward_type === 'valor_fixo' &&
                                 `R$ ${Number(r.fixed_amount_brl || 0).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`}
                               {r.reward_type === 'percentual_comissao' &&
@@ -513,10 +539,10 @@ export function AdminSettingsPage() {
                           </div>
 
                           <div className="space-y-1">
-                            <span className="text-[10px] uppercase font-semibold text-stone-500">
+                            <span className="text-[10px] uppercase font-semibold text-muted-foreground font-heading tracking-label">
                               Vigência
                             </span>
-                            <div className="text-stone-300 text-[11px]">
+                            <div className="text-muted-foreground text-[11px] font-mono">
                               A partir de:{' '}
                               {r.valid_from
                                 ? new Date(r.valid_from).toLocaleDateString('pt-BR')
@@ -528,7 +554,7 @@ export function AdminSettingsPage() {
                         </div>
 
                         {r.reward_type === 'tabela_faixas' && r.brackets && (
-                          <div className="mt-2 p-2 bg-stone-950 border border-stone-800/60 font-mono text-[11px] text-stone-400">
+                          <div className="mt-2 p-2 bg-secondary/50 border border-border font-mono text-[11px] text-foreground rounded-[1px]">
                             <strong>Faixas cadastradas:</strong> {r.brackets}
                           </div>
                         )}
@@ -543,18 +569,18 @@ export function AdminSettingsPage() {
 
         {/* Conteúdo Aba Geral */}
         {activeTab === 'geral' && (
-          <Card className="bg-stone-900/60 border-stone-800 rounded-none max-w-2xl">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base text-white">
+          <Card className="bg-card border-border rounded-[1px] max-w-2xl shadow-subtle">
+            <CardHeader className="pb-3 border-b border-border">
+              <CardTitle className="text-base text-foreground font-serif font-semibold">
                 Parâmetros Operacionais e Governança
               </CardTitle>
-              <CardDescription className="text-xs text-stone-400">
+              <CardDescription className="text-xs text-muted-foreground font-sans">
                 Prazos do ciclo de apuração e atribuição de captações.
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4 text-xs">
+            <CardContent className="space-y-4 text-xs font-sans pt-4">
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">
+                <Label className="text-xs text-foreground font-heading font-medium">
                   Dia de Apuração Mensal do Lote (Reckoning Day)
                 </Label>
                 <Input
@@ -564,16 +590,16 @@ export function AdminSettingsPage() {
                   value={reckoningDay}
                   onChange={(e) => setReckoningDay(e.target.value)}
                   disabled={!isAdmin}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
-                <p className="text-[11px] text-stone-500">
+                <p className="text-[11px] text-muted-foreground">
                   Dia do mês em que o job agendado monta o lote com as recompensas aprovadas
                   (padrão: dia 10).
                 </p>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">
+                <Label className="text-xs text-foreground font-heading font-medium">
                   Dia de Vencimento do Lote (Due Date)
                 </Label>
                 <Input
@@ -583,15 +609,15 @@ export function AdminSettingsPage() {
                   value={dueDay}
                   onChange={(e) => setDueDay(e.target.value)}
                   disabled={!isAdmin}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
-                <p className="text-[11px] text-stone-500">
+                <p className="text-[11px] text-muted-foreground">
                   Data prevista de pagamento exibida aos participantes (padrão: dia 25 do mês).
                 </p>
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">
+                <Label className="text-xs text-foreground font-heading font-medium">
                   Janela de Atribuição de Captação (Dias)
                 </Label>
                 <Input
@@ -599,9 +625,9 @@ export function AdminSettingsPage() {
                   value={attributionDays}
                   onChange={(e) => setAttributionDays(e.target.value)}
                   disabled={!isAdmin}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                  className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                 />
-                <p className="text-[11px] text-stone-500">
+                <p className="text-[11px] text-muted-foreground">
                   Janela máxima em dias entre a indicação e a formalização da captação para gerar
                   recompensa (padrão: 90 dias).
                 </p>
@@ -613,7 +639,7 @@ export function AdminSettingsPage() {
                     size="sm"
                     disabled={savingSettings}
                     onClick={handleSaveSettings}
-                    className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold rounded-none text-xs"
+                    className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold rounded-[1px] text-xs font-heading"
                   >
                     {savingSettings ? 'Salvando...' : 'Salvar Parâmetros'}
                   </Button>
@@ -625,24 +651,26 @@ export function AdminSettingsPage() {
 
         {/* Modal Nova Regra */}
         <Dialog open={ruleModalOpen} onOpenChange={setRuleModalOpen}>
-          <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle className="text-base text-white flex items-center gap-2">
-                <Coins className="w-4 h-4 text-amber-500" />
+              <DialogTitle className="text-base text-foreground font-serif font-semibold flex items-center gap-2">
+                <Coins className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                 {editingRuleId ? 'Criar Nova Versão de Regra' : 'Nova Regra de Recompensa'}
               </DialogTitle>
-              <DialogDescription className="text-xs text-stone-400">
+              <DialogDescription className="text-xs text-muted-foreground font-sans">
                 Regras são versionadas e salvas em modo rascunho até liberação pelo administrador.
               </DialogDescription>
             </DialogHeader>
 
-            <div className="space-y-3 py-2 text-xs">
+            <div className="space-y-3 py-2 text-xs font-sans">
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Categoria de Participante</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Categoria de Participante
+                </Label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                  className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                 >
                   {categories.map((c) => (
                     <option key={c.id} value={c.id}>
@@ -654,11 +682,13 @@ export function AdminSettingsPage() {
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">Marco da Recompensa</Label>
+                  <Label className="text-xs text-foreground font-heading font-medium">
+                    Marco da Recompensa
+                  </Label>
                   <select
                     value={milestone}
                     onChange={(e) => setMilestone(e.target.value as any)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                    className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                   >
                     <option value="captada">Captada (Formalização)</option>
                     <option value="fechamento">Fechamento (Negócio Concluído)</option>
@@ -666,11 +696,13 @@ export function AdminSettingsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">Beneficiário</Label>
+                  <Label className="text-xs text-foreground font-heading font-medium">
+                    Beneficiário
+                  </Label>
                   <select
                     value={beneficiaryType}
                     onChange={(e) => setBeneficiaryType(e.target.value as any)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                    className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                   >
                     <option value="indicador">Indicador</option>
                     <option value="cliente">Cliente (Cashback)</option>
@@ -679,11 +711,13 @@ export function AdminSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Tipo de Indicação Aplicável</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Tipo de Indicação Aplicável
+                </Label>
                 <select
                   value={referralType}
                   onChange={(e) => setReferralType(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                  className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                 >
                   <option value="todos">Todos os tipos</option>
                   <option value="proprietario_venda">Proprietário - Venda</option>
@@ -694,11 +728,13 @@ export function AdminSettingsPage() {
               </div>
 
               <div className="space-y-1">
-                <Label className="text-xs text-stone-300">Tipo de Recompensa</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Tipo de Recompensa
+                </Label>
                 <select
                   value={rewardType}
                   onChange={(e) => setRewardType(e.target.value)}
-                  className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                  className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                 >
                   <option value="valor_fixo">Valor Fixo (BRL)</option>
                   <option value="tabela_faixas">Tabela de Faixas Progressivas</option>
@@ -711,19 +747,21 @@ export function AdminSettingsPage() {
 
               {rewardType === 'valor_fixo' && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">Valor Fixo (R$)</Label>
+                  <Label className="text-xs text-foreground font-heading font-medium">
+                    Valor Fixo (R$)
+                  </Label>
                   <Input
                     type="number"
                     value={fixedAmount}
                     onChange={(e) => setFixedAmount(e.target.value)}
-                    className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                    className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                   />
                 </div>
               )}
 
               {rewardType === 'percentual_comissao' && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">
+                  <Label className="text-xs text-foreground font-heading font-medium">
                     Percentual da Comissão Recebida (%)
                   </Label>
                   <Input
@@ -731,21 +769,21 @@ export function AdminSettingsPage() {
                     value={percentageValue}
                     onChange={(e) => setPercentageValue(e.target.value)}
                     placeholder="Ex: 10"
-                    className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                    className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                   />
                 </div>
               )}
 
               {rewardType === 'tabela_faixas' && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">
+                  <Label className="text-xs text-foreground font-heading font-medium">
                     Faixas em JSON (min, max, amount)
                   </Label>
                   <Textarea
                     value={bracketsJson}
                     onChange={(e) => setBracketsJson(e.target.value)}
                     placeholder='[{"min": 1500000, "max": 3000000, "amount": 10000}]'
-                    className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono"
+                    className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
                     rows={4}
                   />
                 </div>
@@ -753,25 +791,27 @@ export function AdminSettingsPage() {
 
               {rewardType === 'beneficio_catalogo' && (
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">
+                  <Label className="text-xs text-foreground font-heading font-medium">
                     Descrição do Benefício / Catálogo
                   </Label>
                   <Input
                     value={catalogDesc}
                     onChange={(e) => setCatalogDesc(e.target.value)}
                     placeholder="Ex: Voucher Decoração R$ 5.000"
-                    className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                    className="bg-background border-border rounded-[1px] text-xs text-foreground"
                   />
                 </div>
               )}
 
-              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-stone-800">
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-border">
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">Escopo: Campanha (Opcional)</Label>
+                  <Label className="text-xs text-foreground font-heading font-medium">
+                    Escopo: Campanha (Opcional)
+                  </Label>
                   <select
                     value={campaignId}
                     onChange={(e) => setCampaignId(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                    className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                   >
                     <option value="">Geral (Sem campanha)</option>
                     {campaigns.map((camp) => (
@@ -783,11 +823,13 @@ export function AdminSettingsPage() {
                 </div>
 
                 <div className="space-y-1">
-                  <Label className="text-xs text-stone-300">Escopo: Condomínio (Opcional)</Label>
+                  <Label className="text-xs text-foreground font-heading font-medium">
+                    Escopo: Condomínio (Opcional)
+                  </Label>
                   <select
                     value={condoId}
                     onChange={(e) => setCondoId(e.target.value)}
-                    className="w-full bg-stone-950 border border-stone-800 rounded-none px-3 py-2 text-xs text-stone-200"
+                    className="w-full bg-background border border-border rounded-[1px] px-3 py-2 text-xs text-foreground font-sans"
                   >
                     <option value="">Geral (Sem condomínio)</option>
                     {condos.map((c) => (
@@ -805,7 +847,7 @@ export function AdminSettingsPage() {
                 variant="outline"
                 size="sm"
                 onClick={() => setRuleModalOpen(false)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="rounded-[1px] text-xs font-heading"
               >
                 Cancelar
               </Button>
@@ -813,7 +855,7 @@ export function AdminSettingsPage() {
                 size="sm"
                 disabled={savingRule}
                 onClick={handleSaveRule}
-                className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold rounded-none text-xs"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold rounded-[1px] text-xs font-heading"
               >
                 {savingRule ? 'Salvando...' : 'Salvar Regra'}
               </Button>

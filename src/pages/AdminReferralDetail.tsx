@@ -651,7 +651,9 @@ export function AdminReferralDetailPage() {
         <AdminNavbar />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="w-8 h-8 animate-spin text-primary mr-3" strokeWidth={1.5} />
-          <span className="text-muted-foreground font-sans">Carregando detalhes da indicação...</span>
+          <span className="text-muted-foreground font-sans">
+            Carregando detalhes da indicação...
+          </span>
         </div>
       </div>
     )
@@ -690,7 +692,9 @@ export function AdminReferralDetailPage() {
               >
                 Status Atual: <strong className="ml-1 text-foreground">{referral.status}</strong>
               </Badge>
-              <span className="text-xs text-muted-foreground font-mono">#{referral.id.substring(0, 8)}</span>
+              <span className="text-xs text-muted-foreground font-mono">
+                #{referral.id.substring(0, 8)}
+              </span>
             </div>
             <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold">
               {referral.owner_name || referral.buyer_name || referral.referrer_name || 'Sem nome'}

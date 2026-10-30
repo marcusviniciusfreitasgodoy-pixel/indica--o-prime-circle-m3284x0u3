@@ -167,17 +167,20 @@ export function AdminMessagesPage() {
   })
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-stone-800 pb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-border pb-6">
           <div>
-            <h1 className="text-2xl font-serif text-white flex items-center gap-2">
-              <Mail className="w-6 h-6 text-amber-500" />
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Comunicação & Notificações
+            </span>
+            <h1 className="text-2xl font-serif text-foreground font-semibold flex items-center gap-2">
+              <Mail className="w-6 h-6 text-gold-deep" strokeWidth={1.5} />
               Central de Mensagens e Comunicação
             </h1>
-            <p className="text-xs text-stone-400 mt-1">
+            <p className="text-xs text-muted-foreground mt-1 font-sans">
               Modelos transacionais de WhatsApp (Meta Cloud API) e E-mail (Resend), com régua de
               ativação e auditoria de disparos.
             </p>
@@ -189,10 +192,11 @@ export function AdminMessagesPage() {
               size="sm"
               onClick={handleSyncMeta}
               disabled={syncingMeta}
-              className="rounded-none border-stone-700 text-stone-300 hover:text-white text-xs"
+              className="rounded-[1px] text-xs font-heading"
             >
               <RefreshCw
-                className={`w-3.5 h-3.5 mr-1.5 ${syncingMeta ? 'animate-spin text-amber-500' : ''}`}
+                className={`w-3.5 h-3.5 mr-1.5 ${syncingMeta ? 'animate-spin text-gold-deep' : ''}`}
+                strokeWidth={1.5}
               />
               Sincronizar Meta
             </Button>
@@ -201,42 +205,48 @@ export function AdminMessagesPage() {
               size="sm"
               onClick={loadData}
               disabled={loading}
-              className="rounded-none border-stone-700 text-stone-300 hover:text-white text-xs"
+              className="rounded-[1px] text-xs font-heading"
             >
-              <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw
+                className={`w-3.5 h-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`}
+                strokeWidth={1.5}
+              />
               Atualizar
             </Button>
           </div>
         </div>
 
         <Tabs defaultValue="templates" className="space-y-6">
-          <TabsList className="bg-stone-900 border border-stone-800 rounded-none p-1">
-            <TabsTrigger value="templates" className="rounded-none text-xs">
+          <TabsList className="bg-secondary/60 border border-border rounded-[1px] p-1 font-heading">
+            <TabsTrigger value="templates" className="rounded-[1px] text-xs">
               Modelos de Mensagem ({templates.length})
             </TabsTrigger>
-            <TabsTrigger value="logs" className="rounded-none text-xs">
+            <TabsTrigger value="logs" className="rounded-[1px] text-xs">
               Logs de Envio ({logs.length})
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="templates" className="space-y-4">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-stone-900/60 p-3 border border-stone-800">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-card p-3 border border-border rounded-[1px]">
               <div className="relative flex-1 w-full sm:max-w-md">
-                <Search className="w-4 h-4 text-stone-500 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Search
+                  className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2"
+                  strokeWidth={1.5}
+                />
                 <Input
                   placeholder="Buscar modelo por código, texto ou nome Meta..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="pl-9 bg-stone-950 border-stone-800 text-xs text-stone-200 rounded-none"
+                  className="pl-9 bg-background border-border text-xs text-foreground placeholder:text-muted-foreground rounded-[1px]"
                 />
               </div>
 
-              <div className="flex items-center gap-2 self-start sm:self-auto">
+              <div className="flex items-center gap-2 self-start sm:self-auto font-heading">
                 <Button
                   size="sm"
                   variant={channelFilter === 'all' ? 'default' : 'outline'}
                   onClick={() => setChannelFilter('all')}
-                  className="rounded-none text-xs h-8"
+                  className="rounded-[1px] text-xs h-8"
                 >
                   Todos
                 </Button>
@@ -244,18 +254,18 @@ export function AdminMessagesPage() {
                   size="sm"
                   variant={channelFilter === 'whatsapp' ? 'default' : 'outline'}
                   onClick={() => setChannelFilter('whatsapp')}
-                  className="rounded-none text-xs h-8 flex items-center gap-1"
+                  className="rounded-[1px] text-xs h-8 flex items-center gap-1"
                 >
-                  <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
+                  <MessageSquare className="w-3.5 h-3.5 text-success" strokeWidth={1.5} />
                   WhatsApp
                 </Button>
                 <Button
                   size="sm"
                   variant={channelFilter === 'email' ? 'default' : 'outline'}
                   onClick={() => setChannelFilter('email')}
-                  className="rounded-none text-xs h-8 flex items-center gap-1"
+                  className="rounded-[1px] text-xs h-8 flex items-center gap-1"
                 >
-                  <Mail className="w-3.5 h-3.5 text-sky-400" />
+                  <Mail className="w-3.5 h-3.5 text-info" strokeWidth={1.5} />
                   E-mail
                 </Button>
               </div>
@@ -265,26 +275,33 @@ export function AdminMessagesPage() {
               {filteredTemplates.map((tpl) => (
                 <Card
                   key={tpl.id}
-                  className="rounded-none border-stone-800 bg-stone-900/70 flex flex-col justify-between"
+                  className="rounded-[1px] border-border bg-card shadow-subtle flex flex-col justify-between"
                 >
-                  <CardHeader className="pb-3 border-b border-stone-800/60">
+                  <CardHeader className="pb-3 border-b border-border">
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <div className="flex items-center gap-2 mb-1">
                           {tpl.channel === 'whatsapp' ? (
-                            <Badge className="bg-emerald-950/70 border-emerald-800/50 text-emerald-300 text-[10px] rounded-none flex items-center gap-1">
-                              <MessageSquare className="w-3 h-3" /> WhatsApp
+                            <Badge
+                              variant="outline"
+                              className="border-success/40 bg-success/10 text-success text-[10px] rounded-[1px] flex items-center gap-1 font-heading"
+                            >
+                              <MessageSquare className="w-3 h-3 text-success" strokeWidth={1.5} />{' '}
+                              WhatsApp
                             </Badge>
                           ) : (
-                            <Badge className="bg-sky-950/70 border-sky-800/50 text-sky-300 text-[10px] rounded-none flex items-center gap-1">
-                              <Mail className="w-3 h-3" /> E-mail
+                            <Badge
+                              variant="outline"
+                              className="border-info/40 bg-info/10 text-info text-[10px] rounded-[1px] flex items-center gap-1 font-heading"
+                            >
+                              <Mail className="w-3 h-3 text-info" strokeWidth={1.5} /> E-mail
                             </Badge>
                           )}
-                          <span className="text-[11px] font-mono text-stone-400 font-semibold">
+                          <span className="text-[11px] font-mono text-gold-deep font-semibold">
                             {tpl.event_code}
                           </span>
                         </div>
-                        <CardTitle className="text-sm font-semibold text-white">
+                        <CardTitle className="text-sm font-serif font-semibold text-foreground">
                           {tpl.subject || tpl.meta_template_name || tpl.event_code}
                         </CardTitle>
                       </div>
@@ -292,22 +309,24 @@ export function AdminMessagesPage() {
                       <div className="flex items-center gap-1">
                         {tpl.channel === 'whatsapp' && (
                           <Badge
-                            className={`text-[10px] rounded-none ${
+                            variant="outline"
+                            className={`text-[10px] rounded-[1px] font-heading ${
                               tpl.meta_status === 'approved'
-                                ? 'bg-emerald-900/40 text-emerald-300 border-emerald-800/50'
+                                ? 'bg-success/10 text-success border-success/40'
                                 : tpl.meta_status === 'rejected'
-                                  ? 'bg-red-900/40 text-red-300 border-red-800/50'
-                                  : 'bg-amber-900/40 text-amber-300 border-amber-800/50'
+                                  ? 'bg-destructive/10 text-destructive border-destructive/40'
+                                  : 'bg-warning/10 text-warning border-warning/40'
                             }`}
                           >
                             Meta: {tpl.meta_status || 'sem registro'}
                           </Badge>
                         )}
                         <Badge
-                          className={`text-[10px] rounded-none ${
+                          variant="outline"
+                          className={`text-[10px] rounded-[1px] font-heading ${
                             tpl.active
-                              ? 'bg-stone-800 text-stone-300 border-stone-700'
-                              : 'bg-stone-900 text-stone-500 border-stone-800'
+                              ? 'bg-secondary text-foreground border-border'
+                              : 'bg-background text-muted-foreground border-border'
                           }`}
                         >
                           {tpl.active ? 'Ativo' : 'Inativo'}
@@ -316,46 +335,49 @@ export function AdminMessagesPage() {
                     </div>
                   </CardHeader>
 
-                  <CardContent className="pt-3 pb-4 space-y-3 flex-1">
-                    <div className="text-xs text-stone-300 bg-stone-950/80 p-3 border border-stone-800/60 rounded-none whitespace-pre-line font-mono text-[11px] leading-relaxed">
+                  <CardContent className="pt-3 pb-4 space-y-3 flex-1 font-sans">
+                    <div className="text-xs text-foreground bg-secondary/50 p-3 border border-border rounded-[1px] whitespace-pre-line font-mono text-[11px] leading-relaxed">
                       {tpl.body}
                     </div>
 
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-stone-400">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                       <span>
-                        Público: <strong className="text-stone-300">{tpl.audience}</strong>
+                        Público: <strong className="text-foreground">{tpl.audience}</strong>
                       </span>
                       {tpl.meta_category && (
                         <span>
-                          Categoria: <strong className="text-stone-300">{tpl.meta_category}</strong>
+                          Categoria:{' '}
+                          <strong className="text-foreground">{tpl.meta_category}</strong>
                         </span>
                       )}
                       {tpl.button_url_param && (
                         <span>
                           Botão URL:{' '}
-                          <strong className="text-stone-300">{tpl.button_url_param}</strong>
+                          <strong className="text-gold-deep font-mono">
+                            {tpl.button_url_param}
+                          </strong>
                         </span>
                       )}
                     </div>
                   </CardContent>
 
-                  <div className="p-3 border-t border-stone-800/60 bg-stone-950/40 flex items-center justify-end gap-2">
+                  <div className="p-3 border-t border-border bg-secondary/30 flex items-center justify-end gap-2 rounded-b-[1px]">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="rounded-none border-stone-700 text-stone-300 text-xs h-7"
+                      className="rounded-[1px] text-xs h-7 font-heading"
                       onClick={() => {
                         setTestingTemplate(tpl)
                         setTestRecipient('')
                       }}
                     >
-                      <Send className="w-3 h-3 mr-1" />
+                      <Send className="w-3 h-3 mr-1" strokeWidth={1.5} />
                       Testar Disparo
                     </Button>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="rounded-none border-stone-700 text-stone-300 text-xs h-7"
+                      className="rounded-[1px] text-xs h-7 font-heading"
                       onClick={() => {
                         setEditingTemplate(tpl)
                         setEditSubject(tpl.subject || '')
@@ -363,7 +385,7 @@ export function AdminMessagesPage() {
                         setEditActive(tpl.active)
                       }}
                     >
-                      <Edit className="w-3 h-3 mr-1" />
+                      <Edit className="w-3 h-3 mr-1" strokeWidth={1.5} />
                       Editar
                     </Button>
                   </div>
@@ -373,10 +395,10 @@ export function AdminMessagesPage() {
           </TabsContent>
 
           <TabsContent value="logs" className="space-y-4">
-            <Card className="rounded-none border-stone-800 bg-stone-900/60 overflow-hidden">
+            <Card className="rounded-[1px] border-border bg-card overflow-hidden shadow-subtle">
               <div className="overflow-x-auto">
-                <table className="w-full text-xs text-left">
-                  <thead className="bg-stone-950 text-stone-400 border-b border-stone-800">
+                <table className="w-full text-xs text-left font-sans">
+                  <thead className="bg-secondary/60 text-muted-foreground border-b border-border font-heading text-[11px] uppercase tracking-label">
                     <tr>
                       <th className="p-3">Data/Hora</th>
                       <th className="p-3">Canal</th>
@@ -386,53 +408,67 @@ export function AdminMessagesPage() {
                       <th className="p-3">ID Provedor / Erro</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-800 text-stone-300">
+                  <tbody className="divide-y divide-border text-foreground">
                     {logs.length === 0 ? (
                       <tr>
-                        <td colSpan={6} className="p-6 text-center text-stone-500">
+                        <td colSpan={6} className="p-6 text-center text-muted-foreground font-sans">
                           Nenhum registro de notificação encontrado.
                         </td>
                       </tr>
                     ) : (
-                      logs.map((log) => (
-                        <tr key={log.id} className="hover:bg-stone-800/30">
-                          <td className="p-3 text-stone-400 whitespace-nowrap font-mono">
+                      logs.map((log, idx) => (
+                        <tr
+                          key={log.id}
+                          className={`hover:bg-accent/40 transition-colors ${
+                            idx % 2 === 1 ? 'bg-secondary/40' : 'bg-card'
+                          }`}
+                        >
+                          <td className="p-3 text-muted-foreground whitespace-nowrap font-mono">
                             {new Date(log.created).toLocaleString('pt-BR')}
                           </td>
                           <td className="p-3">
                             {log.channel === 'whatsapp' ? (
-                              <Badge className="bg-emerald-950/70 border-emerald-800/50 text-emerald-300 text-[10px] rounded-none">
+                              <Badge
+                                variant="outline"
+                                className="border-success/40 bg-success/10 text-success text-[10px] rounded-[1px] font-heading"
+                              >
                                 WhatsApp
                               </Badge>
                             ) : (
-                              <Badge className="bg-sky-950/70 border-sky-800/50 text-sky-300 text-[10px] rounded-none">
+                              <Badge
+                                variant="outline"
+                                className="border-info/40 bg-info/10 text-info text-[10px] rounded-[1px] font-heading"
+                              >
                                 E-mail
                               </Badge>
                             )}
                           </td>
-                          <td className="p-3 font-mono">{log.recipient}</td>
-                          <td className="p-3 font-semibold text-stone-200">{log.event_code}</td>
+                          <td className="p-3 font-mono text-foreground">{log.recipient}</td>
+                          <td className="p-3 font-semibold text-foreground font-mono">
+                            {log.event_code}
+                          </td>
                           <td className="p-3">
                             <Badge
-                              className={`text-[10px] rounded-none ${
+                              variant="outline"
+                              className={`text-[10px] rounded-[1px] font-heading ${
                                 log.status === 'sent' ||
                                 log.status === 'delivered' ||
                                 log.status === 'read'
-                                  ? 'bg-emerald-950 text-emerald-300 border-emerald-800'
+                                  ? 'bg-success/10 text-success border-success/40'
                                   : log.status === 'failed'
-                                    ? 'bg-red-950 text-red-300 border-red-800'
-                                    : 'bg-amber-950 text-amber-300 border-amber-800'
+                                    ? 'bg-destructive/10 text-destructive border-destructive/40'
+                                    : 'bg-warning/10 text-warning border-warning/40'
                               }`}
                             >
                               {log.status}
                             </Badge>
                           </td>
                           <td
-                            className="p-3 max-w-xs truncate text-[11px] font-mono text-stone-400"
+                            className="p-3 max-w-xs truncate text-[11px] font-mono text-muted-foreground"
                             title={log.error || log.provider_message_id || ''}
                           >
                             {log.error ? (
-                              <span className="text-red-400">{log.error}</span>
+                              <span className="text-destructive">{log.error}</span>
                             ) : (
                               log.provider_message_id || '—'
                             )}
@@ -449,37 +485,43 @@ export function AdminMessagesPage() {
       </main>
 
       <Dialog open={!!editingTemplate} onOpenChange={(open) => !open && setEditingTemplate(null)}>
-        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none max-w-xl">
+        <DialogContent className="bg-card border-border text-foreground rounded-[1px] max-w-xl">
           <DialogHeader>
-            <DialogTitle className="text-lg font-serif">Editar Modelo de Mensagem</DialogTitle>
-            <DialogDescription className="text-xs text-stone-400">
+            <DialogTitle className="text-lg font-serif font-semibold text-foreground">
+              Editar Modelo de Mensagem
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground font-sans">
               Código do evento:{' '}
-              <strong className="text-amber-400 font-mono">{editingTemplate?.event_code}</strong> (
+              <strong className="text-gold-deep font-mono">{editingTemplate?.event_code}</strong> (
               {editingTemplate?.channel})
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-4 py-3">
+          <div className="space-y-4 py-3 font-sans">
             {editingTemplate?.channel === 'email' && (
               <div className="space-y-1.5">
-                <Label className="text-xs text-stone-300">Assunto do E-mail</Label>
+                <Label className="text-xs text-foreground font-heading font-medium">
+                  Assunto do E-mail
+                </Label>
                 <Input
                   value={editSubject}
                   onChange={(e) => setEditSubject(e.target.value)}
-                  className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                  className="bg-background border-border rounded-[1px] text-xs text-foreground"
                 />
               </div>
             )}
 
             <div className="space-y-1.5">
-              <Label className="text-xs text-stone-300">Corpo da Mensagem (com placeholders)</Label>
+              <Label className="text-xs text-foreground font-heading font-medium">
+                Corpo da Mensagem (com placeholders)
+              </Label>
               <Textarea
                 rows={6}
                 value={editBody}
                 onChange={(e) => setEditBody(e.target.value)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs font-mono resize-none"
+                className="bg-background border-border rounded-[1px] text-xs font-mono resize-none text-foreground"
               />
-              <p className="text-[11px] text-stone-500">
+              <p className="text-[11px] text-muted-foreground">
                 {editingTemplate?.channel === 'whatsapp'
                   ? 'No WhatsApp da Meta, utilize {{1}}, {{2}} correspondentes aos parâmetros configurados.'
                   : 'No e-mail, utilize tags como {{nome}}, {{protocolo}}, {{link}}.'}
@@ -492,9 +534,12 @@ export function AdminMessagesPage() {
                 id="editActive"
                 checked={editActive}
                 onChange={(e) => setEditActive(e.target.checked)}
-                className="rounded border-stone-700 bg-stone-950 text-amber-500"
+                className="rounded-[1px] border-border bg-background text-primary focus:ring-primary"
               />
-              <Label htmlFor="editActive" className="text-xs text-stone-300 cursor-pointer">
+              <Label
+                htmlFor="editActive"
+                className="text-xs text-foreground cursor-pointer font-heading"
+              >
                 Modelo ativo para envios automáticos
               </Label>
             </div>
@@ -505,7 +550,7 @@ export function AdminMessagesPage() {
               variant="outline"
               size="sm"
               onClick={() => setEditingTemplate(null)}
-              className="rounded-none border-stone-700 text-stone-300 text-xs"
+              className="rounded-[1px] text-xs font-heading"
             >
               Cancelar
             </Button>
@@ -513,7 +558,7 @@ export function AdminMessagesPage() {
               size="sm"
               onClick={handleSaveTemplate}
               disabled={savingTemplate}
-              className="rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold text-xs"
+              className="rounded-[1px] bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs font-heading"
             >
               {savingTemplate ? 'Salvando...' : 'Salvar Alterações'}
             </Button>
@@ -522,19 +567,23 @@ export function AdminMessagesPage() {
       </Dialog>
 
       <Dialog open={!!testingTemplate} onOpenChange={(open) => !open && setTestingTemplate(null)}>
-        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none max-w-md">
+        <DialogContent className="bg-card border-border text-foreground rounded-[1px] max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-lg font-serif">Disparar Mensagem de Teste</DialogTitle>
-            <DialogDescription className="text-xs text-stone-400">
+            <DialogTitle className="text-lg font-serif font-semibold text-foreground">
+              Disparar Mensagem de Teste
+            </DialogTitle>
+            <DialogDescription className="text-xs text-muted-foreground font-sans">
               Canal:{' '}
-              <strong className="text-amber-400 uppercase">{testingTemplate?.channel}</strong> •
-              Modelo: {testingTemplate?.event_code}
+              <strong className="text-gold-deep uppercase font-heading">
+                {testingTemplate?.channel}
+              </strong>{' '}
+              • Modelo: <span className="font-mono">{testingTemplate?.event_code}</span>
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-3 py-3">
+          <div className="space-y-3 py-3 font-sans">
             <div className="space-y-1.5">
-              <Label className="text-xs text-stone-300">
+              <Label className="text-xs text-foreground font-heading font-medium">
                 {testingTemplate?.channel === 'whatsapp'
                   ? 'Número WhatsApp com DDD'
                   : 'E-mail de Destino'}
@@ -545,9 +594,9 @@ export function AdminMessagesPage() {
                 }
                 value={testRecipient}
                 onChange={(e) => setTestRecipient(e.target.value)}
-                className="bg-stone-950 border-stone-800 rounded-none text-xs"
+                className="bg-background border-border rounded-[1px] text-xs font-mono text-foreground"
               />
-              <p className="text-[11px] text-stone-500">
+              <p className="text-[11px] text-muted-foreground">
                 O envio será realizado via backend autenticado com segredo de servidor.
               </p>
             </div>
@@ -558,7 +607,7 @@ export function AdminMessagesPage() {
               variant="outline"
               size="sm"
               onClick={() => setTestingTemplate(null)}
-              className="rounded-none border-stone-700 text-stone-300 text-xs"
+              className="rounded-[1px] text-xs font-heading"
             >
               Cancelar
             </Button>
@@ -566,7 +615,7 @@ export function AdminMessagesPage() {
               size="sm"
               onClick={handleSendTest}
               disabled={sendingTest || !testRecipient}
-              className="rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold text-xs"
+              className="rounded-[1px] bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs font-heading"
             >
               {sendingTest ? 'Enviando...' : 'Confirmar Envio'}
             </Button>
