@@ -10,14 +10,13 @@ import {
   CheckCircle2,
   Download,
   ExternalLink,
-  Sparkles,
   MessageSquare,
   ShieldCheck,
-  Smartphone,
   CreditCard,
   Share2,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { Eyebrow } from '@/components/brand'
 
 interface ReadyMessage {
   id: string
@@ -130,7 +129,7 @@ export const MemberMaterialsPage: React.FC = () => {
       id: 'geral',
       title: 'Mensagem Geral — Venda, Locação ou Compra',
       targetAudience: 'Para enviar individualmente a amigos ou contatos diretos',
-      text: `Conhece alguém que quer vender, alugar ou comprar imóvel na Barra da Tijuca ou no Recreio? Me passa o contato pelo meu link: ${personalLink}. A Godoy Prime Realty, com corretores com CRECI ativo, atende — você recebe uma recompensa por indicação se a indicação valer.`,
+      text: `Conhece alguém que quer vender, alugar ou comprar imóvel na Barra da Tijuca ou no Recreio? Me passa o contato pelo meu link: ${personalLink}. A Godoy Prime Realty, com corretores com CRECI ativo, atende, você recebe uma recompensa por indicação se a indicação valer.`,
     },
     {
       id: 'proprietario',
@@ -147,25 +146,18 @@ export const MemberMaterialsPage: React.FC = () => {
   ]
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16 font-sans">
+    <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
       <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6 max-w-4xl">
         {/* Banner do topo */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-2xl bg-gradient-to-r from-slate-900 via-slate-900 to-amber-950/30 border border-slate-800 shadow-xl">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 rounded-[1px] bg-card border border-border shadow-luxury">
           <div className="space-y-1.5">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-semibold uppercase tracking-wider text-amber-500 flex items-center gap-1">
-                <Sparkles className="h-3.5 w-3.5" />
-                Materiais Pessoais
-              </span>
-              <span className="text-slate-600">•</span>
-              <span className="text-xs text-slate-400">Entrega em mãos e WhatsApp individual</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
-              Cartão Pessoal & Mensagens Prontas
+            <Eyebrow>MATERIAIS PESSOAIS · ENTREGA EM MÃOS</Eyebrow>
+            <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+              Cartão Pessoal &amp; <em>Mensagens Prontas</em>
             </h1>
-            <p className="text-xs sm:text-sm text-slate-400 max-w-2xl leading-relaxed">
+            <p className="text-xs sm:text-sm text-muted-foreground max-w-2xl leading-relaxed font-sans">
               O programa é estritamente confidencial e pessoal. Não há cartazes para afixação em
               áreas comuns. Utilize seu cartão pessoal com QR para entregar em mãos ou envie as
               mensagens prontas individualmente por WhatsApp.
@@ -175,16 +167,16 @@ export const MemberMaterialsPage: React.FC = () => {
           <Button
             onClick={handleCopyLink}
             variant="outline"
-            className="border-amber-500/40 text-amber-400 hover:bg-amber-500/10 text-xs shrink-0 self-start sm:self-auto"
+            className="text-xs shrink-0 self-start sm:self-auto rounded-[1px] h-9"
           >
             {copiedLink ? (
               <>
-                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-400" />
+                <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-success" strokeWidth={1.5} />
                 Link Copiado!
               </>
             ) : (
               <>
-                <Copy className="h-3.5 w-3.5 mr-1.5" />
+                <Copy className="h-3.5 w-3.5 mr-1.5 text-gold-deep" strokeWidth={1.5} />
                 Copiar Meu Link
               </>
             )}
@@ -192,56 +184,58 @@ export const MemberMaterialsPage: React.FC = () => {
         </div>
 
         {/* Regras e Diretrizes do Regulamento */}
-        <div className="p-4 bg-slate-900/60 border border-slate-800 rounded-xl space-y-2 text-xs text-slate-300">
-          <div className="flex items-center gap-2 text-amber-400 font-semibold text-xs sm:text-sm">
-            <ShieldCheck className="h-4 w-4" />
+        <div className="p-4 bg-secondary/50 border border-border rounded-[1px] space-y-2 text-xs text-foreground font-sans">
+          <div className="flex items-center gap-2 text-gold-deep font-heading font-semibold text-xs sm:text-sm">
+            <ShieldCheck className="h-4 w-4" strokeWidth={1.5} />
             Diretrizes do Regulamento (Seções 3 e 4)
           </div>
-          <ul className="list-disc pl-5 space-y-1 text-slate-400 leading-relaxed text-[11px] sm:text-xs">
+          <ul className="list-disc pl-5 space-y-1 text-muted-foreground leading-relaxed text-[11px] sm:text-xs">
             <li>
-              <strong>Sem divulgação em massa:</strong> É vedada a afixação de cartazes, panfletagem
-              ou divulgação pública em murais de condomínio ou grupos abertos.
+              <strong className="text-foreground">Sem divulgação em massa:</strong> é vedada a
+              afixação de cartazes, panfletagem ou divulgação pública em murais de condomínio ou
+              grupos abertos.
             </li>
             <li>
-              <strong>Atendimento privativo de corretor:</strong> Toda visita, avaliação, negociação
-              e contrato são feitos exclusivamente por corretor de imóveis com CRECI ativo.
+              <strong className="text-foreground">Atendimento privativo de corretor:</strong> toda
+              visita, avaliação, negociação e contrato são feitos exclusivamente por corretor de
+              imóveis credenciado com CRECI ativo.
             </li>
             <li>
-              <strong>Papel do indicador:</strong> O indicador comunica a oportunidade e recebe a
-              recompensa por indicação prevista; não negocia, não fala de preço e não acompanha
-              visita.
+              <strong className="text-foreground">Papel do indicador:</strong> o indicador comunica
+              a oportunidade e recebe a recompensa por indicação prevista, não negocia, não fala de
+              preço e não acompanha visita.
             </li>
           </ul>
         </div>
 
         {/* Cartão Pessoal e QR Code do /i/:codigo */}
-        <Card className="bg-slate-900/90 border-slate-800 shadow-lg overflow-hidden">
-          <CardHeader className="border-b border-slate-800/80 pb-4">
-            <CardTitle className="text-base sm:text-lg font-serif text-white flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-amber-500" />
+        <Card className="bg-card border-border shadow-sm overflow-hidden rounded-[1px]">
+          <CardHeader className="border-b border-border pb-4">
+            <CardTitle className="text-base sm:text-lg font-serif font-bold text-foreground flex items-center gap-2">
+              <CreditCard className="h-5 w-5 text-gold-deep" strokeWidth={1.5} />
               Cartão Pessoal do Indicador com QR Code
             </CardTitle>
-            <CardDescription className="text-xs text-slate-400">
+            <CardDescription className="text-xs text-muted-foreground font-sans">
               Ideal para entregar em mãos ou mostrar no celular para quem deseja indicar imóvel ou
-              comprar.
+              comprar na Barra da Tijuca e Recreio.
             </CardDescription>
           </CardHeader>
-          <CardContent className="p-5 sm:p-6">
+          <CardContent className="p-5 sm:p-6 font-sans">
             <div className="flex flex-col md:flex-row items-center gap-6">
               {/* Moldura de Cartão Pessoal Imprimível */}
-              <div className="w-full max-w-xs sm:max-w-sm rounded-2xl bg-gradient-to-br from-slate-900 to-black border-2 border-amber-500/40 p-5 shadow-2xl space-y-4 shrink-0 text-center">
-                <div className="flex items-center justify-between border-b border-amber-500/20 pb-2">
-                  <span className="text-[10px] uppercase font-bold tracking-widest text-amber-500">
+              <div className="navy w-full max-w-xs sm:max-w-sm rounded-[1px] border border-border/30 p-5 shadow-luxury space-y-4 shrink-0 text-center">
+                <div className="flex items-center justify-between border-b border-border/20 pb-2">
+                  <span className="text-[10px] font-heading font-semibold uppercase tracking-widest text-primary">
                     GODOY PRIME REALTY
                   </span>
-                  <span className="text-[9px] text-slate-400 font-mono">
+                  <span className="text-[9px] text-muted-foreground font-mono">
                     #{codeOrSlug || 'INDICADOR'}
                   </span>
                 </div>
 
-                <div className="p-3 bg-white rounded-xl shadow-md inline-block">
+                <div className="p-3 bg-white rounded-[1px] shadow-sm inline-block">
                   {isLoadingQr ? (
-                    <div className="w-36 h-36 flex items-center justify-center text-slate-400 text-xs">
+                    <div className="w-36 h-36 flex items-center justify-center text-muted-foreground text-xs font-mono">
                       Gerando QR...
                     </div>
                   ) : (
@@ -254,44 +248,40 @@ export const MemberMaterialsPage: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <div className="text-sm font-bold text-white tracking-wide">
+                  <div className="text-sm font-heading font-bold text-foreground tracking-wide">
                     {user?.name || 'Indicador Autorizado'}
                   </div>
-                  <p className="text-[10px] text-slate-400 leading-tight">
+                  <p className="text-[10px] text-muted-foreground leading-tight font-sans">
                     Aponte a câmera para registrar sua indicação direta com segurança e discrição.
                   </p>
                 </div>
 
-                <div className="pt-1 border-t border-slate-800/80 text-[9px] text-slate-500">
-                  Visita, avaliação e contrato realizados por corretores com CRECI ativo.
+                <div className="pt-1 border-t border-border/20 text-[9px] text-muted-foreground font-mono">
+                  CRECI-RJ PJ 11.841 · Atendimento por corretores credenciados
                 </div>
               </div>
 
               {/* Controles do Cartão */}
               <div className="space-y-4 flex-1 w-full">
                 <div>
-                  <label className="text-xs font-semibold text-slate-300 uppercase tracking-wider block mb-1">
+                  <label className="text-xs font-heading font-semibold text-foreground uppercase tracking-wider block mb-1">
                     Seu Link Pessoal Oficial (/i/{codeOrSlug})
                   </label>
-                  <div className="bg-slate-950 p-3 rounded-lg border border-slate-800 font-mono text-xs text-amber-400 break-all select-all flex items-center justify-between gap-2">
+                  <div className="bg-secondary/60 p-3 rounded-[1px] border border-border font-mono text-xs text-foreground break-all select-all flex items-center justify-between gap-2">
                     <span>{personalLink}</span>
                   </div>
                 </div>
 
                 <div className="flex flex-wrap gap-2 pt-1">
-                  <Button
-                    onClick={handleCopyLink}
-                    size="sm"
-                    className="bg-amber-500 hover:bg-amber-600 text-slate-950 font-semibold text-xs h-9"
-                  >
+                  <Button onClick={handleCopyLink} size="sm" className="text-xs h-9 rounded-[1px]">
                     {copiedLink ? (
                       <>
-                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5 text-emerald-950" />
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
                         Copiado!
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3.5 w-3.5 mr-1.5" />
+                        <Copy className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
                         Copiar Link
                       </>
                     )}
@@ -304,31 +294,25 @@ export const MemberMaterialsPage: React.FC = () => {
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs h-9"
-                      >
-                        <Download className="h-3.5 w-3.5 mr-1.5" />
+                      <Button size="sm" variant="outline" className="text-xs h-9 rounded-[1px]">
+                        <Download className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
                         Baixar QR Code
                       </Button>
                     </a>
                   )}
 
                   <a href={personalLink} target="_blank" rel="noopener noreferrer">
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="text-slate-400 hover:text-white text-xs h-9"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
+                    <Button size="sm" variant="ghost" className="text-xs h-9 rounded-[1px]">
+                      <ExternalLink className="h-3.5 w-3.5 mr-1.5" strokeWidth={1.5} />
                       Abrir Meu Link
                     </Button>
                   </a>
                 </div>
 
-                <div className="p-3 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400 space-y-1">
-                  <p className="text-slate-300 font-medium">Como utilizar na prática:</p>
+                <div className="p-3 bg-secondary/40 rounded-[1px] border border-border text-xs text-muted-foreground space-y-1 font-sans">
+                  <p className="text-foreground font-heading font-medium">
+                    Como utilizar na prática:
+                  </p>
                   <p className="leading-relaxed">
                     Mostre o cartão no celular para a pessoa escanear, ou envie o link
                     individualmente. Ao abrir, ela preenche o formulário direto onde já autoriza o
@@ -343,11 +327,11 @@ export const MemberMaterialsPage: React.FC = () => {
         {/* Mensagens Prontas para Envio Individual por WhatsApp */}
         <div className="space-y-4">
           <div>
-            <h2 className="text-lg sm:text-xl font-bold font-serif text-white flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-emerald-400" />
-              Mensagens Prontas para WhatsApp Individual
+            <h2 className="text-lg sm:text-xl font-bold font-serif text-foreground flex items-center gap-2">
+              <MessageSquare className="h-5 w-5 text-gold-deep" strokeWidth={1.5} />
+              Mensagens Prontas para <em>WhatsApp Individual</em>
             </h2>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-muted-foreground mt-0.5 font-sans">
               Envie de forma individual para contatos específicos. Nunca envie em listas de
               transmissão abertas ou grupos públicos.
             </p>
@@ -358,13 +342,16 @@ export const MemberMaterialsPage: React.FC = () => {
               const isCopied = copiedMsgId === msg.id
 
               return (
-                <Card key={msg.id} className="bg-slate-900 border-slate-800 text-slate-100">
-                  <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between gap-2 border-b border-slate-800/60">
+                <Card
+                  key={msg.id}
+                  className="bg-card border-border text-card-foreground rounded-[1px] shadow-sm"
+                >
+                  <CardHeader className="p-4 pb-2 flex flex-row items-start justify-between gap-2 border-b border-border">
                     <div className="space-y-0.5">
-                      <CardTitle className="text-sm font-semibold text-white">
+                      <CardTitle className="text-sm font-heading font-semibold text-foreground">
                         {msg.title}
                       </CardTitle>
-                      <CardDescription className="text-[11px] text-slate-400">
+                      <CardDescription className="text-[11px] text-muted-foreground font-sans">
                         {msg.targetAudience}
                       </CardDescription>
                     </div>
@@ -374,16 +361,19 @@ export const MemberMaterialsPage: React.FC = () => {
                         size="sm"
                         variant="outline"
                         onClick={() => handleCopyMessage(msg)}
-                        className="border-slate-700 text-xs h-8"
+                        className="text-xs h-8 rounded-[1px]"
                       >
                         {isCopied ? (
                           <>
-                            <CheckCircle2 className="h-3.5 w-3.5 mr-1 text-emerald-400" />
+                            <CheckCircle2
+                              className="h-3.5 w-3.5 mr-1 text-success"
+                              strokeWidth={1.5}
+                            />
                             Copiado!
                           </>
                         ) : (
                           <>
-                            <Copy className="h-3.5 w-3.5 mr-1" />
+                            <Copy className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
                             Copiar
                           </>
                         )}
@@ -391,17 +381,18 @@ export const MemberMaterialsPage: React.FC = () => {
 
                       <Button
                         size="sm"
+                        variant="outline"
                         onClick={() => handleOpenWhatsApp(msg.text)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs h-8"
+                        className="text-xs h-8 rounded-[1px]"
                       >
-                        <Share2 className="h-3.5 w-3.5 mr-1" />
-                        Abrir WhatsApp
+                        <Share2 className="h-3.5 w-3.5 mr-1" strokeWidth={1.5} />
+                        WhatsApp
                       </Button>
                     </div>
                   </CardHeader>
 
-                  <CardContent className="p-4 pt-3">
-                    <div className="p-3.5 bg-slate-950 border border-slate-800 rounded-lg text-xs sm:text-sm text-slate-300 font-sans leading-relaxed">
+                  <CardContent className="p-4 pt-3 font-sans">
+                    <div className="p-3.5 bg-secondary/50 border border-border rounded-[1px] text-xs sm:text-sm text-foreground leading-relaxed">
                       {msg.text}
                     </div>
                   </CardContent>

@@ -17,7 +17,7 @@ export function BrandPublicFooter({ className }: BrandPublicFooterProps) {
     >
       <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-center sm:flex-row sm:text-left">
         <div className="flex flex-col sm:flex-row items-center gap-3">
-          <GodoyLogo variant="avatar" size={32} className="shrink-0" />
+          <GodoyLogo variant="avatar" className="h-8 w-8 shrink-0" />
           <div className="flex flex-col">
             <span className="font-mono text-xs font-semibold tracking-wider text-primary">
               Godoy Prime Realty · CRECI-RJ PJ 11.841

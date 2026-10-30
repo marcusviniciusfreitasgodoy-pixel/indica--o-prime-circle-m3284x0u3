@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import { MemberNavbar } from '@/components/MemberNavbar'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -11,13 +11,13 @@ import {
   Building,
   Calendar,
   ArrowRight,
-  UserCheck,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
 import { Reward } from '@/services/rewards'
 import { Link } from 'react-router-dom'
+import { Eyebrow } from '@/components/brand'
 
 export function MemberRewardsPage() {
   const { user } = useAuth()
@@ -81,7 +81,7 @@ export function MemberRewardsPage() {
     }
 
     loadMemberData()
-  }, [user])
+  }, [user, toast])
 
   // Cálculos de totais
   const aReceber = rewards
@@ -119,51 +119,59 @@ export function MemberRewardsPage() {
     switch (r.status) {
       case 'aguardando_comissao':
         return {
-          label: 'Aguardando Comissão',
-          color: 'bg-amber-950 text-amber-300 border-amber-800',
+          label: 'Aguardando Aprovação',
+          color: 'bg-warning/15 text-warning border-warning/30',
         }
       case 'em_analise':
-        return { label: 'Em Validação', color: 'bg-blue-950 text-blue-300 border-blue-800' }
+        return {
+          label: 'Em Validação',
+          color: 'bg-info/15 text-info border-info/30',
+        }
       case 'em_revisao_admin':
         return {
           label: 'Em Verificação Interna',
-          color: 'bg-stone-900 text-stone-300 border-stone-800',
+          color: 'bg-secondary text-muted-foreground border-border',
         }
       case 'pendente_dados':
         return {
           label: 'Dados Pendentes (CPF/Pix)',
-          color: 'bg-purple-950 text-purple-300 border-purple-800',
+          color: 'bg-warning/15 text-warning border-warning/30',
         }
       case 'aprovada':
         return {
           label: 'Aprovada para Pagamento',
-          color: 'bg-emerald-950 text-emerald-300 border-emerald-800',
+          color: 'bg-success/15 text-success border-success/30',
         }
       case 'em_lote':
         return {
           label: 'Programada no Lote Mensal',
-          color: 'bg-cyan-950 text-cyan-300 border-cyan-800',
+          color: 'bg-info/15 text-info border-info/30',
         }
       case 'paga':
-        return { label: 'Paga', color: 'bg-emerald-900 text-white border-emerald-600' }
+        return {
+          label: 'Paga',
+          color: 'bg-success text-success-foreground border-success',
+        }
       case 'cancelada':
-        return { label: 'Cancelada', color: 'bg-stone-900 text-stone-500 border-stone-800' }
+      default:
+        return {
+          label: 'Cancelada',
+          color: 'bg-secondary text-muted-foreground border-border',
+        }
     }
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground pb-16 font-sans">
       <MemberNavbar />
 
-      <main className="max-w-5xl mx-auto px-4 py-8 space-y-6">
-        <div className="border-b border-stone-800 pb-5">
-          <div className="flex items-center gap-2 mb-1">
-            <Coins className="w-5 h-5 text-amber-500" />
-            <h1 className="text-xl font-bold tracking-tight text-white uppercase">
-              Minhas Recompensas
-            </h1>
-          </div>
-          <p className="text-xs text-stone-400">
+      <main className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8 space-y-6">
+        <div className="p-5 sm:p-6 rounded-[1px] bg-card border border-border shadow-luxury space-y-1.5">
+          <Eyebrow>EXTRATO · RECOMPENSA POR INDICAÇÃO</Eyebrow>
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
+            Minhas <em>Recompensas</em>
+          </h1>
+          <p className="text-xs sm:text-sm text-muted-foreground max-w-xl font-sans">
             Acompanhe o valor de cada marco conquistado, datas previstas de pagamento e histórico de
             liquidações.
           </p>
@@ -171,14 +179,14 @@ export function MemberRewardsPage() {
 
         {/* Alerta de dados pendentes se CPF/Pix não cadastrados */}
         {hasMissingData && (
-          <div className="bg-purple-950/40 border border-purple-800/80 p-4 rounded-none flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+          <div className="bg-warning/10 border border-warning/30 p-4 rounded-[1px] flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-purple-400 shrink-0 mt-0.5" />
-              <div>
-                <div className="font-semibold text-purple-200">
-                  Atenção: Complete seu perfil para liberar pagamentos
+              <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" strokeWidth={1.5} />
+              <div className="space-y-0.5">
+                <div className="font-heading font-semibold text-foreground">
+                  Atenção: complete seu perfil para liberar pagamentos
                 </div>
-                <div className="text-purple-300/80 text-[11px] mt-0.5">
+                <div className="text-muted-foreground text-[11px] font-sans">
                   Recompensas monetárias exigem CPF e chave Pix válidos. Enquanto faltarem dados,
                   suas recompensas ficam retidas em status Pendente.
                 </div>
@@ -187,10 +195,11 @@ export function MemberRewardsPage() {
             <Button
               asChild
               size="sm"
-              className="bg-purple-600 hover:bg-purple-500 text-white text-xs rounded-none h-8 whitespace-nowrap"
+              variant="outline"
+              className="text-xs rounded-[1px] h-8 whitespace-nowrap shrink-0 border-warning/40 text-foreground hover:bg-warning/10"
             >
               <Link to="/perfil">
-                Completar Perfil <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                Completar Perfil <ArrowRight className="w-3.5 h-3.5 ml-1" strokeWidth={1.5} />
               </Link>
             </Button>
           </div>
@@ -198,53 +207,59 @@ export function MemberRewardsPage() {
 
         {/* Cards Resumo */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <Card className="bg-stone-900/60 border-stone-800 rounded-none">
+          <Card className="bg-card border-border rounded-[1px] text-card-foreground shadow-sm">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <div className="text-xs font-semibold text-stone-400 uppercase tracking-wider">
+                <div className="text-xs font-heading font-semibold text-gold-deep uppercase tracking-wider">
                   Total a Receber
                 </div>
-                <div className="text-2xl font-mono font-bold text-amber-400 mt-1">
+                <div className="text-2xl sm:text-3xl font-mono font-bold text-foreground mt-1">
                   R$ {aReceber.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
-                <div className="text-[11px] text-stone-500 mt-0.5">
-                  Em validação ou programadas para lote
+                <div className="text-[11px] text-muted-foreground mt-0.5 font-sans">
+                  Em validação ou programadas para lote mensal
                 </div>
               </div>
-              <Clock className="w-8 h-8 text-amber-500/30" />
+              <div className="w-10 h-10 rounded-[1px] bg-secondary border border-border text-gold-deep flex items-center justify-center">
+                <Clock className="w-5 h-5" strokeWidth={1.5} />
+              </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-stone-900/60 border-stone-800 rounded-none">
+          <Card className="bg-card border-border rounded-[1px] text-card-foreground shadow-sm">
             <CardContent className="p-4 flex items-center justify-between">
               <div>
-                <div className="text-xs font-semibold text-stone-400 uppercase tracking-wider">
+                <div className="text-xs font-heading font-semibold text-success uppercase tracking-wider">
                   Total Recebido
                 </div>
-                <div className="text-2xl font-mono font-bold text-emerald-400 mt-1">
+                <div className="text-2xl sm:text-3xl font-mono font-bold text-success mt-1">
                   R$ {recebido.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </div>
-                <div className="text-[11px] text-stone-500 mt-0.5">
-                  Liquidadas com comprovante emitido
+                <div className="text-[11px] text-muted-foreground mt-0.5 font-sans">
+                  Liquidadas com comprovante via Pix
                 </div>
               </div>
-              <CheckCircle2 className="w-8 h-8 text-emerald-500/30" />
+              <div className="w-10 h-10 rounded-[1px] bg-success/15 border border-success/30 text-success flex items-center justify-center">
+                <CheckCircle2 className="w-5 h-5" strokeWidth={1.5} />
+              </div>
             </CardContent>
           </Card>
         </div>
 
         {/* Lista de Recompensas */}
         <div className="space-y-3">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-stone-400">
+          <h2 className="text-xs font-heading font-semibold uppercase tracking-wider text-muted-foreground">
             Histórico Detalhado ({rewards.length})
           </h2>
 
           {loading ? (
-            <div className="p-12 text-center text-xs text-stone-500">Carregando recompensas...</div>
+            <div className="p-12 text-center text-xs text-muted-foreground bg-card border border-border rounded-[1px]">
+              Carregando recompensas...
+            </div>
           ) : rewards.length === 0 ? (
-            <div className="p-12 text-center border border-dashed border-stone-800 text-stone-500 text-xs">
-              Você ainda não possui recompensas registradas. Envie novas indicações para começar a
-              pontuar!
+            <div className="p-12 text-center border border-dashed border-border text-muted-foreground text-xs bg-card rounded-[1px]">
+              Você ainda não possui recompensas registradas. Compartilhe seu link pessoal ou
+              registre uma nova indicação para começar.
             </div>
           ) : (
             <div className="space-y-3">
@@ -256,29 +271,34 @@ export function MemberRewardsPage() {
                 return (
                   <Card
                     key={r.id}
-                    className="bg-stone-900/60 border-stone-800 rounded-none hover:border-stone-700 transition-colors"
+                    className="bg-card border-border rounded-[1px] text-card-foreground hover:border-gold-deep transition-colors shadow-sm"
                   >
-                    <CardContent className="p-4 space-y-3 text-xs">
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-stone-800/60 pb-3">
+                    <CardContent className="p-4 space-y-3 text-xs font-sans">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border pb-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <Badge className={`${stInfo.color} text-[10px] rounded-none`}>
+                          <Badge
+                            className={`${stInfo.color} text-[10px] rounded-[1px] font-heading`}
+                          >
                             {stInfo.label}
                           </Badge>
-                          <Badge className="bg-stone-800 text-stone-300 text-[10px] rounded-none uppercase">
+                          <Badge
+                            variant="outline"
+                            className="text-[10px] rounded-[1px] font-heading uppercase"
+                          >
                             Marco:{' '}
                             {r.milestone === 'captada'
-                              ? 'Formalização / Captação'
-                              : 'Negócio Concluído'}
+                              ? 'Autorização / Imóvel Qualificado'
+                              : 'Atendimento / Primeira Visita'}
                           </Badge>
                           {r.via_decline && (
-                            <Badge className="bg-rose-950 text-rose-300 border-rose-800 text-[10px] rounded-none">
+                            <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px] rounded-[1px] font-heading">
                               Reconhecimento Especial
                             </Badge>
                           )}
                         </div>
 
-                        <div className="text-right">
-                          <span className="font-mono font-bold text-base text-emerald-400">
+                        <div className="text-left sm:text-right">
+                          <span className="font-mono font-bold text-base text-foreground">
                             R${' '}
                             {Number(r.final_amount_brl || 0).toLocaleString('pt-BR', {
                               minimumFractionDigits: 2,
@@ -287,17 +307,17 @@ export function MemberRewardsPage() {
                         </div>
                       </div>
 
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-stone-400 text-[11px]">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-muted-foreground text-[11px]">
                         <div className="flex items-center gap-1.5">
-                          <Building className="w-3.5 h-3.5 text-amber-500" />
+                          <Building className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
                           <span>
                             {condoObj?.name || 'Condomínio não informado'} — Indicação #
-                            {r.referral_id?.substring(0, 8)}
+                            <span className="font-mono">{r.referral_id?.substring(0, 8)}</span>
                           </span>
                         </div>
 
-                        <div className="flex items-center gap-1.5 text-stone-300 font-medium">
-                          <Calendar className="w-3.5 h-3.5 text-amber-500" />
+                        <div className="flex items-center gap-1.5 text-foreground font-medium font-mono">
+                          <Calendar className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
                           <span>{getExpectedPaymentDate(r)}</span>
                         </div>
                       </div>

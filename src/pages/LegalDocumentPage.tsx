@@ -5,6 +5,7 @@ import { SimpleMarkdown } from '@/components/SimpleMarkdown'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Loader2, ArrowLeft, Shield, AlertTriangle } from 'lucide-react'
+import { BrandPublicFooter, Eyebrow } from '@/components/brand'
 
 interface LegalDocument {
   id: string
@@ -77,60 +78,66 @@ export const LegalDocumentPage: React.FC<LegalPageProps> = ({ type, defaultTitle
   }, [type])
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 pb-16 font-sans">
+    <div className="flex min-h-screen flex-col bg-background text-foreground font-sans">
       {/* Faixa provisória obrigatória quando is_provisional = true */}
       {doc?.is_provisional && (
-        <div className="bg-amber-500/20 border-b border-amber-500/40 text-amber-300 py-2.5 px-4 text-center text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
-          <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400" />
+        <div className="bg-warning/15 border-b border-warning/30 text-warning py-2.5 px-4 text-center text-xs sm:text-sm font-medium flex items-center justify-center gap-2">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-warning" strokeWidth={1.5} />
           <span>Texto provisório, em revisão jurídica.</span>
         </div>
       )}
 
-      <header className="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-20">
+      <header className="navy border-b border-border/20 sticky top-0 z-20">
         <div className="container mx-auto px-4 sm:px-6 h-14 flex items-center justify-between max-w-4xl">
           <Link
             to="/painel"
-            className="inline-flex items-center text-xs font-medium text-slate-400 hover:text-white transition-colors"
+            className="inline-flex items-center text-xs font-heading font-medium text-muted-foreground hover:text-foreground transition-colors"
           >
-            <ArrowLeft className="h-4 w-4 mr-1.5" />
+            <ArrowLeft className="h-4 w-4 mr-1.5 text-primary" strokeWidth={1.5} />
             Voltar ao Painel
           </Link>
-          <div className="flex items-center gap-2 text-xs text-slate-400">
-            <Shield className="h-3.5 w-3.5 text-amber-500" />
-            <span>Godoy Prime Realty</span>
+          <div className="flex items-center gap-2 text-xs font-mono text-muted-foreground">
+            <Shield className="h-3.5 w-3.5 text-primary" strokeWidth={1.5} />
+            <span className="text-primary font-semibold">
+              Godoy Prime Realty · CRECI-RJ PJ 11.841
+            </span>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 max-w-4xl space-y-6">
+      <main className="container mx-auto px-4 sm:px-6 pt-6 sm:pt-8 pb-16 max-w-4xl space-y-6 flex-1">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-500 mb-1">
-            <span>Documento Legal Oficial</span>
+          <div className="flex items-center gap-2 mb-1">
+            <Eyebrow>DOCUMENTO LEGAL OFICIAL</Eyebrow>
             {doc?.version && (
               <>
-                <span className="text-slate-600">•</span>
-                <span className="font-mono text-slate-400">Versão {doc.version}</span>
+                <span className="text-muted-foreground">•</span>
+                <span className="font-mono text-xs text-muted-foreground">
+                  Versão {doc.version}
+                </span>
               </>
             )}
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-serif">
+          <h1 className="text-2xl sm:text-3xl font-serif font-bold tracking-tight text-foreground">
             {doc?.title || defaultTitle}
           </h1>
         </div>
 
-        <Card className="bg-slate-900/90 border-slate-800 text-slate-100 shadow-xl overflow-hidden">
-          <CardContent className="p-5 sm:p-8">
+        <Card className="bg-card border-border text-card-foreground shadow-luxury overflow-hidden rounded-[1px]">
+          <CardContent className="p-5 sm:p-8 font-sans">
             {isLoading ? (
               <div className="flex flex-col items-center justify-center py-16 text-center space-y-2">
-                <Loader2 className="h-7 w-7 animate-spin text-amber-500" />
-                <p className="text-xs text-slate-400">Carregando documento oficial...</p>
+                <Loader2 className="h-7 w-7 animate-spin text-gold-deep" strokeWidth={1.5} />
+                <p className="text-xs text-muted-foreground font-sans">
+                  Carregando documento oficial...
+                </p>
               </div>
             ) : errorMessage || !doc ? (
-              <div className="text-center py-12 space-y-3">
-                <p className="text-slate-300 text-sm">
+              <div className="text-center py-12 space-y-3 font-sans">
+                <p className="text-foreground text-sm">
                   {errorMessage || 'Documento em atualização pela equipe jurídica.'}
                 </p>
-                <Button asChild variant="outline" className="border-slate-700 text-xs">
+                <Button asChild variant="outline" className="text-xs rounded-[1px] h-9">
                   <Link to="/painel">Voltar ao Painel</Link>
                 </Button>
               </div>
@@ -140,6 +147,8 @@ export const LegalDocumentPage: React.FC<LegalPageProps> = ({ type, defaultTitle
           </CardContent>
         </Card>
       </main>
+
+      <BrandPublicFooter />
     </div>
   )
 }

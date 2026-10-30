@@ -28,6 +28,7 @@ import {
   ExternalLink,
 } from 'lucide-react'
 import { useToast } from '@/hooks/use-toast'
+import { Eyebrow } from '@/components/brand'
 
 interface RewardSummary {
   aReceber: number
