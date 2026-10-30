@@ -23,7 +23,7 @@ export function BrandPublicFooter({ className }: BrandPublicFooterProps) {
               Godoy Prime Realty · CRECI-RJ PJ 11.841
             </span>
             <span className="font-sans text-[11px] text-muted-foreground">
-              Programa Prime Circle Indica · Barra da Tijuca &amp; Recreio dos Bandeirantes
+              Programa de Indicações Godoy Prime · Barra da Tijuca e Recreio dos Bandeirantes
             </span>
           </div>
         </div>

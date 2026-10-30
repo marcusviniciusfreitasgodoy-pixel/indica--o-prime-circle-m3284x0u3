@@ -51,12 +51,12 @@ routerAdd('POST', '/backend/v1/public-referrals', (e) => {
     try {
       targetUser = $app.findRecordById('users', memberIdentifier)
     } catch (_) {
-      return e.json(404, { message: 'Membro da rede Prime Circle não encontrado.' })
+      return e.json(404, { message: 'Indicador não encontrado.' })
     }
   }
 
   if (!targetUser) {
-    return e.json(404, { message: 'Membro da rede Prime Circle não encontrado.' })
+    return e.json(404, { message: 'Indicador não encontrado.' })
   }
 
   const referralsCol = $app.findCollectionByNameOrId('referrals')
@@ -448,7 +448,7 @@ routerAdd('GET', '/backend/v1/participant/my-referrals', (e) => {
         status === 'captacao_solicitada'
       )
         return 'Em contato'
-      if (status === 'captada') return 'Captado'
+      if (status === 'captada') return 'Autorização assinada'
       if (status === 'em_divulgacao') return 'Em divulgação'
       if (status === 'vendida') return 'Vendido'
       if (status === 'alugada') return 'Alugado'
@@ -624,7 +624,8 @@ function handleMyReferrals(e) {
     ) {
       return 'Em atendimento'
     }
-    if (status === 'captada' || status === 'em_divulgacao') return 'Imóvel disponível'
+    if (status === 'captada') return 'Autorização assinada'
+    if (status === 'em_divulgacao') return 'Imóvel disponível'
     if (
       status === 'vendida' ||
       status === 'alugada' ||

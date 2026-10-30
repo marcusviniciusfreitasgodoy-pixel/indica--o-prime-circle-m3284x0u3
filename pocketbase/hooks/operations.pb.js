@@ -442,7 +442,7 @@ routerAdd('POST', '/backend/v1/referrals/change-status', (e) => {
       targetStatus === 'captacao_solicitada'
     )
       publicLabel = 'Em contato'
-    else if (targetStatus === 'captada') publicLabel = 'Captado'
+    else if (targetStatus === 'captada') publicLabel = 'Autorização assinada'
     else if (targetStatus === 'em_divulgacao') publicLabel = 'Em divulgação'
     else if (targetStatus === 'vendida') publicLabel = 'Vendido'
     else if (targetStatus === 'alugada') publicLabel = 'Alugado'
@@ -784,7 +784,7 @@ routerAdd('POST', '/backend/v1/referrals/approve-capture', (e) => {
   ev.set('to_status', 'captada')
   ev.set('actor_id', authRecord.id)
   ev.set('actor_name', authRecord.getString('name') || 'Aprovador')
-  ev.set('public_label', 'Captado')
+  ev.set('public_label', 'Autorização assinada')
   ev.set('visible_to_participant', true)
   $app.save(ev)
 

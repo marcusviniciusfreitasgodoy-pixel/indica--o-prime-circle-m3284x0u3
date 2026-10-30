@@ -88,7 +88,7 @@ export function PublicVitrinePage() {
       setSubmitted(true)
       toast({
         title: 'Interesse registrado!',
-        description: 'Um consultor da Godoy Prime entrará em contato em breve.',
+        description: 'A equipe da Godoy Prime Realty entrará em contato em breve.',
       })
     } catch (err: any) {
       toast({

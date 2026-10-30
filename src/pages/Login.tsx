@@ -74,7 +74,7 @@ export default function LoginPage({
       navigate(destination, { replace: true })
     } catch (err: unknown) {
       console.error('Falha de login:', err)
-      setErrorMsg('E-mail ou senha incorretos. Verifique suas credenciais de membro Prime Circle.')
+      setErrorMsg('E-mail ou senha incorretos. Verifique suas credenciais.')
     } finally {
       setIsLoading(false)
     }

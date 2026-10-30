@@ -996,8 +996,7 @@ export default function CadastroPage() {
                         htmlFor="mkt-optin-check"
                         className="text-muted-foreground cursor-pointer"
                       >
-                        Desejo receber novidades, campanhas especiais de incentivo e comunicações de
-                        marketing do Prime Circle.
+                        Desejo receber novidades e comunicações da Godoy Prime Realty.
                       </label>
                     </div>
                   </div>
@@ -1043,7 +1042,7 @@ export default function CadastroPage() {
               <span className="truncate">{activeDocModal?.title || 'Documento Legal'}</span>
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground font-sans">
-              Versão vigente: {activeDocModal?.version || 1} • Programa Prime Circle Indica
+              Versão vigente: {activeDocModal?.version || 1} • Programa de Indicações Godoy Prime
             </DialogDescription>
           </DialogHeader>
 

@@ -660,7 +660,7 @@ routerAdd('POST', '/backend/v1/benefits/register-delivery', (e) => {
   try {
     const part = $app.findRecordById('participants', grantRec.getString('participant_id'))
     const user = $app.findRecordById('users', part.getString('user_id'))
-    const desc = grantRec.getString('custom_description') || 'Gratificação Especial Prime Circle'
+    const desc = grantRec.getString('custom_description') || 'Gratificação Godoy Prime'
 
     const internalSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
     $http.send({

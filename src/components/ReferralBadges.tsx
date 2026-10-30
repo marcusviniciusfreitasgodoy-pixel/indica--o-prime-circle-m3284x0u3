@@ -99,7 +99,7 @@ export const StatusBadge: React.FC<{ status: ReferralStatus; className?: string 
           className={`bg-emerald-500/10 text-emerald-400 border-emerald-500/30 gap-1 font-medium ${className}`}
         >
           <CheckCircle2 className="h-3 w-3" />
-          Captado
+          Autorização assinada
         </Badge>
       )
     case 'em_divulgacao':

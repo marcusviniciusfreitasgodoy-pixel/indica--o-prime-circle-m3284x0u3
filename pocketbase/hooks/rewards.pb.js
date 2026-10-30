@@ -165,7 +165,7 @@ onRecordAfterCreateSuccess((e) => {
         grant.set('status', 'em_analise')
         grant.set(
           'custom_description',
-          rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro',
+          rule.getString('catalog_benefit_desc') || 'Reconhecimento por Indicação de Parceiro',
         )
         $app.save(grant)
 
@@ -376,7 +376,7 @@ onRecordAfterUpdateSuccess((e) => {
         grant.set('status', 'em_analise')
         grant.set(
           'custom_description',
-          rule.getString('catalog_benefit_desc') || 'Gratificação por Captação de Parceiro',
+          rule.getString('catalog_benefit_desc') || 'Reconhecimento por Indicação de Parceiro',
         )
         $app.save(grant)
 

@@ -84,7 +84,7 @@ export function participantItemToReferral(item: ParticipantReferralItem): Referr
     referrer_name: item.indicated_first_name,
     referrer_phone: 'Protegido (LGPD)',
     description: item.description || `Indicação em ${item.neighborhood}`,
-    return_contact: 'Canal Seguro Prime Circle',
+    return_contact: 'Canal Seguro Godoy Prime',
     status: item.status,
     channel: (item.channel as any) || 'manual',
     current_owner_id: pb.authStore.record?.id || '',
