@@ -1,113 +1,81 @@
 /* Global styles - Theme, font, utilities, animations and global components */
 
-@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    /* Godoy Prime Indica Luxury Real Estate Palette: Obsidian Noir, Warm Off-White, Champagne Gold, Muted Slate */
-    --background: 40 20% 98%;
-    --foreground: 220 25% 10%;
-
-    --card: 0 0% 100%;
-    --card-foreground: 220 25% 10%;
-
-    --popover: 0 0% 100%;
-    --popover-foreground: 220 25% 10%;
-
-    /* Champagne Gold Primary Accent */
-    --primary: 38 68% 46%;
-    --primary-foreground: 0 0% 100%;
-
-    /* Soft Warm Off-Gray Secondary */
-    --secondary: 40 15% 94%;
-    --secondary-foreground: 220 25% 12%;
-
-    --muted: 40 10% 92%;
-    --muted-foreground: 220 10% 45%;
-
-    --accent: 38 45% 92%;
-    --accent-foreground: 38 68% 28%;
-
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 35 15% 88%;
-    --input: 35 15% 88%;
-    --ring: 38 68% 46%;
-
-    /* Exigência estrita: raio de borda de 1 px para estética refinada de alto padrão */
+    /* Tema Godoy Prime Realty */
+    --background: 60 17% 98%; /* #FAFAF8 */
+    --foreground: 30 13% 9%; /* #1A1714 */
+    --card: 43 33% 96%; /* #F8F6F1 */
+    --card-foreground: 30 13% 9%;
+    --popover: 43 33% 96%;
+    --popover-foreground: 30 13% 9%;
+    --primary: 41 54% 50%; /* #C4993A, botão principal */
+    --primary-foreground: 30 13% 9%; /* texto escuro sobre o dourado */
+    --secondary: 35 44% 92%; /* #F3EBE0 */
+    --secondary-foreground: 30 13% 9%;
+    --muted: 35 44% 92%;
+    --muted-foreground: 34 10% 26%; /* #4A443C */
+    --accent: 33 34% 87%; /* #EAE0D4, hover */
+    --accent-foreground: 30 13% 9%;
+    --destructive: 10 46% 42%; /* #9B4A3A, terracota */
+    --destructive-foreground: 60 17% 98%;
+    --success: 113 18% 35%; /* #4E6B4A, sálvia */
+    --warning: 36 77% 31%; /* #8A5A12, âmbar escuro */
+    --info: 210 30% 35%; /* #3F5A75, ardósia */
+    --border: 38 24% 82%; /* #DDD5C7 */
+    --input: 38 24% 82%;
+    --ring: 42 61% 30%; /* #7A5E1E */
     --radius: 1px;
+    --navy: 213 68% 15%; /* #0C2340 */
+    --navy-deep: 210 71% 9%; /* #071829 */
+    --gold-brand: 46 65% 52%; /* #D4AF37, só sobre navy */
+    --gold-deep: 42 61% 30%; /* #7A5E1E, eyebrows e links sobre claro */
+    --on-navy: 36 40% 90%; /* #F0E8DC */
+    --on-navy-muted: 27 8% 57%; /* #9A9088 */
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 222.2 84% 4.9%;
-
-    --sidebar-primary: 222.2 84% 4.9%;
-
-    --sidebar-primary-foreground: 0 0% 100%;
-
-    --sidebar-accent: 210 40% 98%;
-
-    --sidebar-accent-foreground: 222.2 84% 4.9%;
-
-    --sidebar-border: 214.3 31.8% 91.4%;
-
-    --sidebar-ring: 222.2 84% 4.9%;
-
-    --chart-1: 34 100% 44%;
-    --chart-2: 189 100% 38%;
-    --chart-3: 209 100% 32%;
-    --chart-4: 42 100% 50%;
-    --chart-5: 33 100% 50%;
+    --sidebar-background: 43 33% 96%;
+    --sidebar-foreground: 30 13% 9%;
+    --sidebar-primary: 41 54% 50%;
+    --sidebar-primary-foreground: 30 13% 9%;
+    --sidebar-accent: 33 34% 87%;
+    --sidebar-accent-foreground: 30 13% 9%;
+    --sidebar-border: 38 24% 82%;
+    --sidebar-ring: 42 61% 30%;
   }
 
-  .dark {
-    --background: 224 28% 7%;
-    --foreground: 40 20% 95%;
+  body {
+    font-family: 'Lato', system-ui, sans-serif;
+    font-weight: 400;
+    line-height: 1.7;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
 
-    --card: 224 25% 10%;
-    --card-foreground: 40 20% 95%;
+  p {
+    font-weight: 400;
+  }
 
-    --popover: 224 25% 10%;
-    --popover-foreground: 40 20% 95%;
+  p:not([class*='font-semibold']):not([class*='font-bold']):not([class*='font-extrabold']):not(
+      [class*='font-black']
+    ) {
+    font-weight: 400;
+  }
 
-    --primary: 38 68% 52%;
-    --primary-foreground: 224 28% 7%;
+  /* Seções escuras: topo, hero curto e rodapé */
+  .navy {
+    background-color: hsl(var(--navy));
+    color: hsl(var(--on-navy));
+    border-color: rgba(255, 255, 255, 0.08);
+    --primary: 46 65% 52%;
+    --primary-foreground: 213 68% 15%;
+  }
 
-    --secondary: 224 20% 15%;
-    --secondary-foreground: 40 20% 92%;
-
-    --muted: 224 18% 16%;
-    --muted-foreground: 220 12% 65%;
-
-    --accent: 224 20% 16%;
-    --accent-foreground: 38 68% 62%;
-
-    --destructive: 0 65% 55%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 224 15% 18%;
-    --input: 224 15% 18%;
-    --ring: 38 68% 52%;
-    --radius: 1px;
-    --sidebar-background: 224 25% 9%;
-    --sidebar-foreground: 40 20% 95%;
-    --sidebar-primary: 38 68% 52%;
-    --sidebar-primary-foreground: 224 28% 7%;
-    --sidebar-accent: 224 20% 14%;
-    --sidebar-accent-foreground: 40 20% 92%;
-    --sidebar-border: 224 15% 16%;
-    --sidebar-ring: 38 68% 52%;
-
-    --chart-1: 270 100% 44%;
-    --chart-2: 164 100% 38%;
-    --chart-3: 43 100% 32%;
-    --chart-4: 340 100% 50%;
-    --chart-5: 10 100% 50%;
+  .navy * {
+    border-color: rgba(255, 255, 255, 0.08);
   }
 
   /* NEVER REMOVE THIS */

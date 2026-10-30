@@ -27,8 +27,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['Lato', 'system-ui', '-apple-system', 'sans-serif'],
         serif: ['Cormorant Garamond', 'Georgia', 'serif'],
+        heading: ['Montserrat', 'system-ui', 'sans-serif'],
+        sans: ['Lato', 'system-ui', 'sans-serif'],
+        mono: ['JetBrains Mono', 'Courier New', 'monospace'],
         display: ['Cormorant Garamond', 'Georgia', 'serif'],
       },
       colors: {
@@ -65,6 +67,21 @@ export default {
           DEFAULT: 'hsl(var(--card))',
           foreground: 'hsl(var(--card-foreground))',
         },
+        navy: {
+          DEFAULT: 'hsl(var(--navy))',
+          deep: 'hsl(var(--navy-deep))',
+        },
+        'navy-deep': 'hsl(var(--navy-deep))',
+        'gold-brand': 'hsl(var(--gold-brand))',
+        'gold-deep': 'hsl(var(--gold-deep))',
+        'on-navy': {
+          DEFAULT: 'hsl(var(--on-navy))',
+          muted: 'hsl(var(--on-navy-muted))',
+        },
+        'on-navy-muted': 'hsl(var(--on-navy-muted))',
+        success: 'hsl(var(--success))',
+        warning: 'hsl(var(--warning))',
+        info: 'hsl(var(--info))',
         sidebar: {
           DEFAULT: 'hsl(var(--sidebar-background))',
           foreground: 'hsl(var(--sidebar-foreground))',
@@ -83,10 +100,17 @@ export default {
           5: 'hsl(var(--chart-5))',
         },
       },
+      letterSpacing: {
+        label: '0.28em',
+        nav: '0.20em',
+      },
       borderRadius: {
-        lg: 'var(--radius)',
-        md: 'calc(var(--radius) - 2px)',
-        sm: 'calc(var(--radius) - 4px)',
+        none: '1px',
+        DEFAULT: '1px',
+        sm: '2px',
+        md: '4px',
+        lg: '8px',
+        full: '9999px',
       },
       transitionProperty: {
         width: 'width',
@@ -95,9 +119,11 @@ export default {
       boxShadow: {
         subtle: '0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03)',
         elevation: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        luxury: '0 20px 60px -10px rgba(22,20,18,.3)',
       },
       transitionTimingFunction: {
         apple: 'cubic-bezier(0.42, 0, 0.58, 1)',
+        luxury: 'cubic-bezier(0.4,0,0.2,1)',
       },
     },
   },
