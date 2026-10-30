@@ -203,19 +203,22 @@ export function AdminBatchesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
       <AdminNavbar />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-5">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <div>
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Liquidação Financeira
+            </span>
             <div className="flex items-center gap-2 mb-1">
-              <Layers className="w-5 h-5 text-amber-500" />
-              <h1 className="text-xl font-bold tracking-tight text-white uppercase">
+              <Layers className="w-5 h-5 text-gold-deep" strokeWidth={1.5} />
+              <h1 className="text-xl font-bold font-serif tracking-tight text-foreground">
                 Lotes Mensais de Pagamento
               </h1>
             </div>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-muted-foreground font-sans">
               Apuração mensal das recompensas aprovadas, liquidação bancária e fechamento com
               comprovantes.
             </p>
@@ -226,9 +229,9 @@ export function AdminBatchesPage() {
               <Button
                 size="sm"
                 onClick={() => setBuildModalOpen(true)}
-                className="bg-amber-500 hover:bg-amber-400 text-stone-950 font-semibold text-xs rounded-none"
+                className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs rounded-[1px] font-heading"
               >
-                <Calendar className="w-3.5 h-3.5 mr-1" />
+                <Calendar className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                 Montar / Atualizar Lote do Mês
               </Button>
             )}

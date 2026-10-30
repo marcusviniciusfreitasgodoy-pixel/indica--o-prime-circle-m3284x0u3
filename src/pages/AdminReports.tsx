@@ -386,71 +386,48 @@ export default function AdminReportsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Header */}
-        <div className="border border-stone-800 bg-stone-900/60 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="border border-border bg-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-[1px] shadow-subtle">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-none text-[10px] uppercase tracking-wider">
-                Relatórios Avançados (Seção 9)
-              </Badge>
-              <span className="text-xs text-stone-500 font-mono">Exportação CSV Disponível</span>
+              <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep">
+                Relatórios Avançados
+              </span>
+              <span className="text-xs text-muted-foreground font-mono">Exportação CSV Disponível</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif text-white">
+            <h1 className="text-2xl sm:text-3xl font-serif text-foreground font-semibold">
               Inteligência de Rede & Conversões
             </h1>
-            <p className="text-xs sm:text-sm text-stone-400">
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans">
               Coortes temporais, funis segregados por público, desempenho geográfico e custo por
               captação efetiva.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-            <div className="flex items-center bg-stone-950 border border-stone-800 p-1 text-xs">
-              <Calendar className="w-3.5 h-3.5 text-stone-400 mr-1.5 ml-1" />
-              <button
-                onClick={() => setPeriod('30')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === '30'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                30d
-              </button>
-              <button
-                onClick={() => setPeriod('90')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === '90'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                90d
-              </button>
-              <button
-                onClick={() => setPeriod('180')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === '180'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                180d
-              </button>
-              <button
-                onClick={() => setPeriod('all')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === 'all'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                Tudo
-              </button>
+            <div className="flex items-center bg-secondary border border-border p-1 text-xs rounded-[1px]">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground mr-1.5 ml-1" strokeWidth={1.5} />
+              {(['30', '90', '180', 'all'] as const).map((pKey) => {
+                const isSelected = period === pKey
+                const label = pKey === '30' ? '30d' : pKey === '90' ? '90d' : pKey === '180' ? '180d' : 'Tudo'
+                return (
+                  <button
+                    key={pKey}
+                    onClick={() => setPeriod(pKey)}
+                    className={`px-2.5 py-1 text-xs font-heading uppercase tracking-nav transition-colors rounded-[1px] ${
+                      isSelected
+                        ? 'bg-foreground text-background font-semibold'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
             </div>
           </div>
         </div>
@@ -458,14 +435,14 @@ export default function AdminReportsPage() {
         {/* Coortes Mensais & Funis Segregados */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Gráfico Coortes */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Evolução & Conversão por Coorte Mensal
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Taxa de retenção e conversão das safras de indicações
                 </p>
               </div>
@@ -473,29 +450,29 @@ export default function AdminReportsPage() {
                 onClick={handleExportCohortCSV}
                 variant="ghost"
                 size="sm"
-                className="text-stone-400 hover:text-white text-xs h-7 px-2"
+                className="text-muted-foreground hover:text-foreground text-xs h-7 px-2 font-heading"
               >
-                <Download className="w-3 h-3 mr-1" />
+                <Download className="w-3 h-3 mr-1" strokeWidth={1.5} />
                 CSV
               </Button>
             </div>
 
             <div className="h-64 mt-4 w-full">
               {cohortData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-stone-500">
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground font-sans">
                   Sem dados no período selecionado.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart data={cohortData} margin={{ left: 10, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                    <XAxis dataKey="mes" stroke="#d6d3d1" fontSize={11} />
-                    <YAxis stroke="#78716c" fontSize={11} allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#DDD5C7" />
+                    <XAxis dataKey="mes" stroke="#1A1714" fontSize={11} />
+                    <YAxis stroke="#4A443C" fontSize={11} allowDecimals={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0c0a09',
-                        borderColor: '#292524',
-                        color: '#f5f5f4',
+                        backgroundColor: '#F8F6F1',
+                        borderColor: '#DDD5C7',
+                        color: '#1A1714',
                         fontSize: '12px',
                       }}
                     />
@@ -504,21 +481,21 @@ export default function AdminReportsPage() {
                       type="monotone"
                       dataKey="recebidas"
                       name="Recebidas"
-                      stroke="#60A5FA"
+                      stroke="#0C2340"
                       strokeWidth={2}
                     />
                     <Line
                       type="monotone"
                       dataKey="captadas"
                       name="Captadas"
-                      stroke="#F59E0B"
+                      stroke="#C4993A"
                       strokeWidth={2}
                     />
                     <Line
                       type="monotone"
                       dataKey="vendidas"
                       name="Fechadas"
-                      stroke="#10B981"
+                      stroke="#2E7D32"
                       strokeWidth={2}
                     />
                   </LineChart>
@@ -528,14 +505,14 @@ export default function AdminReportsPage() {
           </Card>
 
           {/* Funil Separado Proprietários vs Compradores */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <Layers className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Funil Comparativo: Proprietários vs Compradores
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Volume de avanço separado por tipo de indicação
                 </p>
               </div>
@@ -543,20 +520,20 @@ export default function AdminReportsPage() {
 
             <div className="h-64 mt-4 w-full">
               {filteredReferrals.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-stone-500">
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground font-sans">
                   Sem dados no período selecionado.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={funnelsCompared} margin={{ left: 10, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                    <XAxis dataKey="etapa" stroke="#d6d3d1" fontSize={10} />
-                    <YAxis stroke="#78716c" fontSize={11} allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#DDD5C7" />
+                    <XAxis dataKey="etapa" stroke="#1A1714" fontSize={10} />
+                    <YAxis stroke="#4A443C" fontSize={11} allowDecimals={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0c0a09',
-                        borderColor: '#292524',
-                        color: '#f5f5f4',
+                        backgroundColor: '#F8F6F1',
+                        borderColor: '#DDD5C7',
+                        color: '#1A1714',
                         fontSize: '12px',
                       }}
                     />
@@ -564,14 +541,14 @@ export default function AdminReportsPage() {
                     <Bar
                       dataKey="Proprietarios"
                       name="Proprietários"
-                      fill="#D4AF37"
-                      radius={[4, 4, 0, 0]}
+                      fill="#C4993A"
+                      radius={[2, 2, 0, 0]}
                     />
                     <Bar
                       dataKey="Compradores"
                       name="Compradores"
-                      fill="#10B981"
-                      radius={[4, 4, 0, 0]}
+                      fill="#0C2340"
+                      radius={[2, 2, 0, 0]}
                     />
                   </BarChart>
                 </ResponsiveContainer>
@@ -583,14 +560,14 @@ export default function AdminReportsPage() {
         {/* Desempenho por Condomínio & Ranking da Equipe */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Condomínios de Referência */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <Building className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <Building className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Desempenho por Condomínio (Barra / Recreio)
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Edifícios com maior volume de indicações e captações
                 </p>
               </div>
@@ -598,36 +575,36 @@ export default function AdminReportsPage() {
                 onClick={handleExportCondosCSV}
                 variant="ghost"
                 size="sm"
-                className="text-stone-400 hover:text-white text-xs h-7 px-2"
+                className="text-muted-foreground hover:text-foreground text-xs h-7 px-2 font-heading"
               >
-                <Download className="w-3 h-3 mr-1" />
+                <Download className="w-3 h-3 mr-1" strokeWidth={1.5} />
                 CSV
               </Button>
             </div>
 
             <div className="h-64 mt-4 w-full">
               {condoStats.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-stone-500">
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground font-sans">
                   Sem dados no período selecionado.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={condoStats} margin={{ left: 10, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                    <XAxis dataKey="nome" stroke="#d6d3d1" fontSize={10} interval={0} />
-                    <YAxis stroke="#78716c" fontSize={11} allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#DDD5C7" />
+                    <XAxis dataKey="nome" stroke="#1A1714" fontSize={10} interval={0} />
+                    <YAxis stroke="#4A443C" fontSize={11} allowDecimals={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0c0a09',
-                        borderColor: '#292524',
-                        color: '#f5f5f4',
+                        backgroundColor: '#F8F6F1',
+                        borderColor: '#DDD5C7',
+                        color: '#1A1714',
                         fontSize: '12px',
                       }}
                     />
                     <Legend />
                     <Bar dataKey="total" name="Total Indicações" fill="#64748B" />
-                    <Bar dataKey="captadas" name="Captações" fill="#D4AF37" />
-                    <Bar dataKey="fechadas" name="Fechadas" fill="#10B981" />
+                    <Bar dataKey="captadas" name="Captações" fill="#C4993A" />
+                    <Bar dataKey="fechadas" name="Fechadas" fill="#2E7D32" />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -635,14 +612,14 @@ export default function AdminReportsPage() {
           </Card>
 
           {/* Ranking Interno de Indicadores */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <Users className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <Users className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Ranking de Participantes (Interno)
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Apurado estritamente para a equipe (sem exposição pública)
                 </p>
               </div>
@@ -650,50 +627,55 @@ export default function AdminReportsPage() {
                 onClick={handleExportRankingCSV}
                 variant="ghost"
                 size="sm"
-                className="text-stone-400 hover:text-white text-xs h-7 px-2"
+                className="text-muted-foreground hover:text-foreground text-xs h-7 px-2 font-heading"
               >
-                <Download className="w-3 h-3 mr-1" />
+                <Download className="w-3 h-3 mr-1" strokeWidth={1.5} />
                 CSV
               </Button>
             </div>
 
             <div className="mt-4 overflow-x-auto">
               {participantRanking.length === 0 ? (
-                <div className="h-56 flex items-center justify-center text-xs text-stone-500">
+                <div className="h-56 flex items-center justify-center text-xs text-muted-foreground font-sans">
                   Sem dados no período selecionado.
                 </div>
               ) : (
                 <table className="w-full text-left text-xs">
-                  <thead className="border-b border-stone-800 text-stone-400">
+                  <thead className="bg-secondary/60 border-b border-border text-muted-foreground font-heading text-[11px] uppercase tracking-label">
                     <tr>
-                      <th className="py-2">Participante</th>
-                      <th className="py-2">Categoria</th>
-                      <th className="py-2 text-right">Indicações</th>
-                      <th className="py-2 text-right">Captadas</th>
-                      <th className="py-2 text-right">Fechadas</th>
-                      <th className="py-2 text-right">Premiação</th>
+                      <th className="p-2.5">Participante</th>
+                      <th className="p-2.5">Categoria</th>
+                      <th className="p-2.5 text-right">Indicações</th>
+                      <th className="p-2.5 text-right">Captadas</th>
+                      <th className="p-2.5 text-right">Fechadas</th>
+                      <th className="p-2.5 text-right">Premiação</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-800/60">
+                  <tbody className="divide-y divide-border/60">
                     {participantRanking.map((p, idx) => (
-                      <tr key={p.id} className="hover:bg-stone-900/50">
-                        <td className="py-2 text-stone-200 font-medium flex items-center gap-1.5">
-                          <span className="text-[10px] text-amber-400 font-mono w-4">
+                      <tr
+                        key={p.id}
+                        className={`hover:bg-accent/40 transition-colors ${
+                          idx % 2 === 1 ? 'bg-secondary/40' : 'bg-card'
+                        }`}
+                      >
+                        <td className="p-2.5 text-foreground font-medium flex items-center gap-1.5">
+                          <span className="text-[10px] text-gold-deep font-mono w-4">
                             #{idx + 1}
                           </span>
                           {p.nome}
                         </td>
-                        <td className="py-2 text-stone-400">{p.categoria}</td>
-                        <td className="py-2 text-right font-mono text-stone-300">
+                        <td className="p-2.5 text-muted-foreground font-sans">{p.categoria}</td>
+                        <td className="p-2.5 text-right font-mono text-foreground">
                           {p.totalIndicado}
                         </td>
-                        <td className="py-2 text-right font-mono text-amber-400 font-semibold">
+                        <td className="p-2.5 text-right font-mono text-gold-deep font-semibold">
                           {p.captadas}
                         </td>
-                        <td className="py-2 text-right font-mono text-emerald-400 font-semibold">
+                        <td className="p-2.5 text-right font-mono text-success font-semibold">
                           {p.fechadas}
                         </td>
-                        <td className="py-2 text-right font-mono text-stone-200">
+                        <td className="p-2.5 text-right font-mono text-foreground font-medium">
                           R$ {p.premiosEstimados.toLocaleString('pt-BR')}
                         </td>
                       </tr>
@@ -707,16 +689,16 @@ export default function AdminReportsPage() {
 
         {/* Indicadores Complementares da Seção 9 */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="rounded-none border-stone-800 bg-stone-900/80 p-5 space-y-3">
-            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-400" />
+          <Card className="rounded-[1px] border-border bg-card p-5 space-y-3">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 font-heading">
+              <Award className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
               Recompensas por Marco
             </h4>
-            <div className="space-y-2 text-xs pt-1">
+            <div className="space-y-2 text-xs pt-1 font-sans">
               {rewardMilestones.map((m) => (
-                <div key={m.marco} className="flex justify-between py-1 border-b border-stone-800">
-                  <span className="text-stone-300">{m.marco}:</span>
-                  <span className="font-mono text-amber-400 font-semibold">
+                <div key={m.marco} className="flex justify-between py-1 border-b border-border/60">
+                  <span className="text-muted-foreground">{m.marco}:</span>
+                  <span className="font-mono text-gold-deep font-semibold">
                     {m.quantidade} premiações (R$ {m.valor.toLocaleString('pt-BR')})
                   </span>
                 </div>
@@ -724,42 +706,42 @@ export default function AdminReportsPage() {
             </div>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/80 p-5 space-y-3">
-            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-              <Building className="w-4 h-4 text-emerald-400" />
+          <Card className="rounded-[1px] border-border bg-card p-5 space-y-3">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 font-heading">
+              <Building className="w-4 h-4 text-success" strokeWidth={1.5} />
               Vitrines & Leads de Compradores
             </h4>
-            <div className="space-y-2 text-xs pt-1">
-              <div className="flex justify-between py-1 border-b border-stone-800">
-                <span className="text-stone-300">Leads Gerados por Vitrines:</span>
-                <span className="font-mono text-emerald-400 font-semibold">
+            <div className="space-y-2 text-xs pt-1 font-sans">
+              <div className="flex justify-between py-1 border-b border-border/60">
+                <span className="text-muted-foreground">Leads Gerados por Vitrines:</span>
+                <span className="font-mono text-success font-semibold">
                   {vitrineStats.totalVitrine}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-stone-800">
-                <span className="text-stone-300">Atribuições Pendentes:</span>
-                <span className="font-mono text-amber-400 font-semibold">
+              <div className="flex justify-between py-1 border-b border-border/60">
+                <span className="text-muted-foreground">Atribuições Pendentes:</span>
+                <span className="font-mono text-warning font-semibold">
                   {vitrineStats.pendingAttributionsCount}
                 </span>
               </div>
             </div>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/80 p-5 space-y-3">
-            <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-blue-400" />
+          <Card className="rounded-[1px] border-border bg-card p-5 space-y-3">
+            <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 font-heading">
+              <ShieldAlert className="w-4 h-4 text-info" strokeWidth={1.5} />
               Declínios & Saldo Institucional
             </h4>
-            <div className="space-y-2 text-xs pt-1">
-              <div className="flex justify-between py-1 border-b border-stone-800">
-                <span className="text-stone-300">Declínios Institucionais:</span>
-                <span className="font-mono text-stone-200 font-semibold">
+            <div className="space-y-2 text-xs pt-1 font-sans">
+              <div className="flex justify-between py-1 border-b border-border/60">
+                <span className="text-muted-foreground">Declínios Institucionais:</span>
+                <span className="font-mono text-foreground font-semibold">
                   {vitrineStats.declinedCount}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-stone-800">
-                <span className="text-stone-300">Reconhecida para o Parceiro:</span>
-                <span className="font-mono text-blue-400 font-semibold">100% Bonificada</span>
+              <div className="flex justify-between py-1 border-b border-border/60">
+                <span className="text-muted-foreground">Reconhecida para o Parceiro:</span>
+                <span className="font-mono text-info font-semibold">100% Bonificada</span>
               </div>
             </div>
           </Card>

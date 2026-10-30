@@ -173,16 +173,19 @@ export function AdminReferralsPage() {
   const currentStages = activeTab === 'proprietarios' ? OWNER_STAGES : BUYER_STAGES
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
           <div>
-            <h1 className="font-serif text-2xl sm:text-3xl text-white font-medium">
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Operação de Pipeline
+            </span>
+            <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold">
               Gestão de Indicações & Funis
             </h1>
-            <p className="text-sm text-stone-400 mt-1">
+            <p className="text-sm text-muted-foreground mt-1 font-sans">
               Kanban e listagem dos funis de Captação de Proprietários e Atendimento de Compradores.
             </p>
           </div>
@@ -192,26 +195,18 @@ export function AdminReferralsPage() {
               variant={viewMode === 'kanban' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('kanban')}
-              className={`rounded-none text-xs ${
-                viewMode === 'kanban'
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                  : 'border-stone-800 text-stone-300'
-              }`}
+              className="rounded-[1px] text-xs font-heading"
             >
-              <KanbanIcon className="w-3.5 h-3.5 mr-1.5" />
+              <KanbanIcon className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
               Kanban
             </Button>
             <Button
               variant={viewMode === 'list' ? 'default' : 'outline'}
               size="sm"
               onClick={() => setViewMode('list')}
-              className={`rounded-none text-xs ${
-                viewMode === 'list'
-                  ? 'bg-amber-600 hover:bg-amber-700 text-white'
-                  : 'border-stone-800 text-stone-300'
-              }`}
+              className="rounded-[1px] text-xs font-heading"
             >
-              <ListIcon className="w-3.5 h-3.5 mr-1.5" />
+              <ListIcon className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
               Lista
             </Button>
           </div>
@@ -226,42 +221,42 @@ export function AdminReferralsPage() {
           }}
           className="w-full space-y-6"
         >
-          <TabsList className="bg-stone-900 border border-stone-800 rounded-none p-1">
+          <TabsList className="bg-secondary border border-border rounded-[1px] p-1 font-heading text-xs">
             <TabsTrigger
               value="proprietarios"
-              className="rounded-none text-xs data-[state=active]:bg-amber-600 data-[state=active]:text-white"
+              className="rounded-[1px] text-xs uppercase tracking-nav data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold"
             >
-              <Building className="w-3.5 h-3.5 mr-1.5" />
+              <Building className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
               Proprietários (Captação)
             </TabsTrigger>
             <TabsTrigger
               value="compradores"
-              className="rounded-none text-xs data-[state=active]:bg-amber-600 data-[state=active]:text-white"
+              className="rounded-[1px] text-xs uppercase tracking-nav data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-semibold"
             >
-              <User className="w-3.5 h-3.5 mr-1.5" />
+              <User className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
               Compradores & Interessados
             </TabsTrigger>
           </TabsList>
 
           {/* Filters Bar */}
-          <div className="bg-stone-900/60 border border-stone-800 p-4 space-y-3">
+          <div className="bg-card border border-border p-4 space-y-3 rounded-[1px]">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
+                <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5" strokeWidth={1.5} />
                 <Input
                   placeholder="Buscar nome, condomínio, unidade..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="bg-stone-950 border-stone-800 pl-9 rounded-none text-xs"
+                  className="bg-background border-border pl-9 rounded-[1px] text-xs text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
               <div>
                 <Select value={filterStage} onValueChange={setFilterStage}>
-                  <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                  <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                     <SelectValue placeholder="Todas as Etapas" />
                   </SelectTrigger>
-                  <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                  <SelectContent className="bg-card border-border text-foreground rounded-[1px]">
                     <SelectItem value="all">Todas as Etapas</SelectItem>
                     {currentStages.map((s) => (
                       <SelectItem key={s.id} value={s.id}>
@@ -274,10 +269,10 @@ export function AdminReferralsPage() {
 
               <div>
                 <Select value={filterCondo} onValueChange={setFilterCondo}>
-                  <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                  <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                     <SelectValue placeholder="Todos os Condomínios" />
                   </SelectTrigger>
-                  <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                  <SelectContent className="bg-card border-border text-foreground rounded-[1px]">
                     <SelectItem value="all">Todos os Condomínios</SelectItem>
                     {condos.map((c) => (
                       <SelectItem key={c.id} value={c.id}>
@@ -290,10 +285,10 @@ export function AdminReferralsPage() {
 
               <div>
                 <Select value={filterOperator} onValueChange={setFilterOperator}>
-                  <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                  <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                     <SelectValue placeholder="Responsável (Operador)" />
                   </SelectTrigger>
-                  <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                  <SelectContent className="bg-card border-border text-foreground rounded-[1px]">
                     <SelectItem value="all">Todos os Responsáveis</SelectItem>
                     {operators.map((o) => (
                       <SelectItem key={o.id} value={o.id}>
@@ -306,28 +301,28 @@ export function AdminReferralsPage() {
             </div>
 
             <div className="flex items-center justify-between pt-1">
-              <label className="flex items-center gap-2 text-xs text-stone-300 cursor-pointer">
+              <label className="flex items-center gap-2 text-xs text-foreground cursor-pointer font-sans">
                 <input
                   type="checkbox"
                   checked={onlyStalled}
                   onChange={(e) => setOnlyStalled(e.target.checked)}
-                  className="rounded-none border-stone-700 bg-stone-950 text-amber-500"
+                  className="rounded-[1px] border-border bg-background text-primary"
                 />
-                <span className="flex items-center gap-1 text-amber-400">
-                  <AlertCircle className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-1 text-warning font-heading font-medium">
+                  <AlertCircle className="w-3.5 h-3.5" strokeWidth={1.5} />
                   Mostrar apenas indicações paradas (&gt;5 dias em triagem ou &gt;10 dias ativas)
                 </span>
               </label>
 
-              <span className="text-xs text-stone-500">
-                Total filtrado: <strong>{filteredReferrals.length}</strong> indicações
+              <span className="text-xs text-muted-foreground font-sans">
+                Total filtrado: <strong className="text-foreground font-mono">{filteredReferrals.length}</strong> indicações
               </span>
             </div>
           </div>
 
           {loading ? (
-            <div className="py-20 flex justify-center text-stone-400 text-sm">
-              <Loader2 className="w-6 h-6 animate-spin text-amber-500 mr-2" />
+            <div className="py-20 flex justify-center text-muted-foreground text-sm font-sans">
+              <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" strokeWidth={1.5} />
               Carregando dados do funil...
             </div>
           ) : viewMode === 'kanban' ? (
@@ -338,14 +333,14 @@ export function AdminReferralsPage() {
                 return (
                   <div
                     key={stage.id}
-                    className="w-72 shrink-0 bg-stone-900/70 border border-stone-800/80 flex flex-col max-h-[750px]"
+                    className="w-72 shrink-0 bg-card border border-border flex flex-col max-h-[750px] rounded-[1px]"
                   >
                     {/* Header */}
-                    <div className="p-3 border-b border-stone-800/80 bg-stone-900 flex justify-between items-center sticky top-0 z-10">
-                      <span className="text-xs font-semibold text-stone-200">{stage.label}</span>
+                    <div className="p-3 border-b border-border bg-secondary/60 flex justify-between items-center sticky top-0 z-10 font-heading">
+                      <span className="text-xs font-semibold text-foreground tracking-wide uppercase">{stage.label}</span>
                       <Badge
                         variant="outline"
-                        className="rounded-none border-stone-700 text-stone-400 text-[10px]"
+                        className="rounded-[1px] border-border text-muted-foreground text-[10px] font-mono"
                       >
                         {stageRefs.length}
                       </Badge>
@@ -354,7 +349,7 @@ export function AdminReferralsPage() {
                     {/* Cards list */}
                     <div className="p-2 space-y-2.5 overflow-y-auto flex-1">
                       {stageRefs.length === 0 ? (
-                        <div className="py-8 text-center text-stone-600 text-xs italic">Vazio</div>
+                        <div className="py-8 text-center text-muted-foreground text-xs italic font-sans">Vazio</div>
                       ) : (
                         stageRefs.map((r) => {
                           const stalled = isStalled(r)
@@ -362,36 +357,36 @@ export function AdminReferralsPage() {
                             <Link
                               key={r.id}
                               to={`/admin/indicacoes/${r.id}`}
-                              className={`block p-3 bg-stone-950 border transition-colors hover:border-amber-500/50 ${
+                              className={`block p-3 bg-card border transition-colors hover:border-gold-deep rounded-[1px] shadow-subtle ${
                                 stalled
-                                  ? 'border-amber-500/60 shadow-sm shadow-amber-950/40'
-                                  : 'border-stone-800'
+                                  ? 'border-warning/60 bg-warning/5'
+                                  : 'border-border'
                               }`}
                             >
                               <div className="flex justify-between items-start gap-1">
-                                <span className="text-[11px] font-medium text-stone-200 line-clamp-1">
+                                <span className="text-[11px] font-semibold text-foreground line-clamp-1 font-serif">
                                   {r.owner_name || r.buyer_name || r.referrer_name || 'Sem nome'}
                                 </span>
                                 {stalled && (
-                                  <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[9px] px-1 py-0 rounded-none shrink-0">
+                                  <Badge className="bg-warning/20 text-warning border-warning/40 text-[9px] px-1 py-0 rounded-[1px] shrink-0 font-mono">
                                     Parada
                                   </Badge>
                                 )}
                               </div>
 
                               {(r.expand?.condominium_id || r.unit) && (
-                                <p className="text-[11px] text-amber-300/90 mt-1 line-clamp-1 flex items-center gap-1">
-                                  <Building className="w-3 h-3 shrink-0" />
+                                <p className="text-[11px] text-gold-deep mt-1 line-clamp-1 flex items-center gap-1 font-heading">
+                                  <Building className="w-3 h-3 shrink-0" strokeWidth={1.5} />
                                   {r.expand?.condominium_id?.name || 'Condomínio'}
                                   {r.unit ? ` - ${r.unit}` : ''}
                                 </p>
                               )}
 
-                              <p className="text-[11px] text-stone-400 mt-1 line-clamp-2">
+                              <p className="text-[11px] text-muted-foreground mt-1 line-clamp-2 font-sans">
                                 {r.description}
                               </p>
 
-                              <div className="mt-2.5 pt-2 border-t border-stone-900 flex justify-between items-center text-[10px] text-stone-500">
+                              <div className="mt-2.5 pt-2 border-t border-border/60 flex justify-between items-center text-[10px] text-muted-foreground font-mono">
                                 <span>#{r.id.substring(0, 6)}</span>
                                 <span>
                                   {new Date(r.created).toLocaleDateString('pt-BR', {
@@ -411,10 +406,10 @@ export function AdminReferralsPage() {
             </div>
           ) : (
             /* LIST VIEW */
-            <div className="bg-stone-900 border border-stone-800 overflow-hidden">
+            <div className="bg-card border border-border overflow-hidden rounded-[1px]">
               <div className="overflow-x-auto">
                 <table className="w-full text-left text-xs">
-                  <thead className="bg-stone-950 border-b border-stone-800 text-stone-400">
+                  <thead className="bg-secondary/60 border-b border-border text-muted-foreground font-heading text-[11px] uppercase tracking-label">
                     <tr>
                       <th className="p-3">ID / Data</th>
                       <th className="p-3">Nome / Contato</th>
@@ -425,63 +420,68 @@ export function AdminReferralsPage() {
                       <th className="p-3 text-right">Ação</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-stone-800/60">
+                  <tbody className="divide-y divide-border/60">
                     {filteredReferrals.length === 0 ? (
                       <tr>
-                        <td colSpan={7} className="p-8 text-center text-stone-500">
+                        <td colSpan={7} className="p-8 text-center text-muted-foreground font-sans">
                           Nenhuma indicação encontrada com os filtros selecionados.
                         </td>
                       </tr>
                     ) : (
-                      filteredReferrals.map((r) => {
+                      filteredReferrals.map((r, index) => {
                         const stalled = isStalled(r)
                         return (
-                          <tr key={r.id} className="hover:bg-stone-800/30 transition-colors">
+                          <tr
+                            key={r.id}
+                            className={`hover:bg-accent/40 transition-colors ${
+                              index % 2 === 1 ? 'bg-secondary/40' : 'bg-card'
+                            }`}
+                          >
                             <td className="p-3 whitespace-nowrap">
-                              <span className="font-mono text-stone-300">
+                              <span className="font-mono text-foreground font-medium">
                                 #{r.id.substring(0, 6)}
                               </span>
-                              <div className="text-[11px] text-stone-500">
+                              <div className="text-[11px] text-muted-foreground font-mono">
                                 {new Date(r.created).toLocaleDateString('pt-BR')}
                               </div>
                             </td>
                             <td className="p-3">
-                              <div className="font-medium text-stone-200">
+                              <div className="font-medium text-foreground">
                                 {r.owner_name || r.buyer_name || r.referrer_name}
                               </div>
-                              <div className="text-[11px] text-stone-400">
+                              <div className="text-[11px] text-muted-foreground font-mono">
                                 {r.owner_phone || r.buyer_phone || r.referrer_phone}
                               </div>
                             </td>
                             <td className="p-3">
                               {r.expand?.condominium_id ? (
-                                <span className="text-amber-300">
+                                <span className="text-gold-deep font-heading">
                                   {r.expand.condominium_id.name}
                                   {r.unit ? ` (${r.unit})` : ''}
                                 </span>
                               ) : (
-                                <span className="text-stone-500">Não informado</span>
+                                <span className="text-muted-foreground">Não informado</span>
                               )}
                             </td>
                             <td className="p-3 whitespace-nowrap">
                               <div className="flex items-center gap-1.5">
                                 <Badge
                                   variant="outline"
-                                  className="rounded-none border-stone-700 text-stone-300 text-[10px]"
+                                  className="rounded-[1px] border-border text-foreground text-[10px] font-mono"
                                 >
                                   {r.status}
                                 </Badge>
                                 {stalled && (
-                                  <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 text-[9px] rounded-none">
+                                  <Badge className="bg-warning/20 text-warning border-warning/40 text-[9px] rounded-[1px] font-mono">
                                     Parada
                                   </Badge>
                                 )}
                               </div>
                             </td>
-                            <td className="p-3 text-stone-300">
+                            <td className="p-3 text-foreground font-sans">
                               {r.expand?.current_owner_id?.name || r.referrer_name || 'Sistema'}
                             </td>
-                            <td className="p-3 text-stone-400">
+                            <td className="p-3 text-muted-foreground font-sans">
                               {r.expand?.assigned_operator_id?.name || 'Não atribuído'}
                             </td>
                             <td className="p-3 text-right">
@@ -489,11 +489,11 @@ export function AdminReferralsPage() {
                                 asChild
                                 size="sm"
                                 variant="ghost"
-                                className="rounded-none text-xs text-amber-400 hover:text-amber-300"
+                                className="rounded-[1px] text-xs text-gold-deep hover:text-gold-deep/80 font-heading"
                               >
                                 <Link to={`/admin/indicacoes/${r.id}`}>
                                   Abrir
-                                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
+                                  <ChevronRight className="w-3.5 h-3.5 ml-1" strokeWidth={1.5} />
                                 </Link>
                               </Button>
                             </td>

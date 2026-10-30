@@ -647,11 +647,11 @@ export function AdminReferralDetailPage() {
 
   if (loading || !referral) {
     return (
-      <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+      <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
         <AdminNavbar />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="w-8 h-8 animate-spin text-amber-500 mr-3" />
-          <span className="text-stone-400">Carregando detalhes da indicação...</span>
+          <Loader2 className="w-8 h-8 animate-spin text-primary mr-3" strokeWidth={1.5} />
+          <span className="text-muted-foreground font-sans">Carregando detalhes da indicação...</span>
         </div>
       </div>
     )
@@ -667,45 +667,47 @@ export function AdminReferralDetailPage() {
     referral.current_owner_id
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Top Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-stone-800 pb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 border-b border-border pb-6">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <Badge
-                className={`rounded-none text-xs ${
+                className={`rounded-[1px] text-xs font-heading ${
                   isProp
-                    ? 'bg-amber-500/15 text-amber-300 border-amber-500/30'
-                    : 'bg-sky-500/15 text-sky-300 border-sky-500/30'
+                    ? 'bg-secondary text-foreground border-border'
+                    : 'bg-info/10 text-info border-info/30'
                 }`}
               >
                 {isProp ? 'Captação (Proprietário)' : 'Comprador / Locatário'}
               </Badge>
               <Badge
                 variant="outline"
-                className="rounded-none border-stone-700 text-stone-300 text-xs"
+                className="rounded-[1px] border-border text-foreground text-xs font-mono"
               >
-                Status Atual: <strong className="ml-1 text-white">{referral.status}</strong>
+                Status Atual: <strong className="ml-1 text-foreground">{referral.status}</strong>
               </Badge>
-              <span className="text-xs text-stone-500">#{referral.id.substring(0, 8)}</span>
+              <span className="text-xs text-muted-foreground font-mono">#{referral.id.substring(0, 8)}</span>
             </div>
-            <h1 className="font-serif text-2xl sm:text-3xl text-white font-medium">
+            <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold">
               {referral.owner_name || referral.buyer_name || referral.referrer_name || 'Sem nome'}
             </h1>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-muted-foreground font-sans">
               Registrado em{' '}
-              {new Date(referral.created).toLocaleDateString('pt-BR', {
-                day: '2-digit',
-                month: 'long',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-              })}{' '}
+              <span className="font-mono">
+                {new Date(referral.created).toLocaleDateString('pt-BR', {
+                  day: '2-digit',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </span>{' '}
               por{' '}
-              <strong className="text-stone-200">
+              <strong className="text-foreground">
                 {referral.expand?.current_owner_id?.name || referral.referrer_name || 'Indicador'}
               </strong>
             </p>

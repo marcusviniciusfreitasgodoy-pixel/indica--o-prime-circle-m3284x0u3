@@ -373,90 +373,68 @@ export default function AdminDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Header e Filtro de Período */}
-        <div className="border border-stone-800 bg-stone-900/60 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="border border-border bg-card p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 rounded-[1px] shadow-subtle">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <Badge className="bg-amber-500/20 text-amber-400 border border-amber-500/30 rounded-none text-[10px] uppercase tracking-wider">
+              <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep">
                 Gestão Executiva
-              </Badge>
-              <span className="text-xs text-stone-500 font-mono">Dados Reais em Tempo Real</span>
+              </span>
+              <span className="text-xs text-muted-foreground font-mono">Dados Reais em Tempo Real</span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-serif text-white">
+            <h1 className="text-2xl sm:text-3xl font-serif text-foreground font-semibold">
               Painel de Indicadores e Funis
             </h1>
-            <p className="text-xs sm:text-sm text-stone-400">
+            <p className="text-xs sm:text-sm text-muted-foreground font-sans">
               Visão consolidada de conversão, SLAs de atendimento, volume de transações e desempenho
               da rede.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2 self-start md:self-auto">
-            <div className="flex items-center bg-stone-950 border border-stone-800 p-1 text-xs">
-              <Calendar className="w-3.5 h-3.5 text-stone-400 mr-1.5 ml-1" />
-              <button
-                onClick={() => setPeriod('30')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === '30'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                30 dias
-              </button>
-              <button
-                onClick={() => setPeriod('90')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === '90'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                90 dias
-              </button>
-              <button
-                onClick={() => setPeriod('365')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === '365'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                12 meses
-              </button>
-              <button
-                onClick={() => setPeriod('all')}
-                className={`px-2.5 py-1 transition-colors ${
-                  period === 'all'
-                    ? 'bg-amber-500 text-stone-950 font-semibold'
-                    : 'text-stone-400 hover:text-white'
-                }`}
-              >
-                Tudo
-              </button>
+            <div className="flex items-center bg-secondary border border-border p-1 text-xs rounded-[1px]">
+              <Calendar className="w-3.5 h-3.5 text-muted-foreground mr-1.5 ml-1" strokeWidth={1.5} />
+              {(['30', '90', '365', 'all'] as const).map((pKey) => {
+                const label = pKey === '30' ? '30 dias' : pKey === '90' ? '90 dias' : pKey === '365' ? '12 meses' : 'Tudo'
+                const isSelected = period === pKey
+                return (
+                  <button
+                    key={pKey}
+                    onClick={() => setPeriod(pKey)}
+                    className={`px-2.5 py-1 text-xs font-heading uppercase tracking-nav transition-colors rounded-[1px] ${
+                      isSelected
+                        ? 'bg-foreground text-background font-semibold'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                )
+              })}
             </div>
 
             <Button
               onClick={handleExportSummaryCSV}
               variant="outline"
               size="sm"
-              className="rounded-none border-stone-700 text-stone-300 hover:bg-stone-800 text-xs"
+              className="rounded-[1px] text-xs"
             >
-              <Download className="w-3.5 h-3.5 mr-1.5" />
+              <Download className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
               Exportar CSV
             </Button>
 
             <Button
               asChild
               size="sm"
-              className="rounded-none bg-amber-600 hover:bg-amber-700 text-stone-950 font-semibold text-xs"
+              variant="default"
+              className="rounded-[1px] text-xs"
             >
               <Link to="/admin/relatorios">
-                <BarChart2 className="w-3.5 h-3.5 mr-1.5" />
+                <BarChart2 className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
                 Relatórios Detalhados &rarr;
               </Link>
             </Button>
@@ -465,82 +443,81 @@ export default function AdminDashboardPage() {
 
         {/* KPIs Principais em Cartões */}
         <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-          <Card className="rounded-none border-stone-800 bg-stone-900/60 p-3.5">
-            <span className="text-[11px] text-stone-400 uppercase tracking-wider font-sans">
+          <Card className="rounded-[1px] border-border bg-card p-3.5">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               Indicações no Período
             </span>
-            <div className="text-2xl font-serif text-white mt-1">{totalReferrals}</div>
-            <p className="text-[10px] text-stone-500 mt-0.5">
-              {activeReferrals} ativas em andamento
+            <div className="text-2xl font-serif text-foreground font-semibold mt-1 font-mono">{totalReferrals}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              <span className="font-mono">{activeReferrals}</span> ativas em andamento
             </p>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/60 p-3.5">
-            <span className="text-[11px] text-stone-400 uppercase tracking-wider font-sans">
+          <Card className="rounded-[1px] border-border bg-card p-3.5">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               Captações Efetivas
             </span>
-            <div className="text-2xl font-serif text-emerald-400 mt-1">{capturedReferrals}</div>
-            <p className="text-[10px] text-stone-500 mt-0.5">
-              {totalReferrals > 0 ? ((capturedReferrals / totalReferrals) * 100).toFixed(0) : 0}% de
-              conversão
+            <div className="text-2xl font-serif text-success font-semibold mt-1 font-mono">{capturedReferrals}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              <span className="font-mono">{totalReferrals > 0 ? ((capturedReferrals / totalReferrals) * 100).toFixed(0) : 0}%</span> de conversão
             </p>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/60 p-3.5">
-            <span className="text-[11px] text-stone-400 uppercase tracking-wider font-sans">
+          <Card className="rounded-[1px] border-border bg-card p-3.5">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               Negócios Fechados
             </span>
-            <div className="text-2xl font-serif text-amber-400 mt-1">{closedDealsCount}</div>
-            <p className="text-[10px] text-stone-500 mt-0.5">
-              VGV R$ {totalVgv.toLocaleString('pt-BR')}
+            <div className="text-2xl font-serif text-foreground font-semibold mt-1 font-mono">{closedDealsCount}</div>
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              VGV <span className="font-mono font-medium">R$ {totalVgv.toLocaleString('pt-BR')}</span>
             </p>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/60 p-3.5">
-            <span className="text-[11px] text-stone-400 uppercase tracking-wider font-sans">
+          <Card className="rounded-[1px] border-border bg-card p-3.5">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               SLA Médio Triagem
             </span>
-            <div className="text-2xl font-serif text-white mt-1">
-              {slaStats.avgTriageDays}{' '}
-              <span className="text-xs font-sans text-stone-400">dias</span>
+            <div className="text-2xl font-serif text-foreground font-semibold mt-1">
+              <span className="font-mono">{slaStats.avgTriageDays}</span>{' '}
+              <span className="text-xs font-sans text-muted-foreground">dias</span>
             </div>
-            <p className="text-[10px] text-stone-500 mt-0.5">Meta operacional: até 5 dias</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Meta operacional: até 5 dias</p>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/60 p-3.5">
-            <span className="text-[11px] text-stone-400 uppercase tracking-wider font-sans">
+          <Card className="rounded-[1px] border-border bg-card p-3.5">
+            <span className="text-[11px] text-muted-foreground uppercase tracking-label font-heading font-semibold">
               SLA 1º Contato
             </span>
-            <div className="text-2xl font-serif text-white mt-1">
-              {slaStats.avgContactDays}{' '}
-              <span className="text-xs font-sans text-stone-400">dias</span>
+            <div className="text-2xl font-serif text-foreground font-semibold mt-1">
+              <span className="font-mono">{slaStats.avgContactDays}</span>{' '}
+              <span className="text-xs font-sans text-muted-foreground">dias</span>
             </div>
-            <p className="text-[10px] text-stone-500 mt-0.5">Meta operacional: até 7 dias</p>
+            <p className="text-[10px] text-muted-foreground mt-0.5">Meta operacional: até 7 dias</p>
           </Card>
 
           <Card
-            className={`rounded-none p-3.5 border ${
+            className={`rounded-[1px] p-3.5 border ${
               slaStats.stalledCount > 0
-                ? 'border-red-900/50 bg-red-950/20'
-                : 'border-stone-800 bg-stone-900/60'
+                ? 'border-destructive/40 bg-destructive/5'
+                : 'border-border bg-card'
             }`}
           >
             <span
-              className={`text-[11px] uppercase tracking-wider font-sans ${
-                slaStats.stalledCount > 0 ? 'text-red-400 font-semibold' : 'text-stone-400'
+              className={`text-[11px] uppercase tracking-label font-heading font-semibold ${
+                slaStats.stalledCount > 0 ? 'text-destructive' : 'text-muted-foreground'
               }`}
             >
               Paradas (SLA)
             </span>
             <div
-              className={`text-2xl font-serif mt-1 ${
-                slaStats.stalledCount > 0 ? 'text-red-400' : 'text-white'
+              className={`text-2xl font-serif mt-1 font-mono font-semibold ${
+                slaStats.stalledCount > 0 ? 'text-destructive' : 'text-foreground'
               }`}
             >
               {slaStats.stalledCount}
             </div>
-            <p className="text-[10px] text-stone-500 mt-0.5">
-              <Link to="/admin/indicacoes" className="hover:underline text-amber-400">
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              <Link to="/admin/indicacoes" className="hover:underline text-gold-deep font-heading">
                 Ver no pipeline &rarr;
               </Link>
             </p>
@@ -550,14 +527,14 @@ export default function AdminDashboardPage() {
         {/* Linha de Gráficos Principais (Recharts) */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Funil de Conversão */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Funil de Conversão da Rede
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Evolução das indicações pelas etapas críticas do processo
                 </p>
               </div>
@@ -565,31 +542,31 @@ export default function AdminDashboardPage() {
 
             <div className="h-64 mt-4 w-full">
               {totalReferrals === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-stone-500">
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
                   Sem dados no período selecionado.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={funnelData} layout="vertical" margin={{ left: 20, right: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                    <XAxis type="number" stroke="#78716c" fontSize={11} allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#DDD5C7" />
+                    <XAxis type="number" stroke="#4A443C" fontSize={11} allowDecimals={false} />
                     <YAxis
                       dataKey="etapa"
                       type="category"
-                      stroke="#d6d3d1"
+                      stroke="#1A1714"
                       fontSize={11}
                       width={110}
                     />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0c0a09',
-                        borderColor: '#292524',
-                        color: '#f5f5f4',
+                        backgroundColor: '#F8F6F1',
+                        borderColor: '#DDD5C7',
+                        color: '#1A1714',
                         fontSize: '12px',
                       }}
                       formatter={(val: any) => [val, 'Indicações']}
                     />
-                    <Bar dataKey="quantidade" fill="#D4AF37" radius={[0, 4, 4, 0]} />
+                    <Bar dataKey="quantidade" fill="#C4993A" radius={[0, 2, 2, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -597,14 +574,14 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Indicações por Categoria Profissional */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <Users className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <Users className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Desempenho por Categoria
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Volume de indicações originadas por perfil profissional
                 </p>
               </div>
@@ -612,24 +589,24 @@ export default function AdminDashboardPage() {
 
             <div className="h-64 mt-4 w-full">
               {categoryData.length === 0 ? (
-                <div className="h-full flex items-center justify-center text-xs text-stone-500">
+                <div className="h-full flex items-center justify-center text-xs text-muted-foreground">
                   Sem dados no período selecionado.
                 </div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={categoryData} margin={{ left: 10, right: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#262626" />
-                    <XAxis dataKey="name" stroke="#d6d3d1" fontSize={10} interval={0} />
-                    <YAxis stroke="#78716c" fontSize={11} allowDecimals={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#DDD5C7" />
+                    <XAxis dataKey="name" stroke="#1A1714" fontSize={10} interval={0} />
+                    <YAxis stroke="#4A443C" fontSize={11} allowDecimals={false} />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0c0a09',
-                        borderColor: '#292524',
-                        color: '#f5f5f4',
+                        backgroundColor: '#F8F6F1',
+                        borderColor: '#DDD5C7',
+                        color: '#1A1714',
                         fontSize: '12px',
                       }}
                     />
-                    <Bar dataKey="quantidade" fill="#3B82F6" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="quantidade" fill="#0C2340" radius={[2, 2, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               )}
@@ -637,14 +614,14 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Distribuição por Frente (Comunidade vs Parceiros) */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <Building className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <Building className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Origem por Frente do Programa
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Proporção de indicações: Comunidade vs Parceiros
                 </p>
               </div>
@@ -652,7 +629,7 @@ export default function AdminDashboardPage() {
 
             <div className="h-64 mt-4 w-full flex items-center justify-center">
               {frontData.length === 0 ? (
-                <div className="text-xs text-stone-500">Sem dados no período selecionado.</div>
+                <div className="text-xs text-muted-foreground">Sem dados no período selecionado.</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -674,9 +651,9 @@ export default function AdminDashboardPage() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0c0a09',
-                        borderColor: '#292524',
-                        color: '#f5f5f4',
+                        backgroundColor: '#F8F6F1',
+                        borderColor: '#DDD5C7',
+                        color: '#1A1714',
                         fontSize: '12px',
                       }}
                     />
@@ -687,14 +664,14 @@ export default function AdminDashboardPage() {
           </Card>
 
           {/* Desfecho / Status da Fila */}
-          <Card className="rounded-none border-stone-800 bg-stone-900/70 p-5">
-            <div className="flex items-center justify-between pb-4 border-b border-stone-800">
+          <Card className="rounded-[1px] border-border bg-card p-5">
+            <div className="flex items-center justify-between pb-4 border-b border-border">
               <div>
-                <h3 className="text-base font-serif text-white flex items-center gap-2">
-                  <Kanban className="w-4 h-4 text-amber-400" />
+                <h3 className="text-base font-serif text-foreground font-semibold flex items-center gap-2">
+                  <Kanban className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                   Composição do Pipeline
                 </h3>
-                <p className="text-xs text-stone-400 mt-0.5">
+                <p className="text-xs text-muted-foreground mt-0.5 font-sans">
                   Status consolidados e desfechos das indicações
                 </p>
               </div>
@@ -702,7 +679,7 @@ export default function AdminDashboardPage() {
 
             <div className="h-64 mt-4 w-full flex items-center justify-center">
               {statusData.length === 0 ? (
-                <div className="text-xs text-stone-500">Sem dados no período selecionado.</div>
+                <div className="text-xs text-muted-foreground">Sem dados no período selecionado.</div>
               ) : (
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
@@ -722,9 +699,9 @@ export default function AdminDashboardPage() {
                     </Pie>
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: '#0c0a09',
-                        borderColor: '#292524',
-                        color: '#f5f5f4',
+                        backgroundColor: '#F8F6F1',
+                        borderColor: '#DDD5C7',
+                        color: '#1A1714',
                         fontSize: '12px',
                       }}
                     />
@@ -737,32 +714,32 @@ export default function AdminDashboardPage() {
 
         {/* Resumo Financeiro & Governança LGPD */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="rounded-none border-stone-800 bg-stone-900/80 p-5 space-y-4">
+          <Card className="rounded-[1px] border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-emerald-400" />
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 font-heading">
+                <DollarSign className="w-4 h-4 text-success" strokeWidth={1.5} />
                 Métricas de Recompensa
               </h4>
-              <Badge className="bg-emerald-500/20 text-emerald-400 border-none rounded-none text-[10px]">
+              <Badge className="bg-success/15 text-success border border-success/30 rounded-[1px] text-[10px] uppercase font-mono">
                 Financeiro
               </Badge>
             </div>
             <div className="space-y-2 text-xs">
-              <div className="flex justify-between py-1 border-b border-stone-800 text-stone-300">
-                <span>Premiações Pagas:</span>
-                <span className="font-mono text-emerald-400 font-semibold">
+              <div className="flex justify-between py-1 border-b border-border/60 text-foreground">
+                <span className="text-muted-foreground">Premiações Pagas:</span>
+                <span className="font-mono text-success font-semibold">
                   R$ {totalRewardsPaid.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex justify-between py-1 border-b border-stone-800 text-stone-300">
-                <span>Premiações Pendentes / Em Lote:</span>
-                <span className="font-mono text-amber-400 font-semibold">
+              <div className="flex justify-between py-1 border-b border-border/60 text-foreground">
+                <span className="text-muted-foreground">Premiações Pendentes / Em Lote:</span>
+                <span className="font-mono text-warning font-semibold">
                   R$ {totalRewardsPending.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="flex justify-between py-1 text-stone-300">
-                <span>Custo Médio por Captação:</span>
-                <span className="font-mono text-white font-semibold">
+              <div className="flex justify-between py-1 text-foreground">
+                <span className="text-muted-foreground">Custo Médio por Captação:</span>
+                <span className="font-mono text-foreground font-semibold">
                   R$ {costPerCapture.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                 </span>
               </div>
@@ -771,26 +748,26 @@ export default function AdminDashboardPage() {
               asChild
               size="sm"
               variant="outline"
-              className="w-full rounded-none border-stone-700 text-xs"
+              className="w-full rounded-[1px] text-xs"
             >
               <Link to="/admin/recompensas">
                 Ver Módulo de Recompensas
-                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                <ArrowRight className="w-3.5 h-3.5 ml-1.5" strokeWidth={1.5} />
               </Link>
             </Button>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/80 p-5 space-y-4">
+          <Card className="rounded-[1px] border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                <Database className="w-4 h-4 text-amber-400" />
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 font-heading">
+                <Database className="w-4 h-4 text-gold-deep" strokeWidth={1.5} />
                 Base Conhecida & LGPD
               </h4>
-              <Badge className="bg-amber-500/20 text-amber-400 border-none rounded-none text-[10px]">
+              <Badge className="bg-secondary text-foreground border border-border rounded-[1px] text-[10px] uppercase font-mono">
                 Etapa 7
               </Badge>
             </div>
-            <p className="text-xs text-stone-400 leading-relaxed">
+            <p className="text-xs text-muted-foreground leading-relaxed font-sans">
               Importação de base conhecida com normalização de telefones (+55) e anonimização de
               dados conforme retenção legal de 24 meses.
             </p>
@@ -798,40 +775,41 @@ export default function AdminDashboardPage() {
               <Button
                 asChild
                 size="sm"
-                className="rounded-none bg-stone-800 hover:bg-stone-700 text-xs text-white"
+                variant="outline"
+                className="rounded-[1px] text-xs"
               >
                 <Link to="/admin/base-conhecida">
                   Importar CSV de Base Conhecida
-                  <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+                  <ArrowRight className="w-3.5 h-3.5 ml-1.5" strokeWidth={1.5} />
                 </Link>
               </Button>
             </div>
           </Card>
 
-          <Card className="rounded-none border-stone-800 bg-stone-900/80 p-5 space-y-4">
+          <Card className="rounded-[1px] border-border bg-card p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h4 className="text-sm font-semibold text-white flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
+              <h4 className="text-sm font-semibold text-foreground flex items-center gap-2 font-heading">
+                <AlertTriangle className="w-4 h-4 text-warning" strokeWidth={1.5} />
                 Auditoria & Segurança
               </h4>
-              <Badge className="bg-stone-800 text-stone-300 border-none rounded-none text-[10px]">
+              <Badge className="bg-secondary text-muted-foreground border border-border rounded-[1px] text-[10px] uppercase font-mono">
                 Logs
               </Badge>
             </div>
             {isAdmin ? (
               <div className="space-y-2">
                 {recentAudits.length === 0 ? (
-                  <p className="text-xs text-stone-500 py-2">Nenhum evento auditado recente.</p>
+                  <p className="text-xs text-muted-foreground py-2 font-sans">Nenhum evento auditado recente.</p>
                 ) : (
                   recentAudits.slice(0, 3).map((a: any) => (
                     <div
                       key={a.id}
-                      className="text-[11px] p-2 bg-stone-950 border border-stone-800 flex justify-between"
+                      className="text-[11px] p-2 bg-secondary/50 border border-border flex justify-between rounded-[1px]"
                     >
-                      <span className="font-mono text-amber-400 truncate max-w-[150px]">
+                      <span className="font-mono text-foreground truncate max-w-[150px]">
                         {a.action}
                       </span>
-                      <span className="text-stone-500 font-mono">
+                      <span className="text-muted-foreground font-mono">
                         {new Date(a.created).toLocaleTimeString('pt-BR', {
                           hour: '2-digit',
                           minute: '2-digit',
@@ -844,13 +822,13 @@ export default function AdminDashboardPage() {
                   asChild
                   size="sm"
                   variant="ghost"
-                  className="w-full text-xs text-amber-400 hover:text-amber-300"
+                  className="w-full text-xs text-gold-deep hover:text-gold-deep/80"
                 >
                   <Link to="/admin/auditoria">Ver Trilha Completa &rarr;</Link>
                 </Button>
               </div>
             ) : (
-              <p className="text-xs text-stone-500">Restrito a administradores.</p>
+              <p className="text-xs text-muted-foreground font-sans">Restrito a administradores.</p>
             )}
           </Card>
         </div>

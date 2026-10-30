@@ -70,40 +70,46 @@ export function AdminAuditPage() {
   })
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl text-white font-medium flex items-center gap-2">
-            <Shield className="w-6 h-6 text-amber-500" />
+          <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+            Conformidade & Rastreabilidade
+          </span>
+          <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold flex items-center gap-2">
+            <Shield className="w-6 h-6 text-gold-deep" strokeWidth={1.5} />
             Trilha de Auditoria & Conformidade
           </h1>
-          <p className="text-sm text-stone-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1 font-sans">
             Registro imutável de todas as ações operacionais, transições de status, formalizações e
             cadastros.
           </p>
         </div>
 
         {/* Filters */}
-        <div className="bg-stone-900 border border-stone-800 p-4 space-y-3">
+        <div className="bg-card border border-border p-4 space-y-3 rounded-[1px]">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div className="relative">
-              <Search className="w-4 h-4 text-stone-500 absolute left-3 top-2.5" />
+              <Search
+                className="w-4 h-4 text-muted-foreground absolute left-3 top-2.5"
+                strokeWidth={1.5}
+              />
               <Input
                 placeholder="Buscar por e-mail, ação, ID..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="bg-stone-950 border-stone-800 pl-9 rounded-none text-xs"
+                className="bg-background border-border pl-9 rounded-[1px] text-xs text-foreground placeholder:text-muted-foreground"
               />
             </div>
 
             <div>
               <Select value={actionFilter} onValueChange={setActionFilter}>
-                <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                   <SelectValue placeholder="Todas as Ações" />
                 </SelectTrigger>
-                <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                <SelectContent className="bg-card border-border text-foreground rounded-[1px]">
                   <SelectItem value="all">Todas as Ações</SelectItem>
                   <SelectItem value="referral_status_changed">Mudança de Status</SelectItem>
                   <SelectItem value="capture_requested">Captação Solicitada</SelectItem>
@@ -120,10 +126,10 @@ export function AdminAuditPage() {
 
             <div>
               <Select value={resourceFilter} onValueChange={setResourceFilter}>
-                <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                   <SelectValue placeholder="Todas as Entidades" />
                 </SelectTrigger>
-                <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                <SelectContent className="bg-card border-border text-foreground rounded-[1px]">
                   <SelectItem value="all">Todas as Entidades</SelectItem>
                   <SelectItem value="referrals">Indicações (referrals)</SelectItem>
                   <SelectItem value="capture_records">Captações (capture_records)</SelectItem>
@@ -138,18 +144,18 @@ export function AdminAuditPage() {
 
         {/* Audit Table */}
         {loading ? (
-          <div className="py-20 flex justify-center text-stone-400 text-sm">
-            <Loader2 className="w-6 h-6 animate-spin text-amber-500 mr-2" />
+          <div className="py-20 flex justify-center text-muted-foreground text-sm">
+            <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" strokeWidth={1.5} />
             Carregando registros de auditoria...
           </div>
         ) : filteredLogs.length === 0 ? (
-          <Card className="bg-stone-900 border-stone-800 rounded-none p-12 text-center text-stone-500 text-xs">
+          <Card className="bg-card border-border rounded-[1px] p-12 text-center text-muted-foreground text-xs">
             Nenhum evento registrado encontrado.
           </Card>
         ) : (
-          <div className="bg-stone-900 border border-stone-800 overflow-x-auto">
+          <div className="bg-card border border-border overflow-x-auto rounded-[1px]">
             <table className="w-full text-left text-xs">
-              <thead className="bg-stone-950 border-b border-stone-800 text-stone-400">
+              <thead className="bg-secondary/60 border-b border-border text-muted-foreground font-heading text-[11px] uppercase tracking-label">
                 <tr>
                   <th className="p-3">Data / Hora</th>
                   <th className="p-3">Usuário Responsável</th>
@@ -159,8 +165,8 @@ export function AdminAuditPage() {
                   <th className="p-3">IP</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-stone-800/60">
-                {filteredLogs.map((log) => {
+              <tbody className="divide-y divide-border/60">
+                {filteredLogs.map((log, index) => {
                   let parsedDetails = log.details
                   if (typeof log.details === 'string') {
                     try {
@@ -171,8 +177,13 @@ export function AdminAuditPage() {
                   }
 
                   return (
-                    <tr key={log.id} className="hover:bg-stone-800/30 transition-colors">
-                      <td className="p-3 whitespace-nowrap text-stone-400 font-mono text-[11px]">
+                    <tr
+                      key={log.id}
+                      className={`hover:bg-accent/40 transition-colors ${
+                        index % 2 === 1 ? 'bg-secondary/40' : 'bg-card'
+                      }`}
+                    >
+                      <td className="p-3 whitespace-nowrap text-muted-foreground font-mono text-[11px]">
                         {new Date(log.created).toLocaleDateString('pt-BR', {
                           day: '2-digit',
                           month: '2-digit',
@@ -182,29 +193,29 @@ export function AdminAuditPage() {
                           second: '2-digit',
                         })}
                       </td>
-                      <td className="p-3 font-medium text-stone-200">
+                      <td className="p-3 font-medium text-foreground">
                         {log.actor_email || log.expand?.actor_id?.name || 'Sistema'}
                       </td>
                       <td className="p-3">
                         <Badge
                           variant="outline"
-                          className="rounded-none border-amber-500/30 text-amber-300 font-mono text-[10px]"
+                          className="rounded-[1px] border-border text-foreground font-mono text-[10px]"
                         >
                           {log.action}
                         </Badge>
                       </td>
-                      <td className="p-3 font-mono text-stone-300 text-[11px]">
-                        <span className="text-stone-500">{log.resource_type}:</span>{' '}
+                      <td className="p-3 font-mono text-foreground text-[11px]">
+                        <span className="text-muted-foreground">{log.resource_type}:</span>{' '}
                         {log.resource_id ? `#${log.resource_id.substring(0, 8)}` : '-'}
                       </td>
                       <td className="p-3 max-w-md">
-                        <pre className="text-[10px] text-stone-400 bg-stone-950 p-1.5 border border-stone-800/60 overflow-x-auto font-mono">
+                        <pre className="text-[10px] text-muted-foreground bg-secondary/70 p-1.5 border border-border/60 overflow-x-auto font-mono">
                           {typeof parsedDetails === 'object'
                             ? JSON.stringify(parsedDetails, null, 2)
                             : String(parsedDetails)}
                         </pre>
                       </td>
-                      <td className="p-3 text-[11px] text-stone-500 font-mono whitespace-nowrap">
+                      <td className="p-3 text-[11px] text-muted-foreground font-mono whitespace-nowrap">
                         {log.ip_address || '-'}
                       </td>
                     </tr>

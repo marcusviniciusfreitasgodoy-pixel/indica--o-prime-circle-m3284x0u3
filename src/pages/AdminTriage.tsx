@@ -218,15 +218,18 @@ export function AdminTriagePage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 flex flex-col font-sans">
+    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       <AdminNavbar />
 
       <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         <div>
-          <h1 className="font-serif text-2xl sm:text-3xl text-white font-medium">
+          <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+            Fila Operacional
+          </span>
+          <h1 className="font-serif text-2xl sm:text-3xl text-foreground font-semibold">
             Fila de Triagem & Atribuições
           </h1>
-          <p className="text-sm text-stone-400 mt-1">
+          <p className="text-sm text-muted-foreground mt-1 font-sans">
             Avalie novas indicações nos estados Recebida e Em Triagem, examine alertas de
             duplicidade e resolva pendências de indicação direta.
           </p>
@@ -236,12 +239,12 @@ export function AdminTriagePage() {
         {pendingAttributions.length > 0 && (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <HelpCircle className="w-5 h-5 text-amber-400" />
-              <h2 className="text-lg font-serif text-amber-200">
+              <HelpCircle className="w-5 h-5 text-warning" strokeWidth={1.5} />
+              <h2 className="text-lg font-serif text-foreground font-semibold">
                 Atribuições Pendentes ({pendingAttributions.length})
               </h2>
             </div>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-muted-foreground font-sans">
               Indicações de captação/compra direta do site em que o cliente declarou ter sido
               indicado por alguém, mas a vinculação automática não foi confirmada.
             </p>
@@ -250,37 +253,37 @@ export function AdminTriagePage() {
               {pendingAttributions.map((p) => (
                 <Card
                   key={p.id}
-                  className="bg-stone-900 border-amber-500/30 rounded-none shadow-sm"
+                  className="bg-card border-border rounded-[1px] shadow-subtle"
                 >
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <Badge className="bg-amber-500/20 text-amber-300 border-amber-500/40 rounded-none text-xs">
+                      <Badge className="bg-secondary text-foreground border-border rounded-[1px] text-xs font-heading">
                         Origem: {p.source_origin || 'Direto Site'}
                       </Badge>
-                      <span className="text-[11px] text-stone-400">
+                      <span className="text-[11px] text-muted-foreground font-mono">
                         {new Date(p.created).toLocaleDateString('pt-BR')}
                       </span>
                     </div>
-                    <CardTitle className="text-base text-stone-100 mt-2 font-medium">
+                    <CardTitle className="text-base text-foreground mt-2 font-serif font-semibold">
                       {p.referrer_name || p.owner_name || p.buyer_name || 'Lead sem nome'}
                     </CardTitle>
-                    <CardDescription className="text-stone-400 text-xs">
+                    <CardDescription className="text-muted-foreground text-xs font-sans">
                       Pista de indicação informada:{' '}
-                      <strong className="text-amber-300">
+                      <strong className="text-gold-deep">
                         {p.attribution_hint || 'Não informada'}
                       </strong>
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="pt-0 space-y-3">
-                    <p className="text-xs text-stone-300 line-clamp-2">{p.description}</p>
+                    <p className="text-xs text-muted-foreground line-clamp-2 font-sans">{p.description}</p>
                     <div className="flex gap-2 justify-end">
                       <Button
                         size="sm"
                         variant="outline"
-                        className="rounded-none border-stone-700 text-xs"
+                        className="rounded-[1px] text-xs font-heading"
                         onClick={() => handleOpenActionModal(p, 'resolve_attribution')}
                       >
-                        <UserCheck className="w-3.5 h-3.5 mr-1.5 text-amber-400" />
+                        <UserCheck className="w-3.5 h-3.5 mr-1.5 text-gold-deep" strokeWidth={1.5} />
                         Resolver Atribuição
                       </Button>
                     </div>
@@ -295,8 +298,8 @@ export function AdminTriagePage() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Clock className="w-5 h-5 text-stone-400" />
-              <h2 className="text-lg font-serif text-stone-200">
+              <Clock className="w-5 h-5 text-muted-foreground" strokeWidth={1.5} />
+              <h2 className="text-lg font-serif text-foreground font-semibold">
                 Fila de Triagem ({triageReferrals.length})
               </h2>
             </div>
@@ -305,7 +308,7 @@ export function AdminTriagePage() {
               size="sm"
               onClick={loadData}
               disabled={loading}
-              className="rounded-none border-stone-800 text-xs text-stone-300"
+              className="rounded-[1px] text-xs font-heading"
             >
               {loading && <Loader2 className="w-3 h-3 mr-1.5 animate-spin" />}
               Atualizar
@@ -313,13 +316,13 @@ export function AdminTriagePage() {
           </div>
 
           {loading ? (
-            <div className="py-12 flex justify-center text-stone-400 text-sm">
-              <Loader2 className="w-6 h-6 animate-spin text-amber-500 mr-2" />
+            <div className="py-12 flex justify-center text-muted-foreground text-sm font-sans">
+              <Loader2 className="w-6 h-6 animate-spin text-primary mr-2" strokeWidth={1.5} />
               Carregando fila de triagem...
             </div>
           ) : triageReferrals.length === 0 ? (
-            <Card className="bg-stone-900/50 border-stone-800 rounded-none p-12 text-center">
-              <p className="text-stone-400 text-sm">
+            <Card className="bg-card border-border rounded-[1px] p-12 text-center">
+              <p className="text-muted-foreground text-sm font-sans">
                 Nenhuma indicação pendente de triagem no momento. Tudo limpo!
               </p>
             </Card>
@@ -336,8 +339,8 @@ export function AdminTriagePage() {
                 return (
                   <Card
                     key={ref.id}
-                    className={`rounded-none bg-stone-900 border transition-all ${
-                      hasFlags ? 'border-amber-500/50 shadow-amber-950/20' : 'border-stone-800'
+                    className={`rounded-[1px] bg-card border transition-all ${
+                      hasFlags ? 'border-warning/60 bg-warning/5' : 'border-border'
                     }`}
                   >
                     <div className="p-4 sm:p-5 flex flex-col lg:flex-row gap-5 justify-between">
@@ -345,21 +348,21 @@ export function AdminTriagePage() {
                       <div className="space-y-3 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <Badge
-                            className={`rounded-none text-[11px] ${
+                            className={`rounded-[1px] text-[11px] font-heading ${
                               isProp
-                                ? 'bg-amber-500/10 text-amber-300 border-amber-500/30'
-                                : 'bg-sky-500/10 text-sky-300 border-sky-500/30'
+                                ? 'bg-secondary text-foreground border-border'
+                                : 'bg-info/10 text-info border-info/30'
                             }`}
                           >
                             {isProp ? 'Captação (Proprietário)' : 'Comprador / Locatário'}
                           </Badge>
                           <Badge
                             variant="outline"
-                            className="rounded-none border-stone-700 text-stone-400 text-[11px]"
+                            className="rounded-[1px] border-border text-muted-foreground text-[11px] font-mono"
                           >
                             Status: {ref.status}
                           </Badge>
-                          <span className="text-[11px] text-stone-500">
+                          <span className="text-[11px] text-muted-foreground font-mono">
                             #{ref.id.substring(0, 6)} •{' '}
                             {new Date(ref.created).toLocaleDateString('pt-BR', {
                               day: '2-digit',
@@ -371,25 +374,25 @@ export function AdminTriagePage() {
                         </div>
 
                         <div>
-                          <h3 className="font-serif text-lg text-white font-medium">
+                          <h3 className="font-serif text-lg text-foreground font-semibold">
                             {ref.owner_name || ref.buyer_name || ref.referrer_name || 'Sem nome'}
                           </h3>
-                          <div className="flex flex-wrap gap-4 text-xs text-stone-400 mt-1">
+                          <div className="flex flex-wrap gap-4 text-xs text-muted-foreground mt-1 font-sans">
                             {(ref.owner_phone || ref.buyer_phone || ref.referrer_phone) && (
-                              <span className="flex items-center gap-1">
-                                <Phone className="w-3.5 h-3.5 text-stone-500" />
+                              <span className="flex items-center gap-1 font-mono">
+                                <Phone className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
                                 {ref.owner_phone || ref.buyer_phone || ref.referrer_phone}
                               </span>
                             )}
                             {(ref.owner_email || ref.buyer_email || ref.return_contact) && (
                               <span className="flex items-center gap-1">
-                                <Mail className="w-3.5 h-3.5 text-stone-500" />
+                                <Mail className="w-3.5 h-3.5 text-muted-foreground" strokeWidth={1.5} />
                                 {ref.owner_email || ref.buyer_email || ref.return_contact}
                               </span>
                             )}
                             {(ref.expand?.condominium_id || ref.unit) && (
-                              <span className="flex items-center gap-1 text-amber-300">
-                                <Building className="w-3.5 h-3.5 text-amber-400" />
+                              <span className="flex items-center gap-1 text-gold-deep font-heading">
+                                <Building className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
                                 {ref.expand?.condominium_id?.name || 'Condomínio'}
                                 {ref.unit ? ` - Unidade ${ref.unit}` : ''}
                               </span>
@@ -397,13 +400,13 @@ export function AdminTriagePage() {
                           </div>
                         </div>
 
-                        <p className="text-xs text-stone-300 bg-stone-950/60 p-3 border border-stone-800/80 rounded-none">
+                        <p className="text-xs text-foreground bg-secondary/50 p-3 border border-border rounded-[1px] font-sans">
                           {ref.description || 'Nenhuma descrição fornecida.'}
                         </p>
 
-                        <div className="text-[11px] text-stone-400 flex items-center gap-2">
+                        <div className="text-[11px] text-muted-foreground flex items-center gap-2 font-sans">
                           <span>Indicado por:</span>
-                          <strong className="text-stone-200">
+                          <strong className="text-foreground">
                             {ref.expand?.current_owner_id?.name ||
                               ref.referrer_name ||
                               'Não identificado'}
@@ -413,9 +416,9 @@ export function AdminTriagePage() {
 
                       {/* Middle: Duplicate Alerts display SIDE BY SIDE */}
                       {hasFlags && (
-                        <div className="lg:max-w-md w-full bg-amber-950/30 border border-amber-500/40 p-4 space-y-2.5">
-                          <div className="flex items-center gap-2 text-amber-300 font-medium text-xs">
-                            <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+                        <div className="lg:max-w-md w-full bg-secondary border border-warning/40 p-4 space-y-2.5 rounded-[1px]">
+                          <div className="flex items-center gap-2 text-warning font-heading font-medium text-xs">
+                            <AlertTriangle className="w-4 h-4 text-warning shrink-0" strokeWidth={1.5} />
                             <span>Alerta de Duplicidade Detectado:</span>
                           </div>
 
@@ -423,28 +426,28 @@ export function AdminTriagePage() {
                             {flags.map((flag) => (
                               <div
                                 key={flag.id}
-                                className="text-xs text-stone-300 bg-stone-900/90 p-2.5 border border-amber-500/20 rounded-none space-y-1"
+                                className="text-xs text-foreground bg-card p-2.5 border border-border rounded-[1px] space-y-1 font-sans"
                               >
-                                <p className="font-medium text-amber-200">
+                                <p className="font-medium text-warning">
                                   {flag.conflict_details}
                                 </p>
                                 {flag.expand?.conflicting_referral_id && (
-                                  <div className="text-[11px] text-stone-400 flex items-center gap-1">
+                                  <div className="text-[11px] text-muted-foreground flex items-center gap-1">
                                     <span>Conflito com:</span>
                                     <Link
                                       to={`/admin/indicacoes/${flag.conflicting_referral_id}`}
-                                      className="text-amber-400 underline hover:text-amber-300 inline-flex items-center"
+                                      className="text-gold-deep underline hover:text-gold-deep/80 inline-flex items-center font-mono"
                                     >
                                       #{flag.conflicting_referral_id?.substring(0, 6)} (
                                       {flag.expand.conflicting_referral_id.status})
-                                      <ArrowRight className="w-3 h-3 ml-0.5" />
+                                      <ArrowRight className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
                                     </Link>
                                   </div>
                                 )}
                               </div>
                             ))}
                           </div>
-                          <p className="text-[10px] text-stone-400 italic">
+                          <p className="text-[10px] text-muted-foreground italic font-sans">
                             * O sistema nunca rejeita automaticamente. O operador tem autonomia para
                             validar ou declinar.
                           </p>
@@ -457,9 +460,9 @@ export function AdminTriagePage() {
                           size="sm"
                           disabled={submitting}
                           onClick={() => handleAccept(ref)}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-xs"
+                          className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading"
                         >
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                           Aceitar
                         </Button>
 
@@ -468,9 +471,9 @@ export function AdminTriagePage() {
                           variant="outline"
                           disabled={submitting}
                           onClick={() => handleOpenActionModal(ref, 'recusar')}
-                          className="border-rose-900/60 text-rose-300 hover:bg-rose-950/40 rounded-none text-xs"
+                          className="border-destructive/40 text-destructive hover:bg-destructive/10 rounded-[1px] text-xs font-heading"
                         >
-                          <XCircle className="w-3.5 h-3.5 mr-1" />
+                          <XCircle className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                           Recusar
                         </Button>
 
@@ -479,9 +482,9 @@ export function AdminTriagePage() {
                           variant="outline"
                           disabled={submitting}
                           onClick={() => handleOpenActionModal(ref, 'duplicada')}
-                          className="border-amber-700/60 text-amber-300 hover:bg-amber-950/40 rounded-none text-xs"
+                          className="border-warning/40 text-warning hover:bg-warning/10 rounded-[1px] text-xs font-heading"
                         >
-                          <Copy className="w-3.5 h-3.5 mr-1" />
+                          <Copy className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
                           Duplicada
                         </Button>
 
@@ -489,7 +492,7 @@ export function AdminTriagePage() {
                           asChild
                           size="sm"
                           variant="ghost"
-                          className="text-stone-400 hover:text-white rounded-none text-xs"
+                          className="text-muted-foreground hover:text-foreground rounded-[1px] text-xs font-heading"
                         >
                           <Link to={`/admin/indicacoes/${ref.id}`}>Ver Detalhes</Link>
                         </Button>
@@ -508,14 +511,14 @@ export function AdminTriagePage() {
         open={actionModal.open}
         onOpenChange={(open) => !open && setActionModal((p) => ({ ...p, open: false }))}
       >
-        <DialogContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none sm:max-w-md">
+        <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="font-serif text-lg text-white">
+            <DialogTitle className="font-serif text-lg text-foreground font-semibold">
               {actionModal.type === 'recusar' && 'Recusar Indicação'}
               {actionModal.type === 'duplicada' && 'Marcar como Duplicada'}
               {actionModal.type === 'resolve_attribution' && 'Resolver Atribuição de Indicador'}
             </DialogTitle>
-            <DialogDescription className="text-stone-400 text-xs">
+            <DialogDescription className="text-muted-foreground text-xs font-sans">
               {actionModal.type === 'resolve_attribution'
                 ? 'Vincule a indicação ao membro parceiro correspondente ou recuse a atribuição.'
                 : 'Defina o motivo e o código de comunicação pública para o participante.'}
@@ -525,14 +528,14 @@ export function AdminTriagePage() {
           <div className="space-y-4 py-2 text-sm">
             {actionModal.type === 'resolve_attribution' ? (
               <div className="space-y-2">
-                <label className="text-xs text-stone-300">
+                <label className="text-xs text-foreground font-heading">
                   Selecionar Indicador (Deixe vazio para recusar):
                 </label>
                 <Select value={targetMemberId} onValueChange={setTargetMemberId}>
-                  <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                  <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                     <SelectValue placeholder="Selecione o parceiro..." />
                   </SelectTrigger>
-                  <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                  <SelectContent className="bg-card border-border text-foreground rounded-[1px]">
                     <SelectItem value="">(Nenhum - Recusar Atribuição)</SelectItem>
                     {networkMembers.map((m) => (
                       <SelectItem key={m.id} value={m.id}>
@@ -545,12 +548,12 @@ export function AdminTriagePage() {
             ) : (
               <>
                 <div className="space-y-1.5">
-                  <label className="text-xs text-stone-300">Código de Motivo Público:</label>
+                  <label className="text-xs text-foreground font-heading">Código de Motivo Público:</label>
                   <Select value={selectedReasonCode} onValueChange={setSelectedReasonCode}>
-                    <SelectTrigger className="bg-stone-950 border-stone-800 rounded-none text-xs">
+                    <SelectTrigger className="bg-background border-border rounded-[1px] text-xs font-heading">
                       <SelectValue placeholder="Selecione o motivo que o indicador verá..." />
                     </SelectTrigger>
-                    <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
+                    <SelectContent className="bg-card border-border text-foreground rounded-[1px]">
                       {reasonCodes
                         .filter((c) =>
                           actionModal.type === 'duplicada'
@@ -567,14 +570,14 @@ export function AdminTriagePage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs text-stone-300">
+                  <label className="text-xs text-foreground font-heading">
                     Justificativa Operacional Interna:
                   </label>
                   <Textarea
                     placeholder="Descreva o motivo detalhado para registro na auditoria..."
                     value={customReason}
                     onChange={(e) => setCustomReason(e.target.value)}
-                    className="bg-stone-950 border-stone-800 rounded-none text-xs h-24"
+                    className="bg-background border-border rounded-[1px] text-xs h-24 text-foreground placeholder:text-muted-foreground"
                   />
                 </div>
               </>
@@ -585,7 +588,7 @@ export function AdminTriagePage() {
             <Button
               variant="ghost"
               onClick={() => setActionModal((p) => ({ ...p, open: false }))}
-              className="rounded-none text-stone-400 hover:text-white text-xs"
+              className="rounded-[1px] text-muted-foreground hover:text-foreground text-xs font-heading"
             >
               Cancelar
             </Button>
@@ -596,11 +599,11 @@ export function AdminTriagePage() {
                   (!selectedReasonCode || !customReason.trim()))
               }
               onClick={handleSubmitModalAction}
-              className="bg-amber-600 hover:bg-amber-700 text-white rounded-none text-xs"
+              className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading"
             >
               {submitting ? (
                 <>
-                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" strokeWidth={1.5} />
                   Salvando...
                 </>
               ) : (

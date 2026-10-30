@@ -314,20 +314,23 @@ export function AdminRewardsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100">
+    <div className="min-h-screen bg-background text-foreground font-sans flex flex-col">
       <AdminNavbar />
 
-      <main className="max-w-7xl mx-auto px-4 py-8 space-y-6">
+      <main className="flex-1 max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 space-y-6">
         {/* Cabeçalho */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-stone-800 pb-5">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-border pb-5">
           <div>
+            <span className="font-heading text-[11px] font-semibold uppercase tracking-label text-gold-deep block mb-1">
+              Financeiro & Recompensas
+            </span>
             <div className="flex items-center gap-2 mb-1">
-              <Coins className="w-5 h-5 text-amber-500" />
-              <h1 className="text-xl font-bold tracking-tight text-white uppercase">
+              <Coins className="w-5 h-5 text-gold-deep" strokeWidth={1.5} />
+              <h1 className="text-xl font-bold font-serif tracking-tight text-foreground">
                 Gestão de Recompensas e Pagamentos
               </h1>
             </div>
-            <p className="text-xs text-stone-400">
+            <p className="text-xs text-muted-foreground font-sans">
               Fila operacional por estado, aprovações com conformidade financeira e liquidação de
               comprovantes.
             </p>
@@ -338,10 +341,10 @@ export function AdminRewardsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-stone-900 border-stone-800 text-xs rounded-none text-amber-400 hover:text-amber-300"
+                className="text-xs rounded-[1px] font-heading"
                 onClick={() => setCommissionModalOpen(true)}
               >
-                <Calendar className="w-3.5 h-3.5 mr-1.5" />
+                <Calendar className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
                 Registrar Comissão
               </Button>
             )}
@@ -350,10 +353,10 @@ export function AdminRewardsPage() {
               <Button
                 variant="outline"
                 size="sm"
-                className="bg-stone-900 border-rose-900/50 text-xs rounded-none text-rose-400 hover:text-rose-300"
+                className="border-destructive/40 text-xs rounded-[1px] text-destructive hover:bg-destructive/10 font-heading"
                 onClick={() => setOrangeModalOpen(true)}
               >
-                <ShieldCheck className="w-3.5 h-3.5 mr-1.5" />
+                <ShieldCheck className="w-3.5 h-3.5 mr-1.5" strokeWidth={1.5} />
                 Resolver Indicador Laranja
               </Button>
             )}
@@ -361,7 +364,7 @@ export function AdminRewardsPage() {
         </div>
 
         {/* Abas / Filtro por Estado */}
-        <div className="flex items-center gap-1 overflow-x-auto border-b border-stone-800 pb-2 text-xs">
+        <div className="flex items-center gap-1 overflow-x-auto border-b border-border pb-2 text-xs font-heading">
           {[
             { id: 'em_analise', label: 'Em Análise' },
             { id: 'aguardando_comissao', label: 'Aguardando Comissão' },
@@ -379,18 +382,18 @@ export function AdminRewardsPage() {
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id as TabState)}
-                className={`px-3 py-1.5 whitespace-nowrap transition-colors flex items-center gap-1.5 ${
+                className={`px-3 py-1.5 whitespace-nowrap uppercase tracking-nav transition-colors flex items-center gap-1.5 rounded-[1px] ${
                   isActive
-                    ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30 font-medium'
-                    : 'text-stone-400 hover:text-stone-200 hover:bg-stone-900'
+                    ? 'bg-primary text-primary-foreground font-semibold'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
               >
                 <span>{tab.label}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
+                  className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono ${
                     isActive
-                      ? 'bg-amber-500 text-stone-950 font-bold'
-                      : 'bg-stone-800 text-stone-400'
+                      ? 'bg-foreground text-background font-bold'
+                      : 'bg-secondary text-muted-foreground'
                   }`}
                 >
                   {count}
