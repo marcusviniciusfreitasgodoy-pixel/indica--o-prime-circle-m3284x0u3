@@ -1205,7 +1205,22 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
   const phone = (sanitized.telefone || sanitized.phone || '').trim()
   const email = (sanitized.email || sanitized['e-mail'] || '').trim().toLowerCase()
   const password = sanitized.senha || sanitized.password || ''
-  const condominiumId = (sanitized.condominium_id || '').trim()
+  let condominiumId = (sanitized.condominium_id || '').trim()
+  const newCondoName = (
+    sanitized.new_condominium_name ||
+    sanitized.novo_condominio_nome ||
+    ''
+  ).trim()
+  const newCondoNeighborhood = (
+    sanitized.new_condominium_neighborhood ||
+    sanitized.novo_condominio_bairro ||
+    'Barra da Tijuca'
+  ).trim()
+  const newCondoAddress = (
+    sanitized.new_condominium_address ||
+    sanitized.novo_condominio_endereco ||
+    ''
+  ).trim()
   const cnpj = (sanitized.cnpj || sanitized.CNPJ || '').trim()
   const roleTitle = (sanitized.role_title || '').trim()
   const creci = (sanitized.creci || sanitized.CRECI || '').trim()
@@ -1459,11 +1474,13 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
   // Validação de condomínio quando a categoria exigir condomínio
   const requiresCondo =
     catSlug === 'porteiro_zelador' || catSlug === 'sindico' || catSlug === 'entidade_condominial'
-  if (requiresCondo && !condominiumId) {
-    return e.json(400, { message: 'A categoria selecionada exige a seleção de um condomínio.' })
+  if (requiresCondo && !condominiumId && !newCondoName) {
+    return e.json(400, {
+      message: 'A categoria selecionada exige a seleção ou cadastro de um condomínio.',
+    })
   }
 
-  if (condominiumId) {
+  if (condominiumId && condominiumId !== 'novo') {
     try {
       $app.findRecordById('condominiums', condominiumId)
     } catch (_) {
@@ -1581,12 +1598,31 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
         txApp.save(ataDoc)
       }
 
-      // 3. Vincular participante ao condomínio se informado
-      if (condominiumId) {
+      // 3. Cadastrar condomínio novo se solicitado, ou vincular participante ao condomínio se informado
+      let resolvedCondoId = condominiumId && condominiumId !== 'novo' ? condominiumId : ''
+      if (newCondoName) {
+        // Criar registro na coleção 'condominiums' com os mesmos campos padrão do admin
+        const condosCol = txApp.findCollectionByNameOrId('condominiums')
+        const newCondoRec = new Record(condosCol)
+        newCondoRec.set('name', newCondoName)
+        newCondoRec.set('neighborhood', newCondoNeighborhood || 'Barra da Tijuca')
+        if (newCondoAddress) newCondoRec.set('address', newCondoAddress)
+        newCondoRec.set('city', 'Rio de Janeiro')
+        newCondoRec.set('state', 'RJ')
+        newCondoRec.set('active', true)
+        txApp.save(newCondoRec)
+        resolvedCondoId = newCondoRec.id
+
+        // Registrar também o nome do condomínio no participante para histórico
+        partRec.set('condominium_name', newCondoName)
+        txApp.save(partRec)
+      }
+
+      if (resolvedCondoId) {
         const pcCol = txApp.findCollectionByNameOrId('participant_condominiums')
         const pcRec = new Record(pcCol)
         pcRec.set('participant_id', partRec.id)
-        pcRec.set('condominium_id', condominiumId)
+        pcRec.set('condominium_id', resolvedCondoId)
         if (roleTitle) pcRec.set('role_description', roleTitle)
         txApp.save(pcRec)
       }

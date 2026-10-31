@@ -56,6 +56,10 @@ export default function CadastroPage() {
 
   // Conditional fields
   const [condominiumId, setCondominiumId] = useState('')
+  const [isNovoCondominio, setIsNovoCondominio] = useState(false)
+  const [novoCondominioNome, setNovoCondominioNome] = useState('')
+  const [novoCondominioBairro, setNovoCondominioBairro] = useState('Barra da Tijuca')
+  const [novoCondominioEndereco, setNovoCondominioEndereco] = useState('')
   const [cnpj, setCnpj] = useState('')
   const [roleTitle, setRoleTitle] = useState('')
   const [creci, setCreci] = useState('')
@@ -66,15 +70,12 @@ export default function CadastroPage() {
   const [ataBase64, setAtaBase64] = useState<string>('')
 
   // Checkboxes gerais e de elegibilidade
-  const [declarouMaioridade, setDeclarouMaioridade] = useState(false)
   const [declarouVinculoEmpregador, setDeclarouVinculoEmpregador] = useState(false)
   const [declarouNaoUsoSistemas, setDeclarouNaoUsoSistemas] = useState(false)
   const [declarouEntregaEmMaos, setDeclarouEntregaEmMaos] = useState(false)
 
-  const [acceptedTerms, setAcceptedTerms] = useState(false)
-  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false)
-  const [acceptedRegulamento, setAcceptedRegulamento] = useState(false)
-  const [acceptedImpedimento, setAcceptedImpedimento] = useState(false)
+  // Aceite consolidado único do Regulamento Geral (engloba maioridade, termos, privacidade, regulamento e ausência de impedimento)
+  const [acceptedRegulamentoUnico, setAcceptedRegulamentoUnico] = useState(false)
 
   const [whatsappOptin, setWhatsappOptin] = useState(true)
   const [marketingOptin, setMarketingOptin] = useState(false)
@@ -252,9 +253,16 @@ export default function CadastroPage() {
       return
     }
 
-    if (exigeCondominio && !condominiumId) {
-      setErrorMessage('A categoria selecionada exige a indicação de um condomínio associado.')
-      return
+    if (exigeCondominio) {
+      if (isNovoCondominio || condominiumId === '__novo__') {
+        if (!novoCondominioNome.trim()) {
+          setErrorMessage('Por favor, informe o nome do condomínio que deseja cadastrar.')
+          return
+        }
+      } else if (!condominiumId) {
+        setErrorMessage('A categoria selecionada exige a indicação de um condomínio associado.')
+        return
+      }
     }
 
     if (exigeEntidadeEmpresa && !cnpj.trim()) {
@@ -264,12 +272,6 @@ export default function CadastroPage() {
 
     if (exigeCreci && !creci.trim()) {
       setErrorMessage('Para corretores parceiros, o número do CRECI é obrigatório.')
-      return
-    }
-
-    // Validação de Maioridade (18+ anos)
-    if (!declarouMaioridade) {
-      setErrorMessage('É obrigatório declarar ter 18 anos ou mais.')
       return
     }
 
@@ -305,21 +307,9 @@ export default function CadastroPage() {
       return
     }
 
-    // Validação dos documentos legais obrigatórios
-    if (!acceptedTerms) {
-      setErrorMessage('É necessário aceitar os Termos de Uso da Plataforma.')
-      return
-    }
-    if (!acceptedPrivacy) {
-      setErrorMessage('É necessário aceitar a Política de Privacidade e Proteção de Dados.')
-      return
-    }
-    if (!acceptedRegulamento) {
-      setErrorMessage('É necessário aceitar o Regulamento Geral do Programa de Indicação.')
-      return
-    }
-    if (!acceptedImpedimento) {
-      setErrorMessage('É necessário declarar a ausência de impedimento legal e ético.')
+    // Validação do aceite consolidado obrigatório
+    if (!acceptedRegulamentoUnico) {
+      setErrorMessage('É necessário ler e aceitar o Regulamento Geral do Programa.')
       return
     }
 
@@ -345,6 +335,7 @@ export default function CadastroPage() {
 
     try {
       setIsSubmitting(true)
+      const isNewCondo = isNovoCondominio || condominiumId === '__novo__'
       const res = await registerParticipant({
         category_id: selectedCategoryId,
         invitation_code: conviteParam || undefined,
@@ -353,12 +344,19 @@ export default function CadastroPage() {
         telefone: telefone.trim(),
         email: email.trim().toLowerCase(),
         senha,
-        condominium_id: condominiumId || undefined,
+        condominium_id: isNewCondo ? undefined : condominiumId || undefined,
+        new_condominium_name: isNewCondo ? novoCondominioNome.trim() : undefined,
+        new_condominium_neighborhood: isNewCondo
+          ? novoCondominioBairro.trim() || 'Barra da Tijuca'
+          : undefined,
+        new_condominium_address: isNewCondo
+          ? novoCondominioEndereco.trim() || undefined
+          : undefined,
         cnpj: cnpj.trim() || undefined,
         role_title: roleTitle.trim() || undefined,
         creci: creci.trim() || undefined,
         conselho_fiscal_notified_at: conselhoFiscalNotifiedAt || undefined,
-        declarou_maioridade: declarouMaioridade,
+        declarou_maioridade: true,
         declarou_vinculo_empregador: declarouVinculoEmpregador,
         declarou_nao_uso_sistemas: declarouNaoUsoSistemas,
         declarou_entrega_em_maos: declarouEntregaEmMaos,
@@ -629,32 +627,127 @@ export default function CadastroPage() {
 
                     {/* Condomínio Obrigatório */}
                     {exigeCondominio && (
-                      <div className="space-y-1.5">
-                        <Label
-                          htmlFor="condo-select"
-                          className="text-xs text-foreground font-heading font-medium flex items-center gap-1.5"
-                        >
-                          <Building2 className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
-                          Condomínio Associado <span className="text-gold">*</span>
-                        </Label>
-                        <select
-                          id="condo-select"
-                          value={condominiumId}
-                          onChange={(e) => setCondominiumId(e.target.value)}
-                          className="w-full h-10 px-3 text-xs sm:text-sm bg-background border border-input text-foreground rounded-[1px] focus:outline-none focus:ring-1 focus:ring-gold font-sans"
-                          required
-                        >
-                          <option value="">Selecione o condomínio...</option>
-                          {condominiums.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name} {c.neighborhood ? `(${c.neighborhood})` : ''}
+                      <div className="space-y-3">
+                        <div className="space-y-1.5">
+                          <Label
+                            htmlFor="condo-select"
+                            className="text-xs text-foreground font-heading font-medium flex items-center gap-1.5"
+                          >
+                            <Building2 className="w-3.5 h-3.5 text-gold-deep" strokeWidth={1.5} />
+                            Condomínio Associado <span className="text-gold">*</span>
+                          </Label>
+                          <select
+                            id="condo-select"
+                            value={isNovoCondominio ? '__novo__' : condominiumId}
+                            onChange={(e) => {
+                              const val = e.target.value
+                              if (val === '__novo__') {
+                                setIsNovoCondominio(true)
+                                setCondominiumId('__novo__')
+                              } else {
+                                setIsNovoCondominio(false)
+                                setCondominiumId(val)
+                              }
+                            }}
+                            className="w-full h-10 px-3 text-xs sm:text-sm bg-background border border-input text-foreground rounded-[1px] focus:outline-none focus:ring-1 focus:ring-gold font-sans"
+                            required
+                          >
+                            <option value="">Selecione o condomínio...</option>
+                            <option value="__novo__" className="font-semibold text-gold-deep">
+                              + Cadastrar novo condomínio
                             </option>
-                          ))}
-                        </select>
-                        <p className="text-[11px] text-muted-foreground font-sans">
-                          Obrigatório para a categoria selecionada para correta apuração e
-                          aprovação.
-                        </p>
+                            {condominiums.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name} {c.neighborhood ? `(${c.neighborhood})` : ''}
+                              </option>
+                            ))}
+                          </select>
+                          <p className="text-[11px] text-muted-foreground font-sans">
+                            Obrigatório para a categoria selecionada para correta apuração e
+                            aprovação.
+                          </p>
+                        </div>
+
+                        {/* Formulário inline para Cadastrar Novo Condomínio */}
+                        {(isNovoCondominio || condominiumId === '__novo__') && (
+                          <div className="p-3.5 bg-card border border-gold/30 rounded-[1px] space-y-3">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-heading font-semibold text-gold-deep uppercase tracking-wider">
+                                Dados do Novo Condomínio
+                              </span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  setIsNovoCondominio(false)
+                                  setCondominiumId('')
+                                }}
+                                className="h-7 text-[11px] text-muted-foreground hover:text-foreground px-2"
+                              >
+                                Selecionar da lista
+                              </Button>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label
+                                htmlFor="novo-condo-nome"
+                                className="text-xs text-foreground font-heading font-medium"
+                              >
+                                Nome do Condomínio / Edifício <span className="text-gold">*</span>
+                              </Label>
+                              <Input
+                                id="novo-condo-nome"
+                                type="text"
+                                placeholder="Ex: Condomínio Edifício Atlântico Sul"
+                                value={novoCondominioNome}
+                                onChange={(e) => setNovoCondominioNome(e.target.value)}
+                                required
+                                className="h-10 text-xs sm:text-sm"
+                              />
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              <div className="space-y-1.5">
+                                <Label
+                                  htmlFor="novo-condo-bairro"
+                                  className="text-xs text-foreground font-heading font-medium"
+                                >
+                                  Bairro
+                                </Label>
+                                <Input
+                                  id="novo-condo-bairro"
+                                  type="text"
+                                  placeholder="Barra da Tijuca, Recreio..."
+                                  value={novoCondominioBairro}
+                                  onChange={(e) => setNovoCondominioBairro(e.target.value)}
+                                  className="h-10 text-xs sm:text-sm"
+                                />
+                              </div>
+
+                              <div className="space-y-1.5">
+                                <Label
+                                  htmlFor="novo-condo-endereco"
+                                  className="text-xs text-foreground font-heading font-medium"
+                                >
+                                  Endereço / Logradouro
+                                </Label>
+                                <Input
+                                  id="novo-condo-endereco"
+                                  type="text"
+                                  placeholder="Av. Lúcio Costa, 3000"
+                                  value={novoCondominioEndereco}
+                                  onChange={(e) => setNovoCondominioEndereco(e.target.value)}
+                                  className="h-10 text-xs sm:text-sm"
+                                />
+                              </div>
+                            </div>
+
+                            <p className="text-[11px] text-muted-foreground font-sans">
+                              O condomínio será registrado e vinculado ao seu cadastro de indicador.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     )}
 
@@ -842,131 +935,34 @@ export default function CadastroPage() {
                     4. Termos e Elegibilidade
                   </span>
 
-                  {/* Declaração de Maioridade */}
-                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
+                  {/* Caixa consolidada única: Li e aceito o Regulamento Geral do Programa */}
+                  <div className="flex items-start space-x-2.5 p-3 bg-secondary/30 border border-border">
                     <Checkbox
-                      id="maioridade-check"
-                      checked={declarouMaioridade}
-                      onCheckedChange={(c) => setDeclarouMaioridade(c === true)}
+                      id="regulamento-unico-check"
+                      checked={acceptedRegulamentoUnico}
+                      onCheckedChange={(c) => setAcceptedRegulamentoUnico(c === true)}
                       className="mt-0.5 rounded-[1px]"
                     />
-                    <div className="grid gap-1 leading-none text-xs">
-                      <label
-                        htmlFor="maioridade-check"
-                        className="text-foreground cursor-pointer font-sans"
-                      >
-                        Declaro ter 18 anos ou mais. <span className="text-gold">*</span>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 1. Termos de Uso */}
-                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
-                    <Checkbox
-                      id="terms-check"
-                      checked={acceptedTerms}
-                      onCheckedChange={(c) => setAcceptedTerms(c === true)}
-                      className="mt-0.5 rounded-[1px]"
-                    />
-                    <div className="grid gap-1 leading-none text-xs">
-                      <label
-                        htmlFor="terms-check"
-                        className="text-foreground cursor-pointer font-sans"
-                      >
-                        Li e concordo com os{' '}
-                        <button
-                          type="button"
-                          onClick={() => setActiveDocModal(legalDocs['termos_de_uso'] || null)}
-                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                    <div className="grid gap-1.5 leading-normal text-xs font-sans">
+                      <div className="flex items-center flex-wrap gap-1">
+                        <label
+                          htmlFor="regulamento-unico-check"
+                          className="text-foreground cursor-pointer font-sans"
                         >
-                          Termos de Uso da Plataforma
-                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
-                        </button>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 2. Privacidade */}
-                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
-                    <Checkbox
-                      id="privacy-check"
-                      checked={acceptedPrivacy}
-                      onCheckedChange={(c) => setAcceptedPrivacy(c === true)}
-                      className="mt-0.5 rounded-[1px]"
-                    />
-                    <div className="grid gap-1 leading-none text-xs">
-                      <label
-                        htmlFor="privacy-check"
-                        className="text-foreground cursor-pointer font-sans"
-                      >
-                        Li e concordo com a{' '}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setActiveDocModal(legalDocs['politica_de_privacidade'] || null)
-                          }
-                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
-                        >
-                          Política de Privacidade (LGPD)
-                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
-                        </button>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 3. Regulamento */}
-                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
-                    <Checkbox
-                      id="regulamento-check"
-                      checked={acceptedRegulamento}
-                      onCheckedChange={(c) => setAcceptedRegulamento(c === true)}
-                      className="mt-0.5 rounded-[1px]"
-                    />
-                    <div className="grid gap-1 leading-none text-xs">
-                      <label
-                        htmlFor="regulamento-check"
-                        className="text-foreground cursor-pointer font-sans"
-                      >
-                        Li e aceito o{' '}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setActiveDocModal(legalDocs['regulamento_do_programa'] || null)
-                          }
-                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
-                        >
-                          Regulamento Geral do Programa
-                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
-                        </button>
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 4. Declaração de Ausência de Impedimento */}
-                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
-                    <Checkbox
-                      id="impedimento-check"
-                      checked={acceptedImpedimento}
-                      onCheckedChange={(c) => setAcceptedImpedimento(c === true)}
-                      className="mt-0.5 rounded-[1px]"
-                    />
-                    <div className="grid gap-1 leading-none text-xs">
-                      <label
-                        htmlFor="impedimento-check"
-                        className="text-foreground cursor-pointer font-sans"
-                      >
-                        Declaro sob as penas da lei a{' '}
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setActiveDocModal(legalDocs['declaracao_ausencia_impedimento'] || null)
-                          }
-                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
-                        >
-                          Ausência de Impedimento Legal e Ético
-                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
-                        </button>
-                      </label>
+                          Li e aceito o{' '}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setActiveDocModal(legalDocs['regulamento_do_programa'] || null)
+                            }
+                            className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                          >
+                            Regulamento Geral do Programa
+                            <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                          </button>
+                          <span className="text-gold ml-1">*</span>
+                        </label>
+                      </div>
                     </div>
                   </div>
 

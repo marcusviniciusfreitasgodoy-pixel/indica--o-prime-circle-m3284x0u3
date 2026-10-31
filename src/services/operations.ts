@@ -357,6 +357,9 @@ export interface RegisterParticipantPayload {
   email: string
   senha: string
   condominium_id?: string
+  new_condominium_name?: string
+  new_condominium_neighborhood?: string
+  new_condominium_address?: string
   cnpj?: string
   role_title?: string
   creci?: string

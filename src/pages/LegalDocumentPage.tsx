@@ -9,10 +9,12 @@ import { BrandPublicFooter, Eyebrow } from '@/components/brand'
 
 interface LegalDocument {
   id: string
-  doc_type: 'regulamento' | 'termos' | 'privacidade'
+  slug?: string
+  doc_type?: string
   title: string
-  version: string
-  content_markdown: string
+  version: string | number
+  content?: string
+  content_markdown?: string
   is_active: boolean
   is_provisional: boolean
   updated: string
@@ -20,6 +22,7 @@ interface LegalDocument {
 
 interface LegalPageProps {
   type: 'regulamento' | 'termos' | 'privacidade'
+  slug?: string
   defaultTitle: string
 }
 
@@ -55,11 +58,43 @@ export const LegalDocumentPage: React.FC<LegalPageProps> = ({ type, defaultTitle
     const fetchDoc = async () => {
       setIsLoading(true)
       try {
-        const record = await pb
-          .collection('legal_documents')
-          .getFirstListItem(`doc_type = '${type}' && is_active = true`, { sort: '-created' })
-        if (isMounted) {
-          setDoc(record as unknown as LegalDocument)
+        // Tentar primeiro por slug padrão na coleção legal_documents ou doc_type legado
+        const slugMap: Record<string, string> = {
+          regulamento: 'regulamento_do_programa',
+          termos: 'termos_de_uso',
+          privacidade: 'politica_de_privacidade',
+        }
+        const targetSlug = slugMap[type] || type
+
+        let record: any = null
+        try {
+          record = await pb
+            .collection('legal_documents')
+            .getFirstListItem(`slug = '${targetSlug}' && is_active = true`, { sort: '-version' })
+        } catch (_) {
+          // Fallback para doc_type caso exista em algum banco
+          record = await pb
+            .collection('legal_documents')
+            .getFirstListItem(
+              `(doc_type = '${type}' || slug = '${targetSlug}') && is_active = true`,
+              {
+                sort: '-created',
+              },
+            )
+        }
+
+        if (isMounted && record) {
+          setDoc({
+            id: record.id,
+            slug: record.slug,
+            title: record.title,
+            version: record.version,
+            content: record.content || record.content_markdown || '',
+            content_markdown: record.content || record.content_markdown || '',
+            is_active: record.is_active,
+            is_provisional: record.is_provisional,
+            updated: record.updated,
+          } as LegalDocument)
         }
       } catch (err: unknown) {
         console.warn('Documento legal ativo não encontrado:', err)
@@ -140,7 +175,7 @@ export const LegalDocumentPage: React.FC<LegalPageProps> = ({ type, defaultTitle
                 </Button>
               </div>
             ) : (
-              <SimpleMarkdown content={doc.content_markdown} />
+              <SimpleMarkdown content={doc.content || doc.content_markdown || ''} />
             )}
           </CardContent>
         </Card>
