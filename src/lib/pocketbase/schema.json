@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-31T14:48:57.676Z",
+  "generatedAt": "2026-10-31T15:06:47.645Z",
   "collections": [
     {
       "name": "users",
@@ -847,6 +847,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "created_by_participant",
+          "type": "bool",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -1186,6 +1192,12 @@
           "required": false,
           "system": false,
           "autodateTriggers": ["onCreate", "onUpdate"]
+        },
+        {
+          "name": "details",
+          "type": "text",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": ["CREATE INDEX idx_acceptances_user_doc ON acceptances (user_id, document_id)"]
