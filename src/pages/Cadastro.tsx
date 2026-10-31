@@ -29,7 +29,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog'
-import { BrandPublicHeader, BrandPublicFooter, Eyebrow } from '@/components/brand'
+import { BrandPublicHeader, BrandPublicFooter, Eyebrow, GodoyLogo } from '@/components/brand'
 import {
   getPublicFormData,
   registerParticipant,
@@ -364,6 +364,7 @@ export default function CadastroPage() {
           <div className="mx-auto w-full max-w-md">
             <Card className="rounded-[1px] border border-border bg-card shadow-luxury text-card-foreground p-6 sm:p-8">
               <div className="flex flex-col items-center text-center space-y-4">
+                <GodoyLogo variant="oficial" className="h-10 sm:h-12 w-auto mb-1" />
                 <Eyebrow>ETAPA CONCLUÍDA</Eyebrow>
                 <div className="w-12 h-12 rounded-[1px] bg-success/15 border border-success/30 flex items-center justify-center text-success">
                   <CheckCircle2 className="w-6 h-6" strokeWidth={1.5} />
@@ -398,6 +399,9 @@ export default function CadastroPage() {
         <div className="mx-auto w-full max-w-lg space-y-5 sm:space-y-6">
           {/* Brand header */}
           <div className="text-center space-y-1.5 min-w-0">
+            <div className="flex justify-center mb-2">
+              <GodoyLogo variant="oficial" className="h-12 sm:h-14 w-auto" />
+            </div>
             <Eyebrow className="justify-center">CADASTRO DE PARCEIRO</Eyebrow>
             <h1 className="text-xl sm:text-3xl font-serif font-bold tracking-tight text-foreground break-words">
               Cadastro de <em>Indicador</em>
