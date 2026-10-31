@@ -19,7 +19,7 @@ import {
   BarChart3,
   Database,
 } from 'lucide-react'
-import { GodoyWordmark } from '@/components/brand/GodoyWordmark'
+import { GodoyLogo } from '@/components/brand/GodoyLogo'
 
 export function AdminNavbar() {
   const { user, roles, logout, isAdmin } = useAuth()
@@ -51,8 +51,16 @@ export function AdminNavbar() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 gap-2">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink-0">
-            <Link to="/admin" className="flex items-center gap-2 sm:gap-2.5 focus:outline-none">
-              <GodoyWordmark onDark className="h-5 sm:h-6 w-auto" />
+            <Link
+              to="/admin"
+              className="flex items-center gap-2 sm:gap-2.5 focus:outline-none"
+              aria-label="Godoy Prime Admin"
+            >
+              <GodoyLogo
+                variant="simbolo"
+                className="h-7 sm:h-8 w-auto max-h-8"
+                alt="Godoy Prime"
+              />
               <span className="font-heading text-xs sm:text-sm font-semibold tracking-label text-gold-brand uppercase border-l border-white/20 pl-2 sm:pl-2.5">
                 Admin
               </span>

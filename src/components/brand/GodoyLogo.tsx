@@ -4,6 +4,8 @@ import { cn } from '@/lib/utils'
 export type GodoyLogoVariant =
   | 'principal'
   | 'negativo'
+  | 'negativo-puro'
+  | 'negativo-dourado'
   | 'simbolo'
   | 'avatar'
   | 'azul'
@@ -17,7 +19,11 @@ export interface GodoyLogoProps extends React.ImgHTMLAttributes<HTMLImageElement
 
 const LOGO_PATHS: Record<GodoyLogoVariant, string> = {
   principal: '/brand/godoy/logo-principal.png',
-  negativo: '/brand/godoy/logo-negativo-01.png',
+  // Variante padrão negativa nos fundos navy: arte branca com detalhe dourado
+  negativo: '/brand/godoy/logotipo-negativo-01.png',
+  'negativo-dourado': '/brand/godoy/logotipo-negativo-01.png',
+  // Branca pura preservada para fallback ou uso explícito
+  'negativo-puro': '/brand/godoy/logo-negativo-01.png',
   simbolo: '/brand/godoy/simbolo-gold.png',
   avatar: '/brand/godoy/godoy-logo.png',
   azul: '/brand/godoy/logo-azul.png',
@@ -47,6 +53,13 @@ export function GodoyLogo({
     if (variant === 'azul' || variant === 'preto' || variant === 'oficial') {
       if (currentSrc !== '/brand/godoy/logotipo-principal.png') {
         setCurrentSrc('/brand/godoy/logotipo-principal.png')
+        return
+      }
+    }
+    // Fallback para negativo se falhar a versão com dourado:
+    if (variant === 'negativo' || variant === 'negativo-dourado') {
+      if (currentSrc !== '/brand/godoy/logo-negativo-01.png') {
+        setCurrentSrc('/brand/godoy/logo-negativo-01.png')
         return
       }
     }

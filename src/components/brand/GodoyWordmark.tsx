@@ -4,7 +4,15 @@ import { cn } from '@/lib/utils'
 export interface GodoyWordmarkProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   onDark?: boolean
   className?: string
-  variant?: 'auto' | 'principal' | 'negativo' | 'azul' | 'preto' | 'oficial'
+  variant?:
+    | 'auto'
+    | 'principal'
+    | 'negativo'
+    | 'negativo-dourado'
+    | 'negativo-puro'
+    | 'azul'
+    | 'preto'
+    | 'oficial'
 }
 
 export function GodoyWordmark({
@@ -20,7 +28,9 @@ export function GodoyWordmark({
     if (variant === 'azul') return '/brand/godoy/logo-azul.png'
     if (variant === 'preto') return '/brand/godoy/logo-preto.png'
     if (variant === 'oficial') return '/brand/godoy/logotipo-principal-oficial.png'
-    if (variant === 'negativo') return '/brand/godoy/logotipo-negativo-01.png'
+    if (variant === 'negativo-puro') return '/brand/godoy/logo-negativo-01.png'
+    if (variant === 'negativo' || variant === 'negativo-dourado')
+      return '/brand/godoy/logotipo-negativo-01.png'
     if (variant === 'principal') return '/brand/godoy/logotipo-principal.png'
     return onDark ? '/brand/godoy/logotipo-negativo-01.png' : '/brand/godoy/logotipo-principal.png'
   }
@@ -41,6 +51,11 @@ export function GodoyWordmark({
         setCurrentSrc(fallback)
         return
       }
+    }
+    // Fallback gracioso para branca pura se a arte com dourado falhar
+    if (currentSrc === '/brand/godoy/logotipo-negativo-01.png') {
+      setCurrentSrc('/brand/godoy/logo-negativo-01.png')
+      return
     }
     setHasError(true)
   }

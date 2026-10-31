@@ -24,7 +24,7 @@ import {
   FileText,
   Shield,
 } from 'lucide-react'
-import { GodoyWordmark } from '@/components/brand/GodoyWordmark'
+import { GodoyLogo } from '@/components/brand/GodoyLogo'
 
 export const MemberNavbar: React.FC = () => {
   const { user, logout, isInternal } = useAuth()
@@ -60,9 +60,13 @@ export const MemberNavbar: React.FC = () => {
       <div className="container mx-auto flex h-16 items-center justify-between px-3 sm:px-6">
         {/* Brand */}
         <div className="flex items-center gap-4 sm:gap-6 min-w-0">
-          <Link to="/painel" className="flex items-center gap-2 focus:outline-none shrink-0">
-            <GodoyWordmark onDark className="h-5 sm:h-6 w-auto" />
-            <span className="font-heading text-[11px] sm:text-sm font-semibold tracking-widest text-primary uppercase border-l border-primary/30 pl-2">
+          <Link
+            to="/painel"
+            className="flex items-center gap-2.5 focus:outline-none shrink-0"
+            aria-label="Godoy Prime Indica"
+          >
+            <GodoyLogo variant="simbolo" className="h-7 sm:h-8 w-auto max-h-8" alt="Godoy Prime" />
+            <span className="font-heading text-xs sm:text-sm font-semibold tracking-widest text-primary uppercase border-l border-primary/30 pl-2.5">
               INDICA
             </span>
           </Link>
