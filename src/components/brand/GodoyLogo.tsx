@@ -1,7 +1,14 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
 
-export type GodoyLogoVariant = 'principal' | 'negativo' | 'simbolo' | 'avatar'
+export type GodoyLogoVariant =
+  | 'principal'
+  | 'negativo'
+  | 'simbolo'
+  | 'avatar'
+  | 'azul'
+  | 'preto'
+  | 'oficial'
 
 export interface GodoyLogoProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   variant?: GodoyLogoVariant
@@ -13,6 +20,9 @@ const LOGO_PATHS: Record<GodoyLogoVariant, string> = {
   negativo: '/brand/godoy/logo-negativo-01.png',
   simbolo: '/brand/godoy/simbolo-gold.png',
   avatar: '/brand/godoy/godoy-logo.png',
+  azul: '/brand/godoy/logo-azul.png',
+  preto: '/brand/godoy/logo-preto.png',
+  oficial: '/brand/godoy/logotipo-principal-oficial.png',
 }
 
 export function GodoyLogo({
@@ -22,7 +32,26 @@ export function GodoyLogo({
   ...props
 }: GodoyLogoProps) {
   const [hasError, setHasError] = React.useState(false)
-  const src = LOGO_PATHS[variant] || LOGO_PATHS.principal
+  const [currentSrc, setCurrentSrc] = React.useState<string>(
+    LOGO_PATHS[variant] || LOGO_PATHS.principal,
+  )
+
+  React.useEffect(() => {
+    setCurrentSrc(LOGO_PATHS[variant] || LOGO_PATHS.principal)
+    setHasError(false)
+  }, [variant])
+
+  const handleError = () => {
+    // Se a variante solicitada for azul, preto ou oficial e ainda não existir o arquivo correspondente,
+    // faz fallback gracioso para os logos oficiais existentes sem cair no texto.
+    if (variant === 'azul' || variant === 'preto' || variant === 'oficial') {
+      if (currentSrc !== '/brand/godoy/logotipo-principal.png') {
+        setCurrentSrc('/brand/godoy/logotipo-principal.png')
+        return
+      }
+    }
+    setHasError(true)
+  }
 
   if (hasError) {
     return (
@@ -39,9 +68,9 @@ export function GodoyLogo({
 
   return (
     <img
-      src={src}
+      src={currentSrc}
       alt={alt}
-      onError={() => setHasError(true)}
+      onError={handleError}
       className={cn('inline-block object-contain', className)}
       {...props}
     />
