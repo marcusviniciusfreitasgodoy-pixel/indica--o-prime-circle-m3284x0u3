@@ -3371,11 +3371,14 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
             }
 
             // Verificar se ainda restou algum vínculo apontando para o condomínio antigo
-            const remainingCount = txApp.countRecords(
+            const remainingLinks = txApp.findRecordsByFilter(
               'participant_condominiums',
-              'condominium_id = {:oldId}',
-              { oldId: oldCondoId },
+              `condominium_id = '${oldCondoId}'`,
+              '',
+              1,
+              0,
             )
+            const remainingCount = remainingLinks.length
 
             if (remainingCount === 0) {
               try {
@@ -3592,12 +3595,14 @@ routerAdd('POST', '/backend/v1/admin/participants/reject', (e) => {
   // C11.1 Item 4: Se o condomínio dele tiver created_by_participant = true, active = false e nenhum outro vínculo, apagar o condomínio
   if (linkedCondoId) {
     try {
-      const remainingCount = $app.countRecords(
+      const remainingLinks = $app.findRecordsByFilter(
         'participant_condominiums',
-        'condominium_id = {:cid}',
-        { cid: linkedCondoId },
+        `condominium_id = '${linkedCondoId}'`,
+        '',
+        1,
+        0,
       )
-      if (remainingCount === 0) {
+      if (remainingLinks.length === 0) {
         const condoRec = $app.findRecordById('condominiums', linkedCondoId)
         if (condoRec.getBool('created_by_participant') && !condoRec.getBool('active')) {
           $app.delete(condoRec)
@@ -4353,10 +4358,14 @@ onRecordAfterDeleteSuccess((e) => {
 
     for (let i = 0; i < orphans.length; i++) {
       const c = orphans[i]
-      const count = $app.countRecords('participant_condominiums', 'condominium_id = {:cid}', {
-        cid: c.id,
-      })
-      if (count === 0) {
+      const remainingLinks = $app.findRecordsByFilter(
+        'participant_condominiums',
+        `condominium_id = '${c.id}'`,
+        '',
+        1,
+        0,
+      )
+      if (remainingLinks.length === 0) {
         try {
           $app.delete(c)
         } catch (_) {}

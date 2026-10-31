@@ -41,6 +41,7 @@ import {
   Send,
   UserSquare2,
   Building,
+  XCircle,
 } from 'lucide-react'
 
 export function AdminParticipantsPage() {
@@ -489,6 +490,14 @@ export function AdminParticipantsPage() {
             >
               Suspensos
             </Button>
+            <Button
+              variant={statusFilter === 'recusado' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setStatusFilter('recusado')}
+              className="rounded-[1px] text-xs"
+            >
+              Recusados
+            </Button>
           </div>
         </div>
 
@@ -601,24 +610,42 @@ export function AdminParticipantsPage() {
                       <td className="p-3 text-right">
                         <div className="flex justify-end gap-1.5 font-heading">
                           {p.status === 'pendente_aprovacao' && (
-                            <Button
-                              size="sm"
-                              onClick={() => openApproveModal(p)}
-                              disabled={submitting || !userRec?.verified}
-                              title={
-                                !userRec?.verified
-                                  ? 'Aprovação bloqueada: participante ainda não verificou o e-mail'
-                                  : 'Revisar e aprovar cadastro'
-                              }
-                              className={`rounded-[1px] text-xs ${
-                                !userRec?.verified
-                                  ? 'bg-secondary text-muted-foreground border border-border cursor-not-allowed opacity-70'
-                                  : 'bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold'
-                              }`}
-                            >
-                              <CheckCircle2 className="w-3 h-3 mr-1" strokeWidth={1.5} />
-                              Revisar / Aprovar
-                            </Button>
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => openApproveModal(p)}
+                                disabled={submitting || !userRec?.verified}
+                                title={
+                                  !userRec?.verified
+                                    ? 'Aprovação bloqueada: participante ainda não verificou o e-mail'
+                                    : 'Revisar e aprovar cadastro'
+                                }
+                                className={`rounded-[1px] text-xs ${
+                                  !userRec?.verified
+                                    ? 'bg-secondary text-muted-foreground border border-border cursor-not-allowed opacity-70'
+                                    : 'bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold'
+                                }`}
+                              >
+                                <CheckCircle2 className="w-3 h-3 mr-1" strokeWidth={1.5} />
+                                Revisar / Aprovar
+                              </Button>
+
+                              {isAdmin && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  onClick={() => {
+                                    setRejectModal({ open: true, part: p })
+                                    setRejectReason('')
+                                  }}
+                                  className="border-destructive/40 text-destructive hover:bg-destructive/10 rounded-[1px] text-xs"
+                                  title="Recusar cadastro do participante"
+                                >
+                                  <XCircle className="w-3 h-3 mr-1" strokeWidth={1.5} />
+                                  Recusar
+                                </Button>
+                              )}
+                            </>
                           )}
 
                           <Button
@@ -631,7 +658,7 @@ export function AdminParticipantsPage() {
                             Contrato
                           </Button>
 
-                          {isAdmin && p.status !== 'suspenso' && (
+                          {isAdmin && p.status !== 'suspenso' && p.status !== 'recusado' && (
                             <Button
                               size="sm"
                               variant="outline"
@@ -832,12 +859,18 @@ export function AdminParticipantsPage() {
                 submitting ||
                 !approveModal.part?.expand?.user_id?.verified ||
                 (selectedCategoryId !== approveModal.part?.category_id &&
-                  !categoryChangeReason.trim())
+                  !categoryChangeReason.trim()) ||
+                (!!pendingCondo && !condoDecision) ||
+                (!!pendingCondo && condoDecision === 'trocar' && !chosenExistingCondoId)
               }
               title={
                 !approveModal.part?.expand?.user_id?.verified
                   ? 'Aprovação bloqueada: participante com e-mail não verificado'
-                  : ''
+                  : pendingCondo && !condoDecision
+                    ? 'Selecione uma decisão para o condomínio novo'
+                    : pendingCondo && condoDecision === 'trocar' && !chosenExistingCondoId
+                      ? 'Selecione o condomínio existente de destino'
+                      : ''
               }
               onClick={handleConfirmApprove}
               className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading font-semibold"
@@ -851,6 +884,89 @@ export function AdminParticipantsPage() {
                 <>
                   <CheckCircle2 className="w-3 h-3 mr-1" strokeWidth={1.5} />
                   Confirmar Aprovação
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal: Recusar Participante (C11.1 Item 3) */}
+      <Dialog
+        open={rejectModal.open}
+        onOpenChange={(open) => !open && setRejectModal({ open: false, part: null })}
+      >
+        <DialogContent className="bg-card border-border text-foreground rounded-[1px] sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="font-serif text-lg text-foreground font-semibold flex items-center gap-2">
+              <XCircle className="w-5 h-5 text-destructive" strokeWidth={1.5} />
+              Recusar Cadastro de Participante
+            </DialogTitle>
+            <DialogDescription className="text-muted-foreground text-xs font-sans">
+              O status do participante passará para <strong>recusado</strong>. Se o participante
+              informou um condomínio novo que não possui outros vínculos, ele será excluído
+              automaticamente.
+            </DialogDescription>
+          </DialogHeader>
+
+          {rejectModal.part && (
+            <div className="space-y-3 py-2 text-xs font-sans">
+              <div className="p-3 bg-secondary/50 border border-border space-y-1 rounded-[1px]">
+                <div className="text-foreground font-medium">
+                  {rejectModal.part.expand?.user_id?.name || 'Sem nome'}
+                </div>
+                <div className="text-[11px] text-muted-foreground font-mono">
+                  {rejectModal.part.expand?.user_id?.email} •{' '}
+                  {rejectModal.part.expand?.user_id?.phone || 'Sem telefone'}
+                </div>
+                <div className="text-[11px] text-muted-foreground pt-1 border-t border-border">
+                  Categoria:{' '}
+                  <span className="font-semibold text-foreground">
+                    {rejectModal.part.expand?.category_id?.name || 'Não informada'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-foreground font-heading font-medium block">
+                  Justificativa da Recusa (opcional):
+                </label>
+                <Textarea
+                  placeholder="Ex: Cadastro inconsistente com a categoria ou não atende aos requisitos do programa..."
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  className="bg-background border-border text-xs rounded-[1px] h-24 text-foreground placeholder:text-muted-foreground"
+                />
+                <p className="text-[10px] text-muted-foreground">
+                  A justificativa fica registrada nas notas internas do participante e no log de
+                  auditoria.
+                </p>
+              </div>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button
+              variant="ghost"
+              onClick={() => setRejectModal({ open: false, part: null })}
+              className="rounded-[1px] text-xs font-heading text-muted-foreground hover:text-foreground"
+            >
+              Cancelar
+            </Button>
+            <Button
+              disabled={submitting}
+              onClick={handleReject}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-[1px] text-xs font-heading font-semibold"
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin mr-1" strokeWidth={1.5} />
+                  Recusando...
+                </>
+              ) : (
+                <>
+                  <XCircle className="w-3 h-3 mr-1" strokeWidth={1.5} />
+                  Confirmar Recusa
                 </>
               )}
             </Button>
