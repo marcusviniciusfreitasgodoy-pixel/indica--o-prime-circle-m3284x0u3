@@ -518,7 +518,12 @@ export async function submitOwnerLead(payload: {
  */
 export async function approveParticipant(
   participantId: string,
-  options?: { newCategoryId?: string; changeReason?: string },
+  options?: {
+    newCategoryId?: string
+    changeReason?: string
+    condominioDecisao?: 'confirmar' | 'trocar'
+    condominioId?: string
+  },
 ) {
   const payload: Record<string, any> = { participant_id: participantId }
   if (options?.newCategoryId) {
@@ -526,6 +531,12 @@ export async function approveParticipant(
   }
   if (options?.changeReason) {
     payload.change_reason = options.changeReason
+  }
+  if (options?.condominioDecisao) {
+    payload.condominio_decisao = options.condominioDecisao
+  }
+  if (options?.condominioId) {
+    payload.condominio_id = options.condominioId
   }
 
   const res = await fetch(`${BACKEND_URL}/backend/v1/admin/participants/approve`, {

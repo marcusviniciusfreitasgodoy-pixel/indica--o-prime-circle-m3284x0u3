@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react'
 import pb from '@/lib/pocketbase/client'
 import { AdminNavbar } from '@/components/AdminNavbar'
 import { useAuth } from '@/contexts/AuthContext'
-import { Participant, Member } from '@/types/referral'
+import { Participant, Member, Condominium } from '@/types/referral'
 import {
   approveParticipant,
   suspendParticipant,
@@ -39,6 +39,7 @@ import {
   Check,
   Send,
   UserSquare2,
+  Building,
 } from 'lucide-react'
 
 export function AdminParticipantsPage() {
@@ -65,6 +66,11 @@ export function AdminParticipantsPage() {
   })
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [categoryChangeReason, setCategoryChangeReason] = useState('')
+  const [pendingCondo, setPendingCondo] = useState<Condominium | null>(null)
+  const [condoDecision, setCondoDecision] = useState<'confirmar' | 'trocar'>('confirmar')
+  const [chosenExistingCondoId, setChosenExistingCondoId] = useState('')
+  const [condominiumsList, setCondominiumsList] = useState<Condominium[]>([])
+  const [loadingCondoInfo, setLoadingCondoInfo] = useState(false)
 
   // Suspend modal
   const [suspendModal, setSuspendModal] = useState<{ open: boolean; part: Participant | null }>({
@@ -135,10 +141,41 @@ export function AdminParticipantsPage() {
     loadData()
   }, [])
 
-  const openApproveModal = (part: Participant) => {
+  const openApproveModal = async (part: Participant) => {
     setApproveModal({ open: true, part })
     setSelectedCategoryId(part.category_id || '')
     setCategoryChangeReason('')
+    setPendingCondo(null)
+    setCondoDecision('confirmar')
+    setChosenExistingCondoId('')
+
+    // Verificar se o participante informou condomínio novo em revisão
+    try {
+      setLoadingCondoInfo(true)
+      const pcList = await pb.collection('participant_condominiums').getFullList({
+        filter: `participant_id = "${part.id}"`,
+        expand: 'condominium_id',
+      })
+      if (pcList.length > 0 && pcList[0].expand?.condominium_id) {
+        const c = pcList[0].expand.condominium_id as Condominium
+        if (c.created_by_participant && !c.active) {
+          setPendingCondo(c)
+          // Carregar lista de condomínios existentes ativos para permitir trocar
+          const activeCondos = await pb.collection('condominiums').getFullList<Condominium>({
+            filter: 'active = true',
+            sort: 'name',
+          })
+          setCondominiumsList(activeCondos)
+          if (activeCondos.length > 0) {
+            setChosenExistingCondoId(activeCondos[0].id)
+          }
+        }
+      }
+    } catch (_) {
+      // Ignora erro de busca de condomínio
+    } finally {
+      setLoadingCondoInfo(false)
+    }
   }
 
   const handleConfirmApprove = async () => {
@@ -155,17 +192,30 @@ export function AdminParticipantsPage() {
       return
     }
 
+    if (pendingCondo && condoDecision === 'trocar' && !chosenExistingCondoId) {
+      toast({
+        title: 'Condomínio obrigatório',
+        description: 'Selecione o condomínio existente de destino para trocar.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     try {
       setSubmitting(true)
       await approveParticipant(approveModal.part.id, {
         newCategoryId: isCategoryChanged ? selectedCategoryId : undefined,
         changeReason: isCategoryChanged ? categoryChangeReason.trim() : undefined,
+        condominioDecisao: pendingCondo ? condoDecision : undefined,
+        condominioId:
+          pendingCondo && condoDecision === 'trocar' ? chosenExistingCondoId : undefined,
       })
       toast({
         title: 'Participante Aprovado!',
         description: `Cadastro de ${approveModal.part.expand?.user_id?.name || 'Parceiro'} está agora ativo.`,
       })
       setApproveModal({ open: false, part: null })
+      setPendingCondo(null)
       loadData()
     } catch (err: any) {
       toast({ title: 'Erro ao aprovar', description: err.message, variant: 'destructive' })
@@ -618,6 +668,89 @@ export function AdminParticipantsPage() {
                   </p>
                 </div>
               )}
+
+              {/* Condomínio novo em revisão (created_by_participant = true e active = false) */}
+              {loadingCondoInfo ? (
+                <div className="p-3 bg-secondary/30 border border-border text-xs flex items-center gap-2 text-muted-foreground">
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" /> Verificando vínculo de
+                  condomínio...
+                </div>
+              ) : pendingCondo ? (
+                <div className="p-3 bg-secondary/40 border border-gold-deep/30 rounded-[1px] space-y-2.5">
+                  <div className="flex items-center gap-1.5 text-gold-deep font-heading font-semibold text-xs">
+                    <Building className="w-4 h-4" strokeWidth={1.5} />
+                    Condomínio novo informado pelo participante (em revisão)
+                  </div>
+
+                  <div className="bg-background p-2.5 border border-border space-y-1 text-xs">
+                    <div className="font-medium text-foreground">{pendingCondo.name}</div>
+                    <div className="text-muted-foreground text-[11px]">
+                      {pendingCondo.address ? (
+                        <span>
+                          {pendingCondo.address} — {pendingCondo.neighborhood || 'Bairro não inf.'}
+                        </span>
+                      ) : (
+                        <span>
+                          {pendingCondo.neighborhood || 'Barra da Tijuca'},{' '}
+                          {pendingCondo.city || 'Rio de Janeiro'} - {pendingCondo.state || 'RJ'}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 pt-1">
+                    <label className="text-foreground font-heading font-medium block">
+                      Decisão para o Condomínio:
+                    </label>
+                    <div className="space-y-1.5">
+                      <label className="flex items-center gap-2 text-xs cursor-pointer text-foreground">
+                        <input
+                          type="radio"
+                          name="condoDecision"
+                          checked={condoDecision === 'confirmar'}
+                          onChange={() => setCondoDecision('confirmar')}
+                          className="accent-primary"
+                        />
+                        Confirmar o condomínio novo (tornar ativo no programa)
+                      </label>
+                      <label className="flex items-center gap-2 text-xs cursor-pointer text-foreground">
+                        <input
+                          type="radio"
+                          name="condoDecision"
+                          checked={condoDecision === 'trocar'}
+                          onChange={() => setCondoDecision('trocar')}
+                          className="accent-primary"
+                        />
+                        Trocar por um condomínio existente
+                      </label>
+                    </div>
+
+                    {condoDecision === 'trocar' && (
+                      <div className="pt-1.5 space-y-1">
+                        <label className="text-muted-foreground text-[11px] block">
+                          Selecione o condomínio existente:
+                        </label>
+                        <select
+                          value={chosenExistingCondoId}
+                          onChange={(e) => setChosenExistingCondoId(e.target.value)}
+                          className="w-full h-9 px-2 text-xs bg-background border border-border text-foreground rounded-[1px] focus:outline-none focus:ring-1 focus:ring-primary font-sans"
+                        >
+                          <option value="">Selecione um condomínio...</option>
+                          {condominiumsList.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name} {c.neighborhood ? `(${c.neighborhood})` : ''}
+                            </option>
+                          ))}
+                        </select>
+                        <p className="text-[10px] text-muted-foreground">
+                          O novo condomínio pendente será removido e o participante será
+                          re-vinculado ao existente.
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ) : null}
             </div>
           )}
 

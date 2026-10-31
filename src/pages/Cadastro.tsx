@@ -69,16 +69,10 @@ export default function CadastroPage() {
   const [ataFile, setAtaFile] = useState<File | null>(null)
   const [ataBase64, setAtaBase64] = useState<string>('')
 
-  // Checkboxes gerais e de elegibilidade
-  const [declarouVinculoEmpregador, setDeclarouVinculoEmpregador] = useState(false)
-  const [declarouNaoUsoSistemas, setDeclarouNaoUsoSistemas] = useState(false)
-  const [declarouEntregaEmMaos, setDeclarouEntregaEmMaos] = useState(false)
-
-  // Aceite consolidado único do Regulamento Geral (engloba maioridade, termos, privacidade, regulamento e ausência de impedimento)
+  // Aceite consolidado único (engloba regulamento, termos, privacidade, maioridade e declarações de condomínio quando aplicável)
   const [acceptedRegulamentoUnico, setAcceptedRegulamentoUnico] = useState(false)
 
-  const [whatsappOptin, setWhatsappOptin] = useState(true)
-  const [marketingOptin, setMarketingOptin] = useState(false)
+  const [whatsappOptin, setWhatsappOptin] = useState(false)
 
   // Honeypot anti-robô
   const [website, setWebsite] = useState('')
@@ -275,26 +269,6 @@ export default function CadastroPage() {
       return
     }
 
-    // Validações específicas para porteiro, prestador e síndico
-    if (isPorteiroPrestadorSindico) {
-      if (!declarouVinculoEmpregador) {
-        setErrorMessage(
-          'É obrigatório declarar que seu contrato de trabalho e o regimento do condomínio ou empregador não vedam esta atividade.',
-        )
-        return
-      }
-      if (!declarouNaoUsoSistemas) {
-        setErrorMessage(
-          'É obrigatório declarar que não usará dados, cadastros, sistemas ou câmeras do condomínio ou empregador.',
-        )
-        return
-      }
-      if (!declarouEntregaEmMaos) {
-        setErrorMessage('É obrigatório declarar que apenas entregará o link de indicação em mãos.')
-        return
-      }
-    }
-
     // Síndico: data da comunicação ao conselho fiscal
     if (isSindico && !conselhoFiscalNotifiedAt) {
       setErrorMessage('Por favor, informe a data em que comunicou a adesão ao conselho fiscal.')
@@ -309,7 +283,9 @@ export default function CadastroPage() {
 
     // Validação do aceite consolidado obrigatório
     if (!acceptedRegulamentoUnico) {
-      setErrorMessage('É necessário ler e aceitar o Regulamento Geral do Programa.')
+      setErrorMessage(
+        'É obrigatório ler e aceitar o Regulamento, os Termos de Uso e a Política de Privacidade.',
+      )
       return
     }
 
@@ -357,14 +333,14 @@ export default function CadastroPage() {
         creci: creci.trim() || undefined,
         conselho_fiscal_notified_at: conselhoFiscalNotifiedAt || undefined,
         declarou_maioridade: true,
-        declarou_vinculo_empregador: declarouVinculoEmpregador,
-        declarou_nao_uso_sistemas: declarouNaoUsoSistemas,
-        declarou_entrega_em_maos: declarouEntregaEmMaos,
+        declarou_vinculo_empregador: isPorteiroPrestadorSindico ? true : undefined,
+        declarou_nao_uso_sistemas: isPorteiroPrestadorSindico ? true : undefined,
+        declarou_entrega_em_maos: isPorteiroPrestadorSindico ? true : undefined,
         ata_file_name: ataFile ? ataFile.name : undefined,
         ata_file_base64: ataBase64 || undefined,
         ata_file_type: ataFile ? ataFile.type || 'application/pdf' : undefined,
         whatsapp_optin: whatsappOptin,
-        marketing_optin: marketingOptin,
+        marketing_optin: false,
         accepted_documents: acceptedDocuments,
         website: website.trim(),
       })
@@ -872,70 +848,13 @@ export default function CadastroPage() {
                   </div>
                 )}
 
-                {/* DECLARAÇÕES OBRIGATÓRIAS DO TERMO DE ADESÃO */}
-                {isPorteiroPrestadorSindico && (
-                  <div className="space-y-3 pt-2 border-t border-border bg-secondary/40 p-3">
-                    <span className="text-xs uppercase tracking-wider text-gold-deep font-heading font-semibold block">
-                      Declarações do Termo de Adesão ({selectedCategory?.name})
-                    </span>
-
-                    <div className="flex items-start space-x-2.5">
-                      <Checkbox
-                        id="dec-vinculo"
-                        checked={declarouVinculoEmpregador}
-                        onCheckedChange={(c) => setDeclarouVinculoEmpregador(c === true)}
-                        className="mt-0.5 rounded-[1px]"
-                      />
-                      <label
-                        htmlFor="dec-vinculo"
-                        className="text-foreground text-xs cursor-pointer font-sans leading-relaxed"
-                      >
-                        Declaro que meu contrato de trabalho e o regimento do condomínio ou
-                        empregador não vedam esta atividade. <span className="text-gold">*</span>
-                      </label>
-                    </div>
-
-                    <div className="flex items-start space-x-2.5">
-                      <Checkbox
-                        id="dec-sistemas"
-                        checked={declarouNaoUsoSistemas}
-                        onCheckedChange={(c) => setDeclarouNaoUsoSistemas(c === true)}
-                        className="mt-0.5 rounded-[1px]"
-                      />
-                      <label
-                        htmlFor="dec-sistemas"
-                        className="text-foreground text-xs cursor-pointer font-sans leading-relaxed"
-                      >
-                        Declaro que não usarei dados, cadastros, sistemas ou câmeras do condomínio
-                        ou do empregador. <span className="text-gold">*</span>
-                      </label>
-                    </div>
-
-                    <div className="flex items-start space-x-2.5">
-                      <Checkbox
-                        id="dec-entrega"
-                        checked={declarouEntregaEmMaos}
-                        onCheckedChange={(c) => setDeclarouEntregaEmMaos(c === true)}
-                        className="mt-0.5 rounded-[1px]"
-                      />
-                      <label
-                        htmlFor="dec-entrega"
-                        className="text-foreground text-xs cursor-pointer font-sans leading-relaxed"
-                      >
-                        Declaro que apenas entregarei o link de indicação em mãos.{' '}
-                        <span className="text-gold">*</span>
-                      </label>
-                    </div>
-                  </div>
-                )}
-
                 {/* TERMOS LEGAIS E CONSENTIMENTO */}
                 <div className="space-y-3 pt-2 border-t border-border">
                   <span className="text-xs uppercase tracking-wider text-gold-deep font-heading font-semibold block">
                     4. Termos e Elegibilidade
                   </span>
 
-                  {/* Caixa consolidada única: Li e aceito o Regulamento Geral do Programa */}
+                  {/* Caixa consolidada única: Regulamento, Termos, Privacidade, Maioridade e Condomínio (se aplicável) */}
                   <div className="flex items-start space-x-2.5 p-3 bg-secondary/30 border border-border">
                     <Checkbox
                       id="regulamento-unico-check"
@@ -944,29 +863,56 @@ export default function CadastroPage() {
                       className="mt-0.5 rounded-[1px]"
                     />
                     <div className="grid gap-1.5 leading-normal text-xs font-sans">
-                      <div className="flex items-center flex-wrap gap-1">
-                        <label
-                          htmlFor="regulamento-unico-check"
-                          className="text-foreground cursor-pointer font-sans"
-                        >
+                      <div className="text-foreground leading-relaxed">
+                        <label htmlFor="regulamento-unico-check" className="cursor-pointer">
                           Li e aceito o{' '}
-                          <button
-                            type="button"
-                            onClick={() =>
-                              setActiveDocModal(legalDocs['regulamento_do_programa'] || null)
-                            }
-                            className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
-                          >
-                            Regulamento Geral do Programa
-                            <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
-                          </button>
+                        </label>
+                        <Link
+                          to="/regulamento"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                        >
+                          Regulamento
+                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                        </Link>
+                        , os{' '}
+                        <Link
+                          to="/termos"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                        >
+                          Termos de Uso
+                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                        </Link>{' '}
+                        e a{' '}
+                        <Link
+                          to="/privacidade"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-gold-deep hover:underline inline-flex items-center gap-0.5 font-medium"
+                        >
+                          Política de Privacidade
+                          <ExternalLink className="w-3 h-3 ml-0.5" strokeWidth={1.5} />
+                        </Link>
+                        .{' '}
+                        <label htmlFor="regulamento-unico-check" className="cursor-pointer">
+                          Tenho 18 anos ou mais e nada me impede de participar.
+                          {isPorteiroPrestadorSindico && (
+                            <>
+                              {' '}
+                              Meu trabalho no condomínio não me impede de participar, não vou usar
+                              dados do condomínio e vou entregar meu link só em mãos.
+                            </>
+                          )}
                           <span className="text-gold ml-1">*</span>
                         </label>
                       </div>
                     </div>
                   </div>
 
-                  {/* 5. Opt-in de WhatsApp */}
+                  {/* 5. Opt-in opcional de WhatsApp (desmarcado por padrão) */}
                   <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
                     <Checkbox
                       id="wa-optin-check"
@@ -978,24 +924,6 @@ export default function CadastroPage() {
                       <label htmlFor="wa-optin-check" className="text-foreground cursor-pointer">
                         Aceito receber atualizações operacionais e avisos sobre minhas indicações
                         via WhatsApp.
-                      </label>
-                    </div>
-                  </div>
-
-                  {/* 6. Consentimento de Marketing */}
-                  <div className="flex items-start space-x-2.5 p-2.5 bg-secondary/30 border border-border">
-                    <Checkbox
-                      id="mkt-optin-check"
-                      checked={marketingOptin}
-                      onCheckedChange={(c) => setMarketingOptin(c === true)}
-                      className="mt-0.5 rounded-[1px]"
-                    />
-                    <div className="grid gap-1 leading-none text-xs font-sans">
-                      <label
-                        htmlFor="mkt-optin-check"
-                        className="text-muted-foreground cursor-pointer"
-                      >
-                        Desejo receber novidades e comunicações da Godoy Prime Realty.
                       </label>
                     </div>
                   </div>

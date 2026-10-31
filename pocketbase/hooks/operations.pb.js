@@ -1601,21 +1601,65 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
       // 3. Cadastrar condomínio novo se solicitado, ou vincular participante ao condomínio se informado
       let resolvedCondoId = condominiumId && condominiumId !== 'novo' ? condominiumId : ''
       if (newCondoName) {
-        // Criar registro na coleção 'condominiums' com os mesmos campos padrão do admin
-        const condosCol = txApp.findCollectionByNameOrId('condominiums')
-        const newCondoRec = new Record(condosCol)
-        newCondoRec.set('name', newCondoName)
-        newCondoRec.set('neighborhood', newCondoNeighborhood || 'Barra da Tijuca')
-        if (newCondoAddress) newCondoRec.set('address', newCondoAddress)
-        newCondoRec.set('city', 'Rio de Janeiro')
-        newCondoRec.set('state', 'RJ')
-        newCondoRec.set('active', true)
-        txApp.save(newCondoRec)
-        resolvedCondoId = newCondoRec.id
+        // Função de normalização para busca de condomínio parecido:
+        // sem acentos, sem maiúsculas, removendo as palavras "condomínio", "residencial", "edifício"
+        function normalizeCondoName(str) {
+          if (!str) return ''
+          return String(str)
+            .toLowerCase()
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/\b(condominio|residencial|edificio)\b/gi, ' ')
+            .replace(/[^a-z0-9]/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim()
+        }
 
-        // Registrar também o nome do condomínio no participante para histórico
-        partRec.set('condominium_name', newCondoName)
-        txApp.save(partRec)
+        const inputNorm = normalizeCondoName(newCondoName)
+        let matchedCondo = null
+
+        // Buscar todos os condomínios para verificar se já existe um com nome parecido
+        try {
+          const allCondos = txApp.findRecordsByFilter('condominiums', 'id != ""', 'name', 500, 0)
+          for (let i = 0; i < allCondos.length; i++) {
+            const cRec = allCondos[i]
+            const existingNorm = normalizeCondoName(cRec.getString('name'))
+            if (
+              existingNorm &&
+              inputNorm &&
+              (existingNorm === inputNorm ||
+                (existingNorm.length >= 4 &&
+                  inputNorm.length >= 4 &&
+                  (existingNorm.includes(inputNorm) || inputNorm.includes(existingNorm))))
+            ) {
+              matchedCondo = cRec
+              break
+            }
+          }
+        } catch (_) {}
+
+        if (matchedCondo) {
+          // Se achar, vincular ao existente em vez de criar
+          resolvedCondoId = matchedCondo.id
+          partRec.set('condominium_name', matchedCondo.getString('name'))
+          txApp.save(partRec)
+        } else {
+          // Condomínio novo nasce com active = false e created_by_participant = true
+          const condosCol = txApp.findCollectionByNameOrId('condominiums')
+          const newCondoRec = new Record(condosCol)
+          newCondoRec.set('name', newCondoName)
+          newCondoRec.set('neighborhood', newCondoNeighborhood || 'Barra da Tijuca')
+          if (newCondoAddress) newCondoRec.set('address', newCondoAddress)
+          newCondoRec.set('city', 'Rio de Janeiro')
+          newCondoRec.set('state', 'RJ')
+          newCondoRec.set('active', false)
+          newCondoRec.set('created_by_participant', true)
+          txApp.save(newCondoRec)
+          resolvedCondoId = newCondoRec.id
+
+          partRec.set('condominium_name', newCondoName)
+          txApp.save(partRec)
+        }
       }
 
       if (resolvedCondoId) {
@@ -1628,6 +1672,15 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
       }
 
       // 4. Gravar os documentos obrigatórios e declarações específicas em acceptances
+      // Texto exato da caixa única marcada gravado no campo details
+      const baseAceiteText =
+        'Li e aceito o Regulamento, os Termos de Uso e a Política de Privacidade. Tenho 18 anos ou mais e nada me impede de participar.'
+      const extraCondoText =
+        ' Meu trabalho no condomínio não me impede de participar, não vou usar dados do condomínio e vou entregar meu link só em mãos.'
+      const exactAceiteText = isPorteiroPrestadorSindico
+        ? `${baseAceiteText}${extraCondoText}`
+        : baseAceiteText
+
       const acceptancesCol = txApp.findCollectionByNameOrId('acceptances')
       for (let i = 0; i < requiredDocSlugs.length; i++) {
         const slug = requiredDocSlugs[i]
@@ -1636,6 +1689,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
           const accRec = new Record(acceptancesCol)
           accRec.set('user_id', userRec.id)
           accRec.set('document_id', docRec.id)
+          accRec.set('details', exactAceiteText)
           accRec.set('ip_address', clientIp)
           accRec.set('user_agent', userAgent)
           accRec.set('accepted_at', nowIso)
@@ -1652,6 +1706,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
           const accM = new Record(acceptancesCol)
           accM.set('user_id', userRec.id)
           accM.set('document_id', docMaioridade.id)
+          accM.set('details', exactAceiteText)
           accM.set('ip_address', clientIp)
           accM.set('user_agent', userAgent)
           accM.set('accepted_at', nowIso)
@@ -1675,6 +1730,7 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
               const accS = new Record(acceptancesCol)
               accS.set('user_id', userRec.id)
               accS.set('document_id', docSpecific.id)
+              accS.set('details', exactAceiteText)
               accS.set('ip_address', clientIp)
               accS.set('user_agent', userAgent)
               accS.set('accepted_at', nowIso)
@@ -3138,6 +3194,8 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
   const participantId = (body.participant_id || '').trim()
   const newCategoryId = (body.new_category_id || '').trim()
   const changeReason = (body.change_reason || '').trim()
+  const condominioDecisao = (body.condominio_decisao || '').trim() // 'confirmar' | 'trocar'
+  const targetCondominioId = (body.condominio_id || '').trim()
 
   if (!participantId) return e.json(400, { message: 'ID do participante é obrigatório.' })
 
@@ -3188,6 +3246,72 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
     newCategorySlug = newCat.getString('slug')
     part.set('category_id', newCat.id)
     categoryChanged = true
+  }
+
+  // Tratar decisão sobre condomínio novo em revisão (created_by_participant = true && active = false)
+  if (condominioDecisao) {
+    let participantCondoLink = null
+    try {
+      participantCondoLink = $app.findFirstRecordByFilter(
+        'participant_condominiums',
+        'participant_id = {:pid}',
+        { pid: part.id },
+      )
+    } catch (_) {}
+
+    if (condominioDecisao === 'confirmar') {
+      if (participantCondoLink) {
+        const cId = participantCondoLink.getString('condominium_id')
+        if (cId) {
+          try {
+            const condoRec = $app.findRecordById('condominiums', cId)
+            condoRec.set('active', true)
+            $app.save(condoRec)
+          } catch (_) {}
+        }
+      }
+    } else if (condominioDecisao === 'trocar') {
+      if (!targetCondominioId) {
+        return e.json(400, {
+          message:
+            'Para trocar por condomínio existente é necessário selecionar o condomínio de destino.',
+        })
+      }
+
+      let chosenCondo = null
+      try {
+        chosenCondo = $app.findRecordById('condominiums', targetCondominioId)
+      } catch (_) {
+        return e.json(400, { message: 'Condomínio de destino não encontrado.' })
+      }
+
+      const oldCondoId = participantCondoLink
+        ? participantCondoLink.getString('condominium_id')
+        : ''
+
+      if (participantCondoLink) {
+        participantCondoLink.set('condominium_id', chosenCondo.id)
+        $app.save(participantCondoLink)
+      } else {
+        const pcCol = $app.findCollectionByNameOrId('participant_condominiums')
+        const newPc = new Record(pcCol)
+        newPc.set('participant_id', part.id)
+        newPc.set('condominium_id', chosenCondo.id)
+        $app.save(newPc)
+      }
+
+      part.set('condominium_name', chosenCondo.getString('name'))
+
+      // Apagar o condomínio novo se ele foi criado pelo participante e estava inativo
+      if (oldCondoId && oldCondoId !== chosenCondo.id) {
+        try {
+          const oldCondoRec = $app.findRecordById('condominiums', oldCondoId)
+          if (oldCondoRec.getBool('created_by_participant') && !oldCondoRec.getBool('active')) {
+            $app.delete(oldCondoRec)
+          }
+        } catch (_) {}
+      }
+    }
   }
 
   part.set('status', 'ativo')

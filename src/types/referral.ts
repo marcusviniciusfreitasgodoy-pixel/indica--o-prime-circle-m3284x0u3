@@ -82,6 +82,7 @@ export interface Condominium {
   state?: string
   zip_code?: string
   active?: boolean
+  created_by_participant?: boolean
   created?: string
   updated?: string
 }
