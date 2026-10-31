@@ -1617,12 +1617,14 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
 
         const inputNorm = normalizeCondoName(newCondoName)
         let exactMatchedCondo = null
+        let exactPendingCondo = null
         const similarIds = []
 
-        // C11.1 Item 1:
-        // - Vincular automaticamente só quando o nome normalizado for IDÊNTICO ao de um condomínio ATIVO.
-        // - Nunca vincular automaticamente a um condomínio inativo.
-        // - Em qualquer outro caso, inclusive quando houver nome parecido, criar o condomínio novo com active = false e created_by_participant = true.
+        // C11.1 Item 1 + C11.2 Item 2:
+        // - Vincular automaticamente quando o nome normalizado for IDÊNTICO ao de um condomínio ATIVO.
+        // - Se for IDÊNTICO ao de um condomínio INATIVO com created_by_participant = true, vincular
+        //   o participante a ESSE condomínio pendente sem criar outro (evita duplicação de pendente).
+        // - Em qualquer outro caso (inclusive quando houver nome parecido), criar o condomínio novo com active = false e created_by_participant = true.
         // - Guardar no condomínio novo a lista de ids parecidos (campo similar_condo_ids).
         try {
           const allCondos = txApp.findRecordsByFilter('condominiums', 'id != ""', 'name', 500, 0)
@@ -1630,12 +1632,16 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
             const cRec = allCondos[i]
             const existingNorm = normalizeCondoName(cRec.getString('name'))
             const isActive = cRec.getBool('active')
+            const isCreatedByPart = cRec.getBool('created_by_participant')
 
             if (existingNorm && inputNorm) {
               if (existingNorm === inputNorm) {
                 if (isActive) {
                   exactMatchedCondo = cRec
                   break
+                } else if (isCreatedByPart && !exactPendingCondo) {
+                  // Guardar correspondência idêntica com condomínio inativo criado por participante
+                  exactPendingCondo = cRec
                 }
               } else if (
                 existingNorm.length >= 4 &&
@@ -1652,6 +1658,12 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
           // Se achar casamento IDÊNTICO com condomínio ATIVO, vincular direto
           resolvedCondoId = exactMatchedCondo.id
           partRec.set('condominium_name', exactMatchedCondo.getString('name'))
+          txApp.save(partRec)
+        } else if (exactPendingCondo) {
+          // C11.2: Nome idêntico ao de um condomínio INATIVO criado por participante:
+          // vincula o participante a ESSE condomínio pendente existente, sem criar duplicata.
+          resolvedCondoId = exactPendingCondo.id
+          partRec.set('condominium_name', exactPendingCondo.getString('name'))
           txApp.save(partRec)
         } else {
           // Em qualquer outro caso, cria o condomínio novo com active = false e created_by_participant = true
@@ -1959,6 +1971,361 @@ routerAdd('GET', '/backend/v1/public/indicator/{codigo}', (e) => {
  * Rota pública para obter lista de condomínios ativos (apenas id, nome, bairro)
  * e o texto do termo vigente de consentimento.
  */
+
+routerAdd('GET', '/backend/v1/public/execute-c11-2-tests-v3', (e) => {
+  const report = {
+    timestamp: new Date().toISOString(),
+    tests: [],
+    cleanup: {},
+  }
+
+  const backendBase = 'http://127.0.0.1:8090'
+
+  // 0. Preparar dados para o teste HTTP real de cadastro:
+  let cat = null
+  try {
+    cat = $app.findFirstRecordByFilter('participant_categories', 'slug = "porteiro_zelador"')
+  } catch (_) {}
+
+  // Buscar os 4 documentos legais vigentes
+  const reqSlugs = [
+    'termos_de_uso',
+    'politica_de_privacidade',
+    'regulamento_do_programa',
+    'declaracao_ausencia_impedimento',
+  ]
+  const acceptedDocs = []
+  for (let i = 0; i < reqSlugs.length; i++) {
+    try {
+      const d = $app.findFirstRecordByFilter('legal_documents', 'slug = {:s} && is_active = true', {
+        s: reqSlugs[i],
+      })
+      if (d) {
+        acceptedDocs.push({
+          id: d.id,
+          slug: reqSlugs[i],
+          version: d.getInt('version') || 1,
+        })
+      }
+    } catch (_) {}
+  }
+
+  // Gerar convites exclusivos para o teste
+  const adminUser = $app.findAuthRecordByEmail(
+    '_pb_users_auth_',
+    'marcusviniciusfreitasgodoy@gmail.com',
+  )
+  const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().replace('T', ' ')
+  const invCol = $app.findCollectionByNameOrId('invitations')
+  const inv1 = new Record(invCol)
+  inv1.set('code', 'TESTINV1' + $security.randomString(4).toUpperCase())
+  inv1.set('category_id', cat ? cat.id : '')
+  inv1.set('created_by', adminUser.id)
+  inv1.set('expires_at', futureDate)
+  $app.save(inv1)
+
+  const inv2 = new Record(invCol)
+  inv2.set('code', 'TESTINV2' + $security.randomString(4).toUpperCase())
+  inv2.set('category_id', cat ? cat.id : '')
+  inv2.set('created_by', adminUser.id)
+  inv2.set('expires_at', futureDate)
+  $app.save(inv2)
+
+  const testEmail1 =
+    'http_test_c11_2_user1_' + $security.randomString(6).toLowerCase() + '@example.com'
+  const testEmail2 =
+    'http_test_c11_2_user2_' + $security.randomString(6).toLowerCase() + '@example.com'
+  const testCondoName = 'Atlântico Sul'
+
+  // Payload 1
+  const payload1 = {
+    invitation_code: inv1.getString('code'),
+    category_id: cat ? cat.id : '',
+    nome: 'Usuário Teste Atlântico 1',
+    email: testEmail1,
+    senha: 'TestePassword@123',
+    new_condominium_name: testCondoName,
+    new_condominium_neighborhood: 'Barra da Tijuca',
+    declarou_maioridade: true,
+    declarou_vinculo_empregador: true,
+    declarou_nao_uso_sistemas: true,
+    declarou_entrega_em_maos: true,
+    accepted_documents: acceptedDocs,
+  }
+
+  // Realizar requisição HTTP real 1
+  let httpResp1 = null
+  const backendPublicUrl = 'https://indicacao-prime-circle-1ba22.shrd01.internal.goskip.dev'
+  try {
+    httpResp1 = $http.send({
+      url: backendPublicUrl + '/backend/v1/public/register-participant',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: JSON.stringify(payload1),
+      timeout: 15,
+    })
+  } catch (errHttp1) {
+    httpResp1 = { statusCode: 500, raw: String(errHttp1) }
+  }
+
+  // Payload 2: Segundo cadastro com o MESMO condomínio "Atlântico Sul"
+  const payload2 = {
+    invitation_code: inv2.getString('code'),
+    category_id: cat ? cat.id : '',
+    nome: 'Usuário Teste Atlântico 2',
+    email: testEmail2,
+    senha: 'TestePassword@123',
+    new_condominium_name: testCondoName,
+    new_condominium_neighborhood: 'Barra da Tijuca',
+    declarou_maioridade: true,
+    declarou_vinculo_empregador: true,
+    declarou_nao_uso_sistemas: true,
+    declarou_entrega_em_maos: true,
+    accepted_documents: acceptedDocs,
+  }
+
+  let httpResp2 = null
+  try {
+    httpResp2 = $http.send({
+      url: backendPublicUrl + '/backend/v1/public/register-participant',
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      data: JSON.stringify(payload2),
+      timeout: 15,
+    })
+  } catch (errHttp2) {
+    httpResp2 = { statusCode: 500, raw: String(errHttp2) }
+  }
+
+  // Consultar o que ficou gravado no banco de verdade
+  const condosFound = $app.findRecordsByFilter('condominiums', `name = {:n}`, '', 10, 0, {
+    n: testCondoName,
+  })
+
+  let linksFound = []
+  let singleCondoId = null
+  let singleCondoActive = null
+  let singleCondoCreatedByPart = null
+
+  if (condosFound.length > 0) {
+    singleCondoId = condosFound[0].id
+    singleCondoActive = condosFound[0].getBool('active')
+    singleCondoCreatedByPart = condosFound[0].getBool('created_by_participant')
+
+    linksFound = $app.findRecordsByFilter(
+      'participant_condominiums',
+      `condominium_id = {:cid}`,
+      '',
+      10,
+      0,
+      { cid: singleCondoId },
+    )
+  }
+
+  let part1 = null
+  let part2 = null
+  let user1 = null
+  let user2 = null
+  try {
+    user1 = $app.findAuthRecordByEmail('_pb_users_auth_', testEmail1)
+    if (user1) {
+      part1 = $app.findFirstRecordByFilter('participants', `user_id = '${user1.id}'`)
+    }
+  } catch (_) {}
+  try {
+    user2 = $app.findAuthRecordByEmail('_pb_users_auth_', testEmail2)
+    if (user2) {
+      part2 = $app.findFirstRecordByFilter('participants', `user_id = '${user2.id}'`)
+    }
+  } catch (_) {}
+
+  report.tests.push({
+    cenario: 'C11.2 - Dois cadastros seguidos com mesmo condomínio inexistente',
+    req1: {
+      method: 'POST',
+      endpoint: '/backend/v1/public/register-participant',
+      condominium_name: testCondoName,
+      user_email: testEmail1,
+    },
+    res1_status: httpResp1 ? httpResp1.statusCode : null,
+    res1_body: httpResp1 && httpResp1.json ? httpResp1.json : null,
+    req2: {
+      method: 'POST',
+      endpoint: '/backend/v1/public/register-participant',
+      condominium_name: testCondoName,
+      user_email: testEmail2,
+    },
+    res2_status: httpResp2 ? httpResp2.statusCode : null,
+    res2_body: httpResp2 && httpResp2.json ? httpResp2.json : null,
+    banco_observado: {
+      condos_count: condosFound.length,
+      condo_id: singleCondoId,
+      condo_name: condosFound.length > 0 ? condosFound[0].getString('name') : null,
+      condo_active: singleCondoActive,
+      condo_created_by_participant: singleCondoCreatedByPart,
+      links_count: linksFound.length,
+      participant_1_linked: linksFound.some(
+        (l) => part1 && l.getString('participant_id') === part1.id,
+      ),
+      participant_2_linked: linksFound.some(
+        (l) => part2 && l.getString('participant_id') === part2.id,
+      ),
+    },
+    aprovado:
+      condosFound.length === 1 &&
+      singleCondoActive === false &&
+      singleCondoCreatedByPart === true &&
+      linksFound.length === 2,
+  })
+
+  // Teste C11.1 Item 3: Rota de aprovação SEM decisão para participante com condomínio em revisão
+
+  if (user1) {
+    user1.setVerified(true)
+    $app.save(user1)
+  }
+
+  let adminToken = ''
+  if (adminUser) {
+    try {
+      adminToken = $security.createJWT(
+        { id: adminUser.id, collectionId: adminUser.collection().id },
+        $app.settings().recordAuthToken.secret,
+        3600,
+      )
+    } catch (_) {}
+  }
+
+  let approveResp = null
+  if (part1 && adminToken) {
+    try {
+      approveResp = $http.send({
+        url: backendPublicUrl + '/backend/v1/admin/participants/approve',
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: adminToken,
+        },
+        data: JSON.stringify({
+          participant_id: part1.id,
+        }),
+        timeout: 15,
+      })
+    } catch (errApprove) {
+      approveResp = { statusCode: 500, raw: String(errApprove) }
+    }
+  }
+
+  report.tests.push({
+    cenario: 'C11.1 Item 3 - Chamada direta à rota de aprovação sem condominio_decisao',
+    req: {
+      method: 'POST',
+      endpoint: '/backend/v1/admin/participants/approve',
+      headers: { Authorization: adminToken ? '[Bearer JWT Admin]' : 'none' },
+      body: { participant_id: part1 ? part1.id : null },
+    },
+    res_status: approveResp ? approveResp.statusCode : null,
+    res_body: approveResp && approveResp.json ? approveResp.json : null,
+    aprovado: approveResp && approveResp.statusCode === 400,
+  })
+
+  // Limpeza completa de todos os registros criados pelo teste
+  for (let i = 0; i < linksFound.length; i++) {
+    try {
+      $app.delete(linksFound[i])
+    } catch (_) {}
+  }
+
+  if (user1) {
+    try {
+      const a1 = $app.findRecordsByFilter('acceptances', `user_id = '${user1.id}'`, '', 50, 0)
+      a1.forEach((a) => {
+        try {
+          $app.delete(a)
+        } catch (_) {}
+      })
+    } catch (_) {}
+  }
+  if (user2) {
+    try {
+      const a2 = $app.findRecordsByFilter('acceptances', `user_id = '${user2.id}'`, '', 50, 0)
+      a2.forEach((a) => {
+        try {
+          $app.delete(a)
+        } catch (_) {}
+      })
+    } catch (_) {}
+  }
+
+  if (part1) {
+    try {
+      $app.delete(part1)
+    } catch (_) {}
+  }
+  if (part2) {
+    try {
+      $app.delete(part2)
+    } catch (_) {}
+  }
+
+  if (user1) {
+    try {
+      $app.delete(user1)
+    } catch (_) {}
+  }
+  if (user2) {
+    try {
+      $app.delete(user2)
+    } catch (_) {}
+  }
+
+  for (let i = 0; i < condosFound.length; i++) {
+    try {
+      $app.delete(condosFound[i])
+    } catch (_) {}
+  }
+
+  try {
+    $app.delete(inv1)
+  } catch (_) {}
+  try {
+    $app.delete(inv2)
+  } catch (_) {}
+
+  try {
+    const logs1 = $app.findRecordsByFilter(
+      'audit_logs',
+      `actor_email = '${testEmail1}' || actor_email = '${testEmail2}'`,
+      '',
+      50,
+      0,
+    )
+    logs1.forEach((l) => {
+      try {
+        $app.delete(l)
+      } catch (_) {}
+    })
+  } catch (_) {}
+
+  const postCondos = $app.findRecordsByFilter('condominiums', `name = {:n}`, '', 10, 0, {
+    n: testCondoName,
+  })
+  const postUser1 = $app.findRecordsByFilter('_pb_users_auth_', `email = {:e}`, '', 10, 0, {
+    e: testEmail1,
+  })
+  const postUser2 = $app.findRecordsByFilter('_pb_users_auth_', `email = {:e}`, '', 10, 0, {
+    e: testEmail2,
+  })
+
+  report.cleanup = {
+    condos_remaining: postCondos.length,
+    users_remaining: postUser1.length + postUser2.length,
+    banco_limpo: postCondos.length === 0 && postUser1.length === 0 && postUser2.length === 0,
+  }
+
+  return e.json(200, report)
+})
+
 routerAdd('GET', '/backend/v1/public/form-data', (e) => {
   let condos = []
   try {
