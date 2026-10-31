@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-10-31T15:42:56.271Z",
+  "generatedAt": "2026-10-31T16:24:33.955Z",
   "collections": [
     {
       "name": "users",
@@ -853,6 +853,12 @@
           "type": "bool",
           "required": false,
           "system": false
+        },
+        {
+          "name": "similar_condo_ids",
+          "type": "json",
+          "required": false,
+          "system": false
         }
       ],
       "indexes": [
@@ -897,7 +903,7 @@
           "type": "select",
           "required": true,
           "system": false,
-          "selectValues": ["pendente_aprovacao", "ativo", "suspenso", "inativo"]
+          "selectValues": ["pendente_aprovacao", "ativo", "suspenso", "inativo", "recusado"]
         },
         {
           "name": "pix_key",

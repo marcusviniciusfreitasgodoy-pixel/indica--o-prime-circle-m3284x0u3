@@ -555,8 +555,24 @@ export async function approveParticipant(
 }
 
 /**
- * Suspend participant
+ * Reject participant
  */
+export async function rejectParticipant(participantId: string, reason?: string) {
+  const res = await fetch(`${BACKEND_URL}/backend/v1/admin/participants/reject`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: pb.authStore.token,
+    },
+    body: JSON.stringify({ participant_id: participantId, reason }),
+  })
+  const data = await res.json()
+  if (!res.ok) {
+    throw new Error(data.message || 'Erro ao recusar participante.')
+  }
+  return data
+}
+
 export async function suspendParticipant(participantId: string, reason: string) {
   const res = await fetch(`${BACKEND_URL}/backend/v1/admin/participants/suspend`, {
     method: 'POST',

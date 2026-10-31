@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Participant, Member, Condominium } from '@/types/referral'
 import {
   approveParticipant,
+  rejectParticipant,
   suspendParticipant,
   getDocumentDownloadUrl,
   uploadDocument,
@@ -67,10 +68,18 @@ export function AdminParticipantsPage() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('')
   const [categoryChangeReason, setCategoryChangeReason] = useState('')
   const [pendingCondo, setPendingCondo] = useState<Condominium | null>(null)
-  const [condoDecision, setCondoDecision] = useState<'confirmar' | 'trocar'>('confirmar')
+  // C11.1 Item 3: condoDecision começa vazio, sem opção pré-marcada.
+  const [condoDecision, setCondoDecision] = useState<'confirmar' | 'trocar' | ''>('')
   const [chosenExistingCondoId, setChosenExistingCondoId] = useState('')
   const [condominiumsList, setCondominiumsList] = useState<Condominium[]>([])
   const [loadingCondoInfo, setLoadingCondoInfo] = useState(false)
+
+  // Reject modal
+  const [rejectModal, setRejectModal] = useState<{ open: boolean; part: Participant | null }>({
+    open: false,
+    part: null,
+  })
+  const [rejectReason, setRejectReason] = useState('')
 
   // Suspend modal
   const [suspendModal, setSuspendModal] = useState<{ open: boolean; part: Participant | null }>({
@@ -146,7 +155,7 @@ export function AdminParticipantsPage() {
     setSelectedCategoryId(part.category_id || '')
     setCategoryChangeReason('')
     setPendingCondo(null)
-    setCondoDecision('confirmar')
+    setCondoDecision('')
     setChosenExistingCondoId('')
 
     // Verificar se o participante informou condomínio novo em revisão
@@ -165,9 +174,37 @@ export function AdminParticipantsPage() {
             filter: 'active = true',
             sort: 'name',
           })
-          setCondominiumsList(activeCondos)
-          if (activeCondos.length > 0) {
-            setChosenExistingCondoId(activeCondos[0].id)
+
+          // C11.1 Item 3: No card, mostrar as sugestões de similar_condo_ids como primeira opção de "trocar"
+          let parsedSimilar: string[] = []
+          if (c.similar_condo_ids) {
+            try {
+              if (Array.isArray(c.similar_condo_ids)) {
+                parsedSimilar = c.similar_condo_ids
+              } else if (typeof c.similar_condo_ids === 'string') {
+                parsedSimilar = JSON.parse(c.similar_condo_ids)
+              }
+            } catch {
+              /* intentionally ignored */
+            }
+          }
+
+          // Ordenar colocando os similares no topo
+          const sorted = [...activeCondos].sort((a, b) => {
+            const aIsSim = parsedSimilar.includes(a.id)
+            const bIsSim = parsedSimilar.includes(b.id)
+            if (aIsSim && !bIsSim) return -1
+            if (!aIsSim && bIsSim) return 1
+            return a.name.localeCompare(b.name)
+          })
+
+          setCondominiumsList(sorted)
+          // Se houver similar_condo_ids, pré-selecionar o primeiro similar quando abrir 'trocar'
+          const firstSim = sorted.find((cd) => parsedSimilar.includes(cd.id))
+          if (firstSim) {
+            setChosenExistingCondoId(firstSim.id)
+          } else if (sorted.length > 0) {
+            setChosenExistingCondoId(sorted[0].id)
           }
         }
       }
@@ -192,6 +229,15 @@ export function AdminParticipantsPage() {
       return
     }
 
+    if (pendingCondo && !condoDecision) {
+      toast({
+        title: 'Decisão obrigatória',
+        description: 'Escolha se deseja confirmar o novo condomínio ou trocar por um existente.',
+        variant: 'destructive',
+      })
+      return
+    }
+
     if (pendingCondo && condoDecision === 'trocar' && !chosenExistingCondoId) {
       toast({
         title: 'Condomínio obrigatório',
@@ -206,7 +252,7 @@ export function AdminParticipantsPage() {
       await approveParticipant(approveModal.part.id, {
         newCategoryId: isCategoryChanged ? selectedCategoryId : undefined,
         changeReason: isCategoryChanged ? categoryChangeReason.trim() : undefined,
-        condominioDecisao: pendingCondo ? condoDecision : undefined,
+        condominioDecisao: pendingCondo ? (condoDecision as 'confirmar' | 'trocar') : undefined,
         condominioId:
           pendingCondo && condoDecision === 'trocar' ? chosenExistingCondoId : undefined,
       })
@@ -219,6 +265,25 @@ export function AdminParticipantsPage() {
       loadData()
     } catch (err: any) {
       toast({ title: 'Erro ao aprovar', description: err.message, variant: 'destructive' })
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  const handleReject = async () => {
+    if (!rejectModal.part) return
+    try {
+      setSubmitting(true)
+      await rejectParticipant(rejectModal.part.id, rejectReason.trim() || undefined)
+      setRejectModal({ open: false, part: null })
+      setRejectReason('')
+      toast({
+        title: 'Participante Recusado',
+        description: 'O cadastro foi recusado e o condomínio órfão (se houver) foi removido.',
+      })
+      loadData()
+    } catch (err: any) {
+      toast({ title: 'Erro ao recusar', description: err.message, variant: 'destructive' })
     } finally {
       setSubmitting(false)
     }

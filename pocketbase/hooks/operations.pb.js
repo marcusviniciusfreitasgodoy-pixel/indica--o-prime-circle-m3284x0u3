@@ -1246,9 +1246,9 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
   const whatsappOptin = !!(sanitized.whatsapp_optin !== undefined
     ? sanitized.whatsapp_optin
     : sanitized.whatsappOptin)
-  const marketingOptin = !!(sanitized.marketing_optin !== undefined
-    ? sanitized.marketing_optin
-    : sanitized.marketingOptin)
+  // C11.1 Item 5: A caixa de marketing saiu do formulário público.
+  // O backend sempre grava marketing_optin = false no cadastro público e ignora o que vier no corpo.
+  const marketingOptin = false
   const acceptedDocuments = Array.isArray(sanitized.accepted_documents)
     ? sanitized.accepted_documents
     : Array.isArray(sanitized.documents)
@@ -1616,35 +1616,46 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
         }
 
         const inputNorm = normalizeCondoName(newCondoName)
-        let matchedCondo = null
+        let exactMatchedCondo = null
+        const similarIds = []
 
-        // Buscar todos os condomínios para verificar se já existe um com nome parecido
+        // C11.1 Item 1:
+        // - Vincular automaticamente só quando o nome normalizado for IDÊNTICO ao de um condomínio ATIVO.
+        // - Nunca vincular automaticamente a um condomínio inativo.
+        // - Em qualquer outro caso, inclusive quando houver nome parecido, criar o condomínio novo com active = false e created_by_participant = true.
+        // - Guardar no condomínio novo a lista de ids parecidos (campo similar_condo_ids).
         try {
           const allCondos = txApp.findRecordsByFilter('condominiums', 'id != ""', 'name', 500, 0)
           for (let i = 0; i < allCondos.length; i++) {
             const cRec = allCondos[i]
             const existingNorm = normalizeCondoName(cRec.getString('name'))
-            if (
-              existingNorm &&
-              inputNorm &&
-              (existingNorm === inputNorm ||
-                (existingNorm.length >= 4 &&
-                  inputNorm.length >= 4 &&
-                  (existingNorm.includes(inputNorm) || inputNorm.includes(existingNorm))))
-            ) {
-              matchedCondo = cRec
-              break
+            const isActive = cRec.getBool('active')
+
+            if (existingNorm && inputNorm) {
+              if (existingNorm === inputNorm) {
+                if (isActive) {
+                  exactMatchedCondo = cRec
+                  break
+                }
+              } else if (
+                existingNorm.length >= 4 &&
+                inputNorm.length >= 4 &&
+                (existingNorm.includes(inputNorm) || inputNorm.includes(existingNorm))
+              ) {
+                similarIds.push(cRec.id)
+              }
             }
           }
         } catch (_) {}
 
-        if (matchedCondo) {
-          // Se achar, vincular ao existente em vez de criar
-          resolvedCondoId = matchedCondo.id
-          partRec.set('condominium_name', matchedCondo.getString('name'))
+        if (exactMatchedCondo) {
+          // Se achar casamento IDÊNTICO com condomínio ATIVO, vincular direto
+          resolvedCondoId = exactMatchedCondo.id
+          partRec.set('condominium_name', exactMatchedCondo.getString('name'))
           txApp.save(partRec)
         } else {
-          // Condomínio novo nasce com active = false e created_by_participant = true
+          // Em qualquer outro caso, cria o condomínio novo com active = false e created_by_participant = true
+          // E salva similar_condo_ids com as sugestões
           const condosCol = txApp.findCollectionByNameOrId('condominiums')
           const newCondoRec = new Record(condosCol)
           newCondoRec.set('name', newCondoName)
@@ -1654,6 +1665,9 @@ routerAdd('POST', '/backend/v1/public/register-participant', (e) => {
           newCondoRec.set('state', 'RJ')
           newCondoRec.set('active', false)
           newCondoRec.set('created_by_participant', true)
+          if (similarIds.length > 0) {
+            newCondoRec.set('similar_condo_ids', JSON.stringify(similarIds))
+          }
           txApp.save(newCondoRec)
           resolvedCondoId = newCondoRec.id
 
@@ -3248,27 +3262,45 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
     categoryChanged = true
   }
 
-  // Tratar decisão sobre condomínio novo em revisão (created_by_participant = true && active = false)
-  if (condominioDecisao) {
-    let participantCondoLink = null
-    try {
-      participantCondoLink = $app.findFirstRecordByFilter(
-        'participant_condominiums',
-        'participant_id = {:pid}',
-        { pid: part.id },
-      )
-    } catch (_) {}
+  // C11.1 Item 3: Verificar se o participante tem condomínio em revisão (created_by_participant = true e active = false)
+  let participantCondoLink = null
+  try {
+    participantCondoLink = $app.findFirstRecordByFilter(
+      'participant_condominiums',
+      'participant_id = {:pid}',
+      { pid: part.id },
+    )
+  } catch (_) {}
 
+  let linkedCondoRec = null
+  if (participantCondoLink) {
+    const cId = participantCondoLink.getString('condominium_id')
+    if (cId) {
+      try {
+        linkedCondoRec = $app.findRecordById('condominiums', cId)
+      } catch (_) {}
+    }
+  }
+
+  const isCondoInReview =
+    linkedCondoRec &&
+    linkedCondoRec.getBool('created_by_participant') &&
+    !linkedCondoRec.getBool('active')
+
+  if (isCondoInReview && !condominioDecisao) {
+    return e.json(400, {
+      message:
+        'Decisão obrigatória: este participante cadastrou um condomínio novo em revisão. É necessário escolher "confirmar" ou "trocar".',
+    })
+  }
+
+  // Tratar decisão sobre condomínio novo em revisão
+  if (condominioDecisao) {
     if (condominioDecisao === 'confirmar') {
-      if (participantCondoLink) {
-        const cId = participantCondoLink.getString('condominium_id')
-        if (cId) {
-          try {
-            const condoRec = $app.findRecordById('condominiums', cId)
-            condoRec.set('active', true)
-            $app.save(condoRec)
-          } catch (_) {}
-        }
+      // Backend: "confirmar" só ativa o condomínio se ele tiver created_by_participant = true e active = false. Se não tiver, ignorar.
+      if (isCondoInReview && linkedCondoRec) {
+        linkedCondoRec.set('active', true)
+        $app.save(linkedCondoRec)
       }
     } else if (condominioDecisao === 'trocar') {
       if (!targetCondominioId) {
@@ -3289,28 +3321,92 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
         ? participantCondoLink.getString('condominium_id')
         : ''
 
-      if (participantCondoLink) {
-        participantCondoLink.set('condominium_id', chosenCondo.id)
-        $app.save(participantCondoLink)
-      } else {
-        const pcCol = $app.findCollectionByNameOrId('participant_condominiums')
-        const newPc = new Record(pcCol)
-        newPc.set('participant_id', part.id)
-        newPc.set('condominium_id', chosenCondo.id)
-        $app.save(newPc)
+      // C11.1 Item 2: Fazer a troca numa transação atômica
+      // - Antes de apagar, contar os participant_condominiums que apontam para o condomínio antigo.
+      // - Se houver outros além do participante em aprovação, NÃO apagar.
+      // - Mover todos esses vínculos para o condomínio escolhido e atualizar condominium_name de cada participante afetado.
+      // - Só apagar quando não restar nenhum vínculo.
+      try {
+        $app.runInTransaction((txApp) => {
+          if (oldCondoId && oldCondoId !== chosenCondo.id) {
+            // Buscar todos os vínculos que apontam para o condomínio antigo
+            const allLinksToOld = txApp.findRecordsByFilter(
+              'participant_condominiums',
+              'condominium_id = {:oldId}',
+              '',
+              500,
+              0,
+              { oldId: oldCondoId },
+            )
+
+            for (let i = 0; i < allLinksToOld.length; i++) {
+              const link = allLinksToOld[i]
+              const pId = link.getString('participant_id')
+
+              // Verificar se o participante já possui vínculo com o chosenCondo
+              let alreadyHasChosen = false
+              try {
+                const dupCheck = txApp.findFirstRecordByFilter(
+                  'participant_condominiums',
+                  'participant_id = {:pid} && condominium_id = {:cid}',
+                  { pid: pId, cid: chosenCondo.id },
+                )
+                if (dupCheck) alreadyHasChosen = true
+              } catch (_) {}
+
+              if (alreadyHasChosen) {
+                // Se já tem com o novo, apagar o vínculo antigo
+                txApp.delete(link)
+              } else {
+                link.set('condominium_id', chosenCondo.id)
+                txApp.save(link)
+              }
+
+              // Atualizar condominium_name do participante afetado
+              try {
+                const affectedPart = txApp.findRecordById('participants', pId)
+                affectedPart.set('condominium_name', chosenCondo.getString('name'))
+                txApp.save(affectedPart)
+              } catch (_) {}
+            }
+
+            // Verificar se ainda restou algum vínculo apontando para o condomínio antigo
+            const remainingCount = txApp.countRecords(
+              'participant_condominiums',
+              'condominium_id = {:oldId}',
+              { oldId: oldCondoId },
+            )
+
+            if (remainingCount === 0) {
+              try {
+                const oldCondo = txApp.findRecordById('condominiums', oldCondoId)
+                if (oldCondo.getBool('created_by_participant') && !oldCondo.getBool('active')) {
+                  txApp.delete(oldCondo)
+                }
+              } catch (_) {}
+            }
+          } else {
+            // Se não tinha oldCondoId, apenas vincula ao chosenCondo
+            if (participantCondoLink) {
+              participantCondoLink.set('condominium_id', chosenCondo.id)
+              txApp.save(participantCondoLink)
+            } else {
+              const pcCol = txApp.findCollectionByNameOrId('participant_condominiums')
+              const newPc = new Record(pcCol)
+              newPc.set('participant_id', part.id)
+              newPc.set('condominium_id', chosenCondo.id)
+              txApp.save(newPc)
+            }
+            part.set('condominium_name', chosenCondo.getString('name'))
+            txApp.save(part)
+          }
+        })
+      } catch (errTroca) {
+        console.error('[approve-participant] Erro na transação de troca de condomínio:', errTroca)
+        return e.json(500, { message: 'Erro ao trocar o condomínio na aprovação.' })
       }
 
       part.set('condominium_name', chosenCondo.getString('name'))
-
-      // Apagar o condomínio novo se ele foi criado pelo participante e estava inativo
-      if (oldCondoId && oldCondoId !== chosenCondo.id) {
-        try {
-          const oldCondoRec = $app.findRecordById('condominiums', oldCondoId)
-          if (oldCondoRec.getBool('created_by_participant') && !oldCondoRec.getBool('active')) {
-            $app.delete(oldCondoRec)
-          }
-        } catch (_) {}
-      }
     }
   }
 
@@ -3419,8 +3515,113 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
 })
 
 /**
- * POST /backend/v1/admin/participants/suspend
+ * POST /backend/v1/admin/participants/reject
+ * Recusa o cadastro de um participante pendente de aprovação.
+ * C11.1 Item 4: Quando o participante for recusado ou excluído e o condomínio dele tiver
+ * created_by_participant = true, active = false e nenhum outro vínculo, apagar o condomínio.
  */
+routerAdd('POST', '/backend/v1/admin/participants/reject', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
+
+  let isAdmin = false
+  try {
+    const check = $app.findFirstRecordByFilter(
+      'user_roles',
+      `user_id = '${authRecord.id}' && role = 'admin'`,
+    )
+    isAdmin = !!check
+  } catch (_) {
+    isAdmin = false
+  }
+
+  if (!isAdmin) {
+    return e.json(403, { message: 'Apenas administradores podem recusar participantes.' })
+  }
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const participantId = (body.participant_id || '').trim()
+  const reason = (body.reason || 'Cadastro recusado pela administração').trim()
+
+  if (!participantId) {
+    return e.json(400, { message: 'ID do participante é obrigatório.' })
+  }
+
+  let part
+  try {
+    part = $app.findRecordById('participants', participantId)
+  } catch (_) {
+    return e.json(404, { message: 'Participante não encontrado.' })
+  }
+
+  // Identificar se tem vínculo com condomínio novo
+  let linkedCondoId = ''
+  let participantCondoLink = null
+  try {
+    participantCondoLink = $app.findFirstRecordByFilter(
+      'participant_condominiums',
+      'participant_id = {:pid}',
+      { pid: part.id },
+    )
+    if (participantCondoLink) {
+      linkedCondoId = participantCondoLink.getString('condominium_id')
+    }
+  } catch (_) {}
+
+  // Atualizar status do participante para recusado ou inativo
+  try {
+    part.set('status', 'recusado')
+  } catch (_) {
+    part.set('status', 'inativo')
+  }
+  part.set(
+    'notes',
+    `[Recusa em ${new Date().toLocaleDateString('pt-BR')}] ${reason}\n` +
+      (part.getString('notes') || ''),
+  )
+  $app.save(part)
+
+  // Remover o vínculo do participante com o condomínio para liberar a contagem
+  if (participantCondoLink) {
+    try {
+      $app.delete(participantCondoLink)
+    } catch (_) {}
+  }
+
+  // C11.1 Item 4: Se o condomínio dele tiver created_by_participant = true, active = false e nenhum outro vínculo, apagar o condomínio
+  if (linkedCondoId) {
+    try {
+      const remainingCount = $app.countRecords(
+        'participant_condominiums',
+        'condominium_id = {:cid}',
+        { cid: linkedCondoId },
+      )
+      if (remainingCount === 0) {
+        const condoRec = $app.findRecordById('condominiums', linkedCondoId)
+        if (condoRec.getBool('created_by_participant') && !condoRec.getBool('active')) {
+          $app.delete(condoRec)
+        }
+      }
+    } catch (_) {}
+  }
+
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('actor_id', authRecord.id)
+    audit.set('actor_email', authRecord.getString('email'))
+    audit.set('action', 'participant_rejected')
+    audit.set('resource_type', 'participants')
+    audit.set('resource_id', part.id)
+    audit.set('details', JSON.stringify({ reason }))
+    audit.set('ip_address', e.request.remoteAddr)
+    $app.save(audit)
+  } catch (_) {}
+
+  return e.json(200, { success: true, message: 'Cadastro do participante recusado com sucesso.' })
+})
+
 routerAdd('POST', '/backend/v1/admin/participants/suspend', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
@@ -4127,3 +4328,46 @@ cronAdd('apply_retention', '0 3 * * 0', () => {
     console.error('[cron:apply_retention] Erro ao aplicar retenção semanal:', err)
   }
 })
+
+/**
+ * C11.1 Item 4: Limpeza de condomínio órfão na exclusão de participante.
+ * Quando um participante for excluído e o condomínio dele tiver
+ * created_by_participant = true, active = false e nenhum outro vínculo, apagar o condomínio.
+ */
+onRecordAfterDeleteSuccess((e) => {
+  const partRec = e.record
+  if (!partRec) return
+
+  try {
+    // Buscar se havia vínculos de condomínio apontando para condomínios criados por participantes
+    const condoName = partRec.getString('condominium_name')
+    // Como os participant_condominiums possuem cascadeDelete: true, eles já foram excluídos pelo PocketBase.
+    // Buscamos se há condomínios inativos criados por participante com esse nome ou órfãos sem nenhum vínculo.
+    const orphans = $app.findRecordsByFilter(
+      'condominiums',
+      'created_by_participant = true && active = false',
+      '',
+      100,
+      0,
+    )
+
+    for (let i = 0; i < orphans.length; i++) {
+      const c = orphans[i]
+      const count = $app.countRecords('participant_condominiums', 'condominium_id = {:cid}', {
+        cid: c.id,
+      })
+      if (count === 0) {
+        try {
+          $app.delete(c)
+        } catch (_) {}
+      }
+    }
+  } catch (errOrphan) {
+    console.warn(
+      '[onRecordAfterDeleteSuccess:participants] Falha ao verificar condomínios órfãos:',
+      errOrphan,
+    )
+  }
+
+  e.next()
+}, 'participants')

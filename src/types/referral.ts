@@ -83,6 +83,7 @@ export interface Condominium {
   zip_code?: string
   active?: boolean
   created_by_participant?: boolean
+  similar_condo_ids?: string[] | string
   created?: string
   updated?: string
 }
@@ -225,7 +226,7 @@ export interface Participant {
   user_id: string
   category_id: string
   level_id?: string
-  status: 'pendente_aprovacao' | 'ativo' | 'suspenso' | 'inativo'
+  status: 'pendente_aprovacao' | 'ativo' | 'suspenso' | 'inativo' | 'recusado'
   pix_key?: string
   pix_key_type?: 'cpf' | 'cnpj' | 'email' | 'telefone' | 'aleatoria'
   referral_code?: string
