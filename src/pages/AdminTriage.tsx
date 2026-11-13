@@ -28,6 +28,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   AlertTriangle,
   CheckCircle2,
@@ -64,6 +65,7 @@ export function AdminTriagePage() {
   const [submitting, setSubmitting] = useState(false)
 
   const { toast } = useToast()
+  const { isOperational } = useAuth()
 
   const loadData = async () => {
     try {
@@ -276,18 +278,20 @@ export function AdminTriagePage() {
                       {p.description}
                     </p>
                     <div className="flex gap-2 justify-end">
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="rounded-[1px] text-xs font-heading"
-                        onClick={() => handleOpenActionModal(p, 'resolve_attribution')}
-                      >
-                        <UserCheck
-                          className="w-3.5 h-3.5 mr-1.5 text-gold-deep"
-                          strokeWidth={1.5}
-                        />
-                        Resolver Atribuição
-                      </Button>
+                      {isOperational && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="rounded-[1px] text-xs font-heading"
+                          onClick={() => handleOpenActionModal(p, 'resolve_attribution')}
+                        >
+                          <UserCheck
+                            className="w-3.5 h-3.5 mr-1.5 text-gold-deep"
+                            strokeWidth={1.5}
+                          />
+                          Resolver Atribuição
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -468,37 +472,43 @@ export function AdminTriagePage() {
 
                       {/* Right: Actions */}
                       <div className="flex lg:flex-col justify-end gap-2 shrink-0 self-end lg:self-center">
-                        <Button
-                          size="sm"
-                          disabled={submitting}
-                          onClick={() => handleAccept(ref)}
-                          className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading"
-                        >
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
-                          Aceitar
-                        </Button>
+                        {isOperational && (
+                          <Button
+                            size="sm"
+                            disabled={submitting}
+                            onClick={() => handleAccept(ref)}
+                            className="bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] rounded-[1px] text-xs font-heading"
+                          >
+                            <CheckCircle2 className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
+                            Aceitar
+                          </Button>
+                        )}
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={submitting}
-                          onClick={() => handleOpenActionModal(ref, 'recusar')}
-                          className="border-destructive/40 text-destructive hover:bg-destructive/10 rounded-[1px] text-xs font-heading"
-                        >
-                          <XCircle className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
-                          Recusar
-                        </Button>
+                        {isOperational && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={submitting}
+                            onClick={() => handleOpenActionModal(ref, 'recusar')}
+                            className="border-destructive/40 text-destructive hover:bg-destructive/10 rounded-[1px] text-xs font-heading"
+                          >
+                            <XCircle className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
+                            Recusar
+                          </Button>
+                        )}
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          disabled={submitting}
-                          onClick={() => handleOpenActionModal(ref, 'duplicada')}
-                          className="border-warning/40 text-warning hover:bg-warning/10 rounded-[1px] text-xs font-heading"
-                        >
-                          <Copy className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
-                          Duplicada
-                        </Button>
+                        {isOperational && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            disabled={submitting}
+                            onClick={() => handleOpenActionModal(ref, 'duplicada')}
+                            className="border-warning/40 text-warning hover:bg-warning/10 rounded-[1px] text-xs font-heading"
+                          >
+                            <Copy className="w-3.5 h-3.5 mr-1" strokeWidth={1.5} />
+                            Duplicada
+                          </Button>
+                        )}
 
                         <Button
                           asChild

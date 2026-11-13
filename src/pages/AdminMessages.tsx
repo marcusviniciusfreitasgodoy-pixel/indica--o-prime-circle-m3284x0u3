@@ -26,10 +26,12 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/AuthContext'
 import { Mail, MessageSquare, RefreshCw, Send, Edit, Search } from 'lucide-react'
 
 export function AdminMessagesPage() {
   const { toast } = useToast()
+  const { isOperational } = useAuth()
   const [templates, setTemplates] = useState<MessageTemplate[]>([])
   const [logs, setLogs] = useState<NotificationLog[]>([])
   const [loading, setLoading] = useState(true)
@@ -187,19 +189,21 @@ export function AdminMessagesPage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSyncMeta}
-              disabled={syncingMeta}
-              className="rounded-[1px] text-xs font-heading"
-            >
-              <RefreshCw
-                className={`w-3.5 h-3.5 mr-1.5 ${syncingMeta ? 'animate-spin text-gold-deep' : ''}`}
-                strokeWidth={1.5}
-              />
-              Sincronizar Meta
-            </Button>
+            {isOperational && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSyncMeta}
+                disabled={syncingMeta}
+                className="rounded-[1px] text-xs font-heading"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 mr-1.5 ${syncingMeta ? 'animate-spin text-gold-deep' : ''}`}
+                  strokeWidth={1.5}
+                />
+                Sincronizar Meta
+              </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
@@ -362,32 +366,36 @@ export function AdminMessagesPage() {
                   </CardContent>
 
                   <div className="p-3 border-t border-border bg-secondary/30 flex items-center justify-end gap-2 rounded-b-[1px]">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-[1px] text-xs h-7 font-heading"
-                      onClick={() => {
-                        setTestingTemplate(tpl)
-                        setTestRecipient('')
-                      }}
-                    >
-                      <Send className="w-3 h-3 mr-1" strokeWidth={1.5} />
-                      Testar Disparo
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="rounded-[1px] text-xs h-7 font-heading"
-                      onClick={() => {
-                        setEditingTemplate(tpl)
-                        setEditSubject(tpl.subject || '')
-                        setEditBody(tpl.body)
-                        setEditActive(tpl.active)
-                      }}
-                    >
-                      <Edit className="w-3 h-3 mr-1" strokeWidth={1.5} />
-                      Editar
-                    </Button>
+                    {isOperational && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-[1px] text-xs h-7 font-heading"
+                        onClick={() => {
+                          setTestingTemplate(tpl)
+                          setTestRecipient('')
+                        }}
+                      >
+                        <Send className="w-3 h-3 mr-1" strokeWidth={1.5} />
+                        Testar Disparo
+                      </Button>
+                    )}
+                    {isOperational && (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="rounded-[1px] text-xs h-7 font-heading"
+                        onClick={() => {
+                          setEditingTemplate(tpl)
+                          setEditSubject(tpl.subject || '')
+                          setEditBody(tpl.body)
+                          setEditActive(tpl.active)
+                        }}
+                      >
+                        <Edit className="w-3 h-3 mr-1" strokeWidth={1.5} />
+                        Editar
+                      </Button>
+                    )}
                   </div>
                 </Card>
               ))}
