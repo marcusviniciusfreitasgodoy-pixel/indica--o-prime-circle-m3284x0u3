@@ -17,6 +17,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
+import { useAuth } from '@/contexts/AuthContext'
 import {
   Megaphone,
   Plus,
@@ -32,6 +33,7 @@ import {
 
 export function AdminCampaignsPage() {
   const { toast } = useToast()
+  const { isOperational } = useAuth()
   const [campaigns, setCampaigns] = useState<Campaign[]>([])
   const [condos, setCondos] = useState<any[]>([])
   const [participants, setParticipants] = useState<any[]>([])
@@ -232,14 +234,16 @@ export function AdminCampaignsPage() {
               />
               Atualizar
             </Button>
-            <Button
-              size="sm"
-              onClick={handleOpenNew}
-              className="rounded-[1px] bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs flex items-center gap-1.5 font-heading"
-            >
-              <Plus className="w-4 h-4" strokeWidth={1.5} />
-              Nova Campanha
-            </Button>
+            {isOperational && (
+              <Button
+                size="sm"
+                onClick={handleOpenNew}
+                className="rounded-[1px] bg-primary text-primary-foreground hover:bg-[#7A5E1E] hover:text-[#FAFAF8] font-semibold text-xs flex items-center gap-1.5 font-heading"
+              >
+                <Plus className="w-4 h-4" strokeWidth={1.5} />
+                Nova Campanha
+              </Button>
+            )}
           </div>
         </div>
 
@@ -318,14 +322,16 @@ export function AdminCampaignsPage() {
               </CardContent>
 
               <div className="p-3 border-t border-border bg-secondary/30 flex items-center justify-end gap-2 rounded-b-[1px]">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleOpenEdit(camp)}
-                  className="rounded-[1px] text-xs h-7 font-heading"
-                >
-                  Editar
-                </Button>
+                {isOperational && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleOpenEdit(camp)}
+                    className="rounded-[1px] text-xs h-7 font-heading"
+                  >
+                    Editar
+                  </Button>
+                )}
                 <Button
                   size="sm"
                   onClick={() => {
