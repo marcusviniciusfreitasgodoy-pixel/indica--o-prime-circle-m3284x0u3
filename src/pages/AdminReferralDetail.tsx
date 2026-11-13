@@ -90,7 +90,7 @@ import {
 
 export function AdminReferralDetailPage() {
   const { id } = useParams<{ id: string }>()
-  const { user, isAdmin, isOperator, refreshUser } = useAuth()
+  const { user, isAdmin, isOperator, isOperational, refreshUser } = useAuth()
   const { toast } = useToast()
 
   const [referral, setReferral] = useState<Referral | null>(null)
@@ -1126,7 +1126,7 @@ export function AdminReferralDetailPage() {
                   )}
                 </div>
 
-                {!referral.consent_confirmed_by_operator && (
+                {!referral.consent_confirmed_by_operator && isOperational && (
                   <Button
                     size="sm"
                     variant="outline"
@@ -1184,7 +1184,7 @@ export function AdminReferralDetailPage() {
                 <FileText className="w-4 h-4" />
                 Formalização da Captação
               </CardTitle>
-              {isProp && referral.status === 'em_negociacao' && (
+              {isProp && referral.status === 'em_negociacao' && isOperational && (
                 <Button
                   size="sm"
                   onClick={() => setCaptureModalOpen(true)}
@@ -1245,7 +1245,7 @@ export function AdminReferralDetailPage() {
                       </div>
 
                       {/* Download attached contract */}
-                      {cap.document_id && (
+                      {cap.document_id && isOperational && (
                         <Button
                           size="sm"
                           variant="outline"
@@ -1258,7 +1258,7 @@ export function AdminReferralDetailPage() {
                       )}
 
                       {/* Approve / Return Actions */}
-                      {cap.status === 'solicitada' && (
+                      {cap.status === 'solicitada' && isOperational && (
                         <div className="flex gap-2 pt-1">
                           <Button
                             size="sm"

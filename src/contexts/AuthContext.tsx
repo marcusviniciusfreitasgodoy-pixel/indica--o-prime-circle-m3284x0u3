@@ -13,6 +13,7 @@ interface AuthContextType {
   isOperator: boolean
   isFinance: boolean
   isInternal: boolean
+  isOperational: boolean
   login: (email: string, pass: string) => Promise<void>
   signup: (payload: {
     email: string
@@ -214,6 +215,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isOperator = roles.includes('operador')
   const isFinance = roles.includes('financeiro')
   const isInternal = roles.length > 0
+  const isOperational = isAdmin || isOperator
 
   return (
     <AuthContext.Provider
@@ -226,6 +228,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isOperator,
         isFinance,
         isInternal,
+        isOperational,
         login,
         signup,
         requestOTP,

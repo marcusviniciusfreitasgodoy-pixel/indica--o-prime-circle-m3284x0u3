@@ -2,6 +2,28 @@
 // Implementa as regras de negócio e transições da Etapa 3 do Godoy Prime Indica
 
 /**
+ * Verifica se o usuário tem papel operacional (admin ou operador) em user_roles.
+ * Papéis como 'financeiro' não autorizam operações de equipe.
+ */
+function isOperationalRole(authRecord) {
+  if (!authRecord) return false
+  if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) return true
+  try {
+    const roles = $app.findRecordsByFilter(
+      'user_roles',
+      'user_id = {:uid} && (role = "admin" || role = "operador")',
+      'created',
+      5,
+      0,
+      { uid: authRecord.id },
+    )
+    return roles.length > 0
+  } catch (_) {
+    return false
+  }
+}
+
+/**
  * Hook on referrals create: trigger duplicate check and set initial fields
  */
 onRecordCreate((e) => {
@@ -619,19 +641,7 @@ routerAdd('POST', '/backend/v1/referrals/request-capture', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  let isInternal = false
-  try {
-    const rolesRecords = $app.findRecordsByFilter(
-      'user_roles',
-      `user_id = '${authRecord.id}'`,
-      'created',
-      5,
-      0,
-    )
-    isInternal = rolesRecords.length > 0
-  } catch (_) {}
-
-  if (!isInternal) return e.json(403, { message: 'Acesso negado.' })
+  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -815,19 +825,7 @@ routerAdd('POST', '/backend/v1/referrals/return-capture', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  let isInternal = false
-  try {
-    const rolesRecords = $app.findRecordsByFilter(
-      'user_roles',
-      `user_id = '${authRecord.id}'`,
-      'created',
-      5,
-      0,
-    )
-    isInternal = rolesRecords.length > 0
-  } catch (_) {}
-
-  if (!isInternal) return e.json(403, { message: 'Acesso negado.' })
+  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -900,19 +898,7 @@ routerAdd('POST', '/backend/v1/referrals/register-listing', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  let isInternal = false
-  try {
-    const rolesRecords = $app.findRecordsByFilter(
-      'user_roles',
-      `user_id = '${authRecord.id}'`,
-      'created',
-      5,
-      0,
-    )
-    isInternal = rolesRecords.length > 0
-  } catch (_) {}
-
-  if (!isInternal) return e.json(403, { message: 'Acesso negado.' })
+  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -2672,19 +2658,7 @@ routerAdd('POST', '/backend/v1/referrals/resolve-attribution-hint', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  let isInternal = false
-  try {
-    const rolesRecords = $app.findRecordsByFilter(
-      'user_roles',
-      `user_id = '${authRecord.id}'`,
-      'created',
-      5,
-      0,
-    )
-    isInternal = rolesRecords.length > 0
-  } catch (_) {}
-
-  if (!isInternal) return e.json(403, { message: 'Acesso negado.' })
+  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -3146,19 +3120,7 @@ routerAdd('POST', '/backend/v1/referrals/confirm-consent', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  let isInternal = false
-  try {
-    const rolesRecords = $app.findRecordsByFilter(
-      'user_roles',
-      `user_id = '${authRecord.id}'`,
-      'created',
-      5,
-      0,
-    )
-    isInternal = rolesRecords.length > 0
-  } catch (_) {}
-
-  if (!isInternal) return e.json(403, { message: 'Acesso negado.' })
+  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -3202,19 +3164,7 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  let isInternal = false
-  try {
-    const rolesRecords = $app.findRecordsByFilter(
-      'user_roles',
-      `user_id = '${authRecord.id}'`,
-      'created',
-      5,
-      0,
-    )
-    isInternal = rolesRecords.length > 0
-  } catch (_) {}
-
-  if (!isInternal) return e.json(403, { message: 'Acesso negado.' })
+  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -3706,19 +3656,7 @@ routerAdd('GET', '/backend/v1/documents/{id}/download-url', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  let isInternal = false
-  try {
-    const rolesRecords = $app.findRecordsByFilter(
-      'user_roles',
-      `user_id = '${authRecord.id}'`,
-      'created',
-      5,
-      0,
-    )
-    isInternal = rolesRecords.length > 0
-  } catch (_) {}
-
-  if (!isInternal) return e.json(403, { message: 'Acesso restrito à equipe interna.' })
+  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
 
   const docId = e.request.pathValue('id')
   if (!docId) return e.json(400, { message: 'ID do documento não informado.' })

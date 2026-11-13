@@ -3,6 +3,28 @@
 // Regra JSVM do PocketBase: cada callback precisa ser autocontido (inline helpers).
 
 /**
+ * Verifica se o usuário tem papel operacional (admin ou operador) em user_roles.
+ * Papéis como 'financeiro' não autorizam operações de equipe.
+ */
+function isOperationalRole(authRecord) {
+  if (!authRecord) return false
+  if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) return true
+  try {
+    const roles = $app.findRecordsByFilter(
+      'user_roles',
+      'user_id = {:uid} && (role = "admin" || role = "operador")',
+      'created',
+      5,
+      0,
+      { uid: authRecord.id },
+    )
+    return roles.length > 0
+  } catch (_) {
+    return false
+  }
+}
+
+/**
  * 2. POST /backend/v1/communication/send-whatsapp
  */
 routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
@@ -25,21 +47,10 @@ routerAdd('POST', '/backend/v1/communication/send-whatsapp', (e) => {
       }
     }
 
-    try {
-      const rolesRecords = $app.findRecordsByFilter(
-        'user_roles',
-        `user_id = '${authRecord.id}'`,
-        'created',
-        10,
-        0,
-      )
-      const roles = rolesRecords.map((r) => r.getString('role'))
-      if (roles.length > 0) {
-        return { ok: true, isAdmin: roles.includes('admin') }
-      }
-    } catch (_) {}
-
-    return { ok: false, error: 'Acesso negado. Usuário sem papel interno na plataforma.' }
+    if (!isOperationalRole(authRecord)) {
+      return { ok: false, error: 'Acesso negado. Usuário sem papel interno na plataforma.' }
+    }
+    return { ok: true, isAdmin: !!authRecord.getBool('is_admin') }
   }
 
   function formatPhone(phone) {
@@ -737,18 +748,7 @@ routerAdd('POST', '/backend/v1/communication/send-email', (e) => {
   const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
   let isAuthorized = envSecret && reqSecret && reqSecret === envSecret
 
-  if (!isAuthorized && e.auth) {
-    try {
-      const roles = $app.findRecordsByFilter(
-        'user_roles',
-        `user_id = '${e.auth.id}'`,
-        'created',
-        5,
-        0,
-      )
-      if (roles.length > 0) isAuthorized = true
-    } catch (_) {}
-  }
+  if (!isAuthorized && e.auth && isOperationalRole(e.auth)) isAuthorized = true
 
   if (!isAuthorized) {
     return e.json(403, {
@@ -838,18 +838,7 @@ routerAdd('POST', '/backend/v1/communication/notify-event', (e) => {
   const envSecret = $os.getenv('INTERNAL_FUNCTION_SECRET')
   let isAuthorized = envSecret && reqSecret && reqSecret === envSecret
 
-  if (!isAuthorized && e.auth) {
-    try {
-      const roles = $app.findRecordsByFilter(
-        'user_roles',
-        `user_id = '${e.auth.id}'`,
-        'created',
-        5,
-        0,
-      )
-      if (roles.length > 0) isAuthorized = true
-    } catch (_) {}
-  }
+  if (!isAuthorized && e.auth && isOperationalRole(e.auth)) isAuthorized = true
 
   if (!isAuthorized) {
     return e.json(403, { message: 'Acesso negado.' })

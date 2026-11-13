@@ -1,8 +1,6 @@
 import pb from '@/lib/pocketbase/client'
 import {
   Referral,
-  CreateReferralPayload,
-  PublicReferralSubmissionPayload,
   PublicMemberInfo,
   Member,
   ReferralStatus,
@@ -169,34 +167,6 @@ export async function getReferralById(id: string): Promise<Referral> {
 }
 
 /**
- * Create a referral manually by the logged in member via secure server route
- */
-export async function createManualReferral(
-  payload: CreateReferralPayload,
-  currentUserId: string,
-  currentUserName: string,
-): Promise<{ success: boolean; message: string; id: string; memberName: string }> {
-  const res = await pb.send<{
-    success: boolean
-    message: string
-    id: string
-    memberName: string
-  }>('/backend/v1/public-referrals', {
-    method: 'POST',
-    body: {
-      memberIdentifier: currentUserId,
-      type: payload.type,
-      referrer_name: payload.referrer_name,
-      referrer_phone: payload.referrer_phone,
-      description: payload.description,
-      return_contact: payload.return_contact,
-      channel: 'manual',
-    },
-  })
-  return res
-}
-
-/**
  * Update referral status via secure server endpoint (/backend/v1/referrals/change-status)
  */
 export async function updateReferralStatus(
@@ -257,24 +227,6 @@ export async function getNetworkMembers(): Promise<Member[]> {
 export async function getPublicMemberInfo(slugOrId: string): Promise<PublicMemberInfo> {
   const res = await pb.send<PublicMemberInfo>(`/backend/v1/public-member/${slugOrId}`, {
     method: 'GET',
-  })
-  return res
-}
-
-/**
- * Public submission of referral through member's public link
- */
-export async function submitPublicReferral(
-  payload: PublicReferralSubmissionPayload,
-): Promise<{ success: boolean; message: string; id: string; memberName: string }> {
-  const res = await pb.send<{
-    success: boolean
-    message: string
-    id: string
-    memberName: string
-  }>('/backend/v1/public-referrals', {
-    method: 'POST',
-    body: payload,
   })
   return res
 }

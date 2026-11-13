@@ -332,13 +332,3 @@ export interface CreateReferralPayload {
   target_neighborhood?: string
   consent_declared?: boolean
 }
-
-export interface PublicReferralSubmissionPayload {
-  memberIdentifier: string
-  type: ReferralType
-  referrer_name: string
-  referrer_phone: string
-  description: string
-  return_contact: string
-  campaign_code?: string
-}
