@@ -111,7 +111,9 @@ const App = () => (
             path="/materiais"
             element={
               <ProtectedRoute>
-                <MemberMaterialsPage />
+                <AcceptanceGate>
+                  <MemberMaterialsPage />
+                </AcceptanceGate>
               </ProtectedRoute>
             }
           />
@@ -119,7 +121,9 @@ const App = () => (
             path="/nova-indicacao"
             element={
               <ProtectedRoute>
-                <NewReferralPage />
+                <AcceptanceGate>
+                  <NewReferralPage />
+                </AcceptanceGate>
               </ProtectedRoute>
             }
           />
@@ -127,7 +131,9 @@ const App = () => (
             path="/indicacoes/:id"
             element={
               <ProtectedRoute>
-                <ReferralDetailPage />
+                <AcceptanceGate>
+                  <ReferralDetailPage />
+                </AcceptanceGate>
               </ProtectedRoute>
             }
           />
@@ -135,7 +141,9 @@ const App = () => (
             path="/perfil"
             element={
               <ProtectedRoute>
-                <ProfilePage />
+                <AcceptanceGate>
+                  <ProfilePage />
+                </AcceptanceGate>
               </ProtectedRoute>
             }
           />
