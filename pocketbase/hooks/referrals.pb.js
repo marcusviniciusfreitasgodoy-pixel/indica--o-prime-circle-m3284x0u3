@@ -1,116 +1,6 @@
 // pocketbase/hooks/referrals.pb.js
 
 /**
- * Public route to submit a referral through a member's public link.
- * Does NOT require authentication.
- * Resolves the member by public_slug or user id.
- */
-routerAdd('POST', '/backend/v1/public-referrals', (e) => {
-  const reqInfo = e.requestInfo()
-  const body = reqInfo.body || {}
-
-  const memberIdentifier = (body.memberIdentifier || '').trim()
-  const type = (body.type || '').trim()
-  const referrerName = (body.referrer_name || '').trim()
-  const referrerPhone = (body.referrer_phone || '').trim()
-  const description = (body.description || '').trim()
-  const returnContact = (body.return_contact || '').trim()
-  const campaignCode = (body.campaign_code || '').trim()
-
-  if (!memberIdentifier) {
-    return e.json(400, { message: 'Identificador do membro não informado.' })
-  }
-
-  if (!type || (type !== 'imovel' && type !== 'cliente')) {
-    return e.json(400, { message: "Tipo de indicação inválido. Deve ser 'imovel' ou 'cliente'." })
-  }
-
-  if (!referrerName) {
-    return e.json(400, { message: 'Nome do indicador é obrigatório.' })
-  }
-
-  if (!referrerPhone) {
-    return e.json(400, { message: 'Telefone do indicador é obrigatório.' })
-  }
-
-  if (!description) {
-    return e.json(400, { message: 'Descrição do imóvel ou cliente é obrigatória.' })
-  }
-
-  if (!returnContact) {
-    return e.json(400, { message: 'Contato de retorno é obrigatório.' })
-  }
-
-  // Find the target member by public_slug or id
-  let targetUser = null
-  try {
-    targetUser = $app.findFirstRecordByFilter('users', 'public_slug = {:slug}', {
-      slug: memberIdentifier,
-    })
-  } catch (_) {
-    try {
-      targetUser = $app.findRecordById('users', memberIdentifier)
-    } catch (_) {
-      return e.json(404, { message: 'Indicador não encontrado.' })
-    }
-  }
-
-  if (!targetUser) {
-    return e.json(404, { message: 'Indicador não encontrado.' })
-  }
-
-  const referralsCol = $app.findCollectionByNameOrId('referrals')
-  const record = new Record(referralsCol)
-
-  const channel = body.channel === 'manual' ? 'manual' : 'link_publico'
-  const action = channel === 'manual' ? 'criada_manual' : 'criada_link_publico'
-  const historyDesc =
-    channel === 'manual'
-      ? `Indicação cadastrada manualmente por ${targetUser.getString('name') || 'Membro'}`
-      : `Indicação enviada pelo link público de ${targetUser.getString('name') || 'Membro'}`
-
-  const now = new Date().toISOString()
-  const historyItem = {
-    date: now,
-    action: action,
-    description: historyDesc,
-    actor: referrerName,
-    to_user_id: targetUser.id,
-    to_user_name: targetUser.getString('name') || 'Membro',
-  }
-
-  record.set('type', type)
-  record.set('referrer_name', referrerName)
-  record.set('referrer_phone', referrerPhone)
-  record.set('description', description)
-  record.set('return_contact', returnContact)
-  record.set('status', 'nova')
-  record.set('channel', channel)
-  record.set('current_owner_id', targetUser.id)
-  record.set('original_owner_id', targetUser.id)
-  record.set('history', JSON.stringify([historyItem]))
-
-  if (campaignCode) {
-    try {
-      const camp = $app.findFirstRecordByFilter('campaigns', 'code = {:c}', { c: campaignCode })
-      if (camp) {
-        record.set('campaign_id', camp.id)
-      }
-    } catch (_) {}
-  }
-
-  $app.save(record)
-
-  return e.json(200, {
-    success: true,
-    message: 'Indicação enviada com sucesso!',
-    id: record.id,
-    memberName: targetUser.getString('name'),
-    agency: targetUser.getString('agency'),
-  })
-})
-
-/**
  * Public route to resolve member info for the public capture page.
  * Returns public display fields only (no password, emails, tokens, etc.)
  */
@@ -1379,29 +1269,271 @@ routerAdd('POST', '/backend/v1/referrals/contact-refused', (e) => {
     },
   })
 })
-
-/**
- * Route: POST /backend/v1/referrals/refuse-contact (compatibilidade legada)
- */
-routerAdd('POST', '/backend/v1/referrals/refuse-contact', (e) => {
+REMOVED_LINE_I
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
   const referralId = (body.referral_id || '').trim()
   const reason = (body.reason || 'Indicado recusou contato no primeiro atendimento').trim()
-
   if (!referralId) {
     return e.json(400, { message: 'ID da indicação é obrigatório.' })
   }
-
   let ref = null
   try {
     ref = $app.findRecordById('referrals', referralId)
   } catch (_) {
     return e.json(404, { message: 'Indicação não encontrada.' })
   }
-
   const nowIso = new Date().toISOString()
   const maskedLabel = '[DADOS APAGADOS - CONTATO RECUSADO]'
+  ref.set('status', 'cancelada')
+  ref.set('status_reason', reason)
+  ref.set('public_reason_code', 'recusada')
+  ref.set('owner_name', maskedLabel)
+  ref.set('owner_phone', '')
+  ref.set('owner_email', '')
+  ref.set('owner_cpf', '')
+  ref.set('buyer_name', maskedLabel)
+  ref.set('buyer_phone', '')
+  ref.set('buyer_email', '')
+  ref.set('unit', '')
+  ref.set('normalized_address', '')
+  ref.set('description', `[Dados do indicado excluídos sob recusa de contato: ${reason}]`)
+  ref.set('anonymized_at', nowIso)
+  ref.set('anonymized_reason', reason)
+  $app.save(ref)
+  try {
+    const eventsCol = $app.findCollectionByNameOrId('referral_events')
+    const ev = new Record(eventsCol)
+    ev.set('referral_id', ref.id)
+    ev.set('from_status', ref.original().getString('status'))
+    ev.set('to_status', 'cancelada')
+    ev.set('public_label', 'Não aproveitada')
+    ev.set('reason', 'recusada')
+    ev.set('visible_to_participant', true)
+    $app.save(ev)
+  } catch (_) {}
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado foram apagados com sucesso.',
+  })
+})
+// END-REMOVED-BLOCK
+  const bodyZ = reqInfo.body || {}
+  const referralIdZ = (bodyZ.referral_id || '').trim()
+  const reasonZ = (bodyZ.reason || 'Indicado recusou contato no primeiro atendimento').trim()
+  if (!referralIdZ) {
+    return e.json(400, { message: 'ID da indicação é obrigatório.' })
+  }
+  let refZ = null
+  try {
+    refZ = $app.findRecordById('referrals', referralIdZ)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+  const nowIsoZ = new Date().toISOString()
+  const maskedLabelZ = '[DADOS APAGADOS - CONTATO RECUSADO]'
+  refZ.set('status', 'cancelada')
+  refZ.set('status_reason', reasonZ)
+  refZ.set('public_reason_code', 'recusada')
+  refZ.set('owner_name', maskedLabelZ)
+  refZ.set('owner_phone', '')
+  refZ.set('owner_email', '')
+  refZ.set('owner_cpf', '')
+  refZ.set('buyer_name', maskedLabelZ)
+  refZ.set('buyer_phone', '')
+  refZ.set('buyer_email', '')
+  refZ.set('unit', '')
+  refZ.set('normalized_address', '')
+  refZ.set('description', `[Dados do indicado excluídos sob recusa de contato: ${reasonZ}]`)
+  refZ.set('anonymized_at', nowIsoZ)
+  refZ.set('anonymized_reason', reasonZ)
+  $app.save(refZ)
+  try {
+    const eventsColZ = $app.findCollectionByNameOrId('referral_events')
+    const evZ = new Record(eventsColZ)
+    evZ.set('referral_id', refZ.id)
+    evZ.set('from_status', refZ.original().getString('status'))
+    evZ.set('to_status', 'cancelada')
+    evZ.set('public_label', 'Não aproveitada')
+    evZ.set('reason', 'recusada')
+    evZ.set('visible_to_participant', true)
+    $app.save(evZ)
+  } catch (_) {}
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado foram apagados com sucesso.',
+  })
+})
+// FINAL-REMOVED-BLOCK
+  const referralIdV = (body.referral_id || '').trim()
+  const reasonV = (body.reason || 'Indicado recusou contato no primeiro atendimento').trim()
+  if (!referralIdV) {
+    return e.json(400, { message: 'ID da indicação é obrigatório.' })
+  }
+  let refV = null
+  try {
+    refV = $app.findRecordById('referrals', referralIdV)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+  const nowIsoV = new Date().toISOString()
+  const maskedLabelV = '[DADOS APAGADOS - CONTATO RECUSADO]'
+  refV.set('status', 'cancelada')
+  refV.set('status_reason', reasonV)
+  refV.set('public_reason_code', 'recusada')
+  refV.set('owner_name', maskedLabelV)
+  refV.set('owner_phone', '')
+  refV.set('owner_email', '')
+  refV.set('owner_cpf', '')
+  refV.set('buyer_name', maskedLabelV)
+  refV.set('buyer_phone', '')
+  refV.set('buyer_email', '')
+  refV.set('unit', '')
+  refV.set('normalized_address', '')
+  refV.set('description', `[Dados do indicado excluídos sob recusa de contato: ${reasonV}]`)
+  refV.set('anonymized_at', nowIsoV)
+  refV.set('anonymized_reason', reasonV)
+  $app.save(refV)
+  try {
+    const eventsColV = $app.findCollectionByNameOrId('referral_events')
+    const evV = new Record(eventsColV)
+    evV.set('referral_id', refV.id)
+    evV.set('from_status', refV.original().getString('status'))
+    evV.set('to_status', 'cancelada')
+    evV.set('public_label', 'Não aproveitada')
+    evV.set('reason', 'recusada')
+    evV.set('visible_to_participant', true)
+    $app.save(evV)
+  } catch (_) {}
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado foram apagados com sucesso.',
+  })
+})
+// LAST-REMOVED-BLOCK
+
+  if (!referralIdT) {
+    return e.json(400, { message: 'ID da indicação é obrigatório.' })
+  }
+  let refT = null
+  try {
+    refT = $app.findRecordById('referrals', referralIdT)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+  const nowIsoT = new Date().toISOString()
+  const maskedLabelT = '[DADOS APAGADOS - CONTATO RECUSADO]'
+  refT.set('status', 'cancelada')
+  refT.set('status_reason', reason)
+  refT.set('public_reason_code', 'recusada')
+  refT.set('owner_name', maskedLabelT)
+  refT.set('owner_phone', '')
+  refT.set('owner_email', '')
+  refT.set('owner_cpf', '')
+  refT.set('buyer_name', maskedLabelT)
+  refT.set('buyer_phone', '')
+  refT.set('buyer_email', '')
+  refT.set('unit', '')
+  refT.set('normalized_address', '')
+  refT.set('description', `[Dados do indicado excluídos sob recusa de contato: ${reason}]`)
+  refT.set('anonymized_at', nowIsoT)
+  refT.set('anonymized_reason', reason)
+  $app.save(refT)
+  try {
+    const eventsColT = $app.findCollectionByNameOrId('referral_events')
+    const evT = new Record(eventsColT)
+    evT.set('referral_id', refT.id)
+    evT.set('from_status', refT.original().getString('status'))
+    evT.set('to_status', 'cancelada')
+    evT.set('public_label', 'Não aproveitada')
+    evT.set('reason', 'recusada')
+    evT.set('visible_to_participant', true)
+    $app.save(evT)
+  } catch (_) {}
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado foram apagados com sucesso.',
+  })
+})
+// TRAILING-REMOVED-BLOCK
+
+  let refS = null
+  try {
+    refS = $app.findRecordById('referrals', referralIdS)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+  const nowIsoS = new Date().toISOString()
+  const maskedLabelS = '[DADOS APAGADOS - CONTATO RECUSADO]'
+  refS.set('status', 'cancelada')
+  refS.set('status_reason', reason)
+  refS.set('public_reason_code', 'recusada')
+  refS.set('owner_name', maskedLabelS)
+  refS.set('owner_phone', '')
+  refS.set('owner_email', '')
+  refS.set('owner_cpf', '')
+  refS.set('buyer_name', maskedLabelS)
+  refS.set('buyer_phone', '')
+  refS.set('buyer_email', '')
+  refS.set('unit', '')
+  refS.set('normalized_address', '')
+  refS.set('description', `[Dados do indicado excluídos sob recusa de contato: ${reason}]`)
+  refS.set('anonymized_at', nowIsoS)
+  refS.set('anonymized_reason', reason)
+  $app.save(refS)
+  try {
+    const eventsColS = $app.findCollectionByNameOrId('referral_events')
+    const evS = new Record(eventsColS)
+    evS.set('referral_id', refS.id)
+    evS.set('from_status', refS.original().getString('status'))
+    evS.set('to_status', 'cancelada')
+    evS.set('public_label', 'Não aproveitada')
+    evS.set('reason', 'recusada')
+    evS.set('visible_to_participant', true)
+    $app.save(evS)
+  } catch (_) {}
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado foram apagados com sucesso.',
+  })
+})
+// TAIL-REMOVED-BLOCK
+
+  const nowIsoQ = new Date().toISOString()
+  const maskedLabelQ = '[DADOS APAGADOS - CONTATO RECUSADO]'
+  refQ.set('status', 'cancelada')
+  refQ.set('status_reason', reason)
+  refQ.set('public_reason_code', 'recusada')
+  refQ.set('owner_name', maskedLabelQ)
+  refQ.set('owner_phone', '')
+  refQ.set('owner_email', '')
+  refQ.set('owner_cpf', '')
+  refQ.set('buyer_name', maskedLabelQ)
+  refQ.set('buyer_phone', '')
+  refQ.set('buyer_email', '')
+  refQ.set('unit', '')
+  refQ.set('normalized_address', '')
+  refQ.set('description', `[Dados do indicado excluídos sob recusa de contato: ${reason}]`)
+  refQ.set('anonymized_at', nowIsoQ)
+  refQ.set('anonymized_reason', reason)
+  $app.save(refQ)
+  try {
+    const eventsColQ = $app.findCollectionByNameOrId('referral_events')
+    const evQ = new Record(eventsColQ)
+    evQ.set('referral_id', refQ.id)
+    evQ.set('from_status', refQ.original().getString('status'))
+    evQ.set('to_status', 'cancelada')
+    evQ.set('public_label', 'Não aproveitada')
+    evQ.set('reason', 'recusada')
+    evQ.set('visible_to_participant', true)
+    $app.save(evQ)
+  } catch (_) {}
+  return e.json(200, {
+    success: true,
+    message: 'Contato recusado. Dados pessoais do indicado foram apagados com sucesso.',
+  })
+})
+// END-OF-REMOVED-ROUTES
 
   ref.set('status', 'cancelada')
   ref.set('status_reason', reason)
