@@ -4,6 +4,7 @@ import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { AuthProvider } from '@/contexts/AuthContext'
 import { ProtectedRoute } from '@/components/ProtectedRoute'
+import { AcceptanceGate } from '@/components/AcceptanceGate'
 
 // Pages
 import LoginPage from './pages/Login'
@@ -80,7 +81,9 @@ const App = () => (
             path="/painel"
             element={
               <ProtectedRoute>
-                <DashboardPage />
+                <AcceptanceGate>
+                  <DashboardPage />
+                </AcceptanceGate>
               </ProtectedRoute>
             }
           />
@@ -88,7 +91,9 @@ const App = () => (
             path="/painel/recompensas"
             element={
               <ProtectedRoute>
-                <MemberRewardsPage />
+                <AcceptanceGate>
+                  <MemberRewardsPage />
+                </AcceptanceGate>
               </ProtectedRoute>
             }
           />
@@ -96,7 +101,9 @@ const App = () => (
             path="/painel/materiais"
             element={
               <ProtectedRoute>
-                <MemberMaterialsPage />
+                <AcceptanceGate>
+                  <MemberMaterialsPage />
+                </AcceptanceGate>
               </ProtectedRoute>
             }
           />
