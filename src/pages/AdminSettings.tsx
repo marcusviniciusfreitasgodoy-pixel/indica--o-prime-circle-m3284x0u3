@@ -31,6 +31,14 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useToast } from '@/hooks/use-toast'
 import pb from '@/lib/pocketbase/client'
 import { listRewardRules, RewardRule } from '@/services/rewards'
+import {
+  BRAND_LABELS,
+  DEFAULT_BRAND_SETTINGS,
+  getBrandSettings,
+  saveBrandSettings,
+  type BrandSettings,
+} from '@/services/brandSettings'
+import { Palette } from 'lucide-react'
 
 export function AdminSettingsPage() {
   const { isAdmin } = useAuth()
@@ -65,6 +73,10 @@ export function AdminSettingsPage() {
   const [attributionDays, setAttributionDays] = useState('90')
   const [savingSettings, setSavingSettings] = useState(false)
 
+  // Configurações de marca (program_settings)
+  const [brand, setBrand] = useState<BrandSettings>({ ...DEFAULT_BRAND_SETTINGS })
+  const [savingBrand, setSavingBrand] = useState(false)
+
   const loadData = async () => {
     try {
       setLoading(true)
@@ -95,6 +107,13 @@ export function AdminSettingsPage() {
           /* intentionally ignored */
         }
       })
+
+      // Marca: chaves oficiais em program_settings
+      try {
+        setBrand(await getBrandSettings())
+      } catch {
+        /* mantém valores padrão */
+      }
     } catch (err: any) {
       toast({
         title: 'Erro ao carregar dados',

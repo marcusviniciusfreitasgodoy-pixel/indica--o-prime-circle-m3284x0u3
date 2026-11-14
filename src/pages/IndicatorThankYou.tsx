@@ -10,9 +10,11 @@ import {
 import { Button } from '@/components/ui/button'
 import { CheckCircle2, ShieldCheck, MessageSquare } from 'lucide-react'
 import { BrandPublicHeader, BrandPublicFooter, Eyebrow } from '@/components/brand'
+import { usePublicBrand } from '@/hooks/usePublicBrand'
 
 export default function IndicatorThankYouPage() {
   const { codigo } = useParams<{ codigo: string }>()
+  const { brand } = usePublicBrand()
   const [searchParams] = useSearchParams()
   const protocoloRaw = searchParams.get('protocolo') || ''
   const protocolo = protocoloRaw
@@ -71,15 +73,17 @@ export default function IndicatorThankYouPage() {
             </CardContent>
 
             <CardFooter className="flex flex-col gap-2 pt-2 p-4 sm:p-6">
-              <a
-                href={`https://wa.me/5521999999999?text=${encodeURIComponent(`Olá! Enviei uma solicitação pelo link de indicação (Protocolo: ${protocolo}). Gostaria de agilizar meu atendimento.`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 min-h-[44px] rounded-[1px] bg-primary text-primary-foreground font-heading font-semibold text-xs uppercase tracking-wider transition-colors hover:bg-gold-light"
-              >
-                <MessageSquare className="w-4 h-4 shrink-0" strokeWidth={1.5} />
-                Falar com a Godoy Prime no WhatsApp
-              </a>
+              {brand.support_whatsapp ? (
+                <a
+                  href={`https://wa.me/${brand.support_whatsapp}?text=${encodeURIComponent(`Olá! Enviei uma solicitação pelo link de indicação (Protocolo: ${protocolo}). Gostaria de agilizar meu atendimento.`)}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full inline-flex items-center justify-center gap-2 py-3 px-4 min-h-[44px] rounded-[1px] bg-primary text-primary-foreground font-heading font-semibold text-xs uppercase tracking-wider transition-colors hover:bg-gold-light"
+                >
+                  <MessageSquare className="w-4 h-4 shrink-0" strokeWidth={1.5} />
+                  Falar com a Godoy Prime no WhatsApp
+                </a>
+              ) : null}
               {codigo && (
                 <Button
                   asChild
