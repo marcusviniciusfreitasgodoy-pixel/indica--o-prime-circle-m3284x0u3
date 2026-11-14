@@ -1,4 +1,4 @@
-// 0043_brand_settings.js
+// pocketbase/migrations/0043_brand_settings.js
 //
 // Duas partes, ambas idempotentes (no-op quando nada a fazer):
 //
@@ -13,6 +13,14 @@
 //
 // public_base_url é o domínio oficial do programa, já usado fixo nos hooks
 // (operations.pb.js:3424, partners_levels_benefits.pb.js:169 etc).
+//
+// NOTA sobre value_json: o campo é `required` na coleção (0004) e o PocketBase
+// rejeita vazio "", `null` e até strings de zero-largura — a validação de campo
+// JSON required exige um valor presente. Por isso `support_whatsapp` (que deve
+// nascer vazio) é gravado como '{}' — objeto JSON não-string, que todos os
+// leitores (hook GET /backend/v1/public/brand e hooks do front) tratam como
+// "sem WhatsApp". O padrão do seed anterior (0028/0029, JSON '""') não serve
+// para value_json required nesta instância.
 
 migrate(
   (app) => {
@@ -61,10 +69,24 @@ migrate(
         description: 'E-mail de contato/suporte (canal de privacidade nos documentos)',
       },
       {
+        // value_json é required: vazio, null e '""' são rejeitados, então
+        // "sem WhatsApp" nasce como '{}' (objeto JSON); leitores tratam
+        // valor não-string como vazio → botões de WhatsApp ocultos.
         key: 'support_whatsapp',
-        value: '',
+        value: '{}',
+        literalJson: true,
         description:
-          'WhatsApp de suporte no formato internacional somente dígitos (ex.: 5521XXXXXXXXX). Vazio = botões de WhatsApp ficam ocultos.',
+          'WhatsApp de suporte no formato internacional somente dígitos (ex.: 5521XXXXXXXXX). Vazio/objeto = botões de WhatsApp ficam ocultos.',
+      },
+      {
+        // value_json é required: vazio, null e '""' são rejeitados, então
+        // "sem valor" nasce como '{}' (objeto JSON); leitores tratam
+        // valor não-string como vazio.
+        key: 'clube_beneficios_url',
+        value: '{}',
+        literalJson: true,
+        description:
+          'URL do Clube de beneficios Godoy Prime exibido no painel de participantes ativos',
       },
       {
         key: 'public_base_url',
@@ -117,7 +139,9 @@ migrate(
       }
       const rec = new Record(col)
       rec.set('key', entry.key)
-      rec.set('value_json', JSON.stringify(entry.value))
+      // value_json é required (nunca aceita vazio/null): '{}' para "sem valor",
+      // JSON.stringify para todo o resto.
+      rec.set('value_json', entry.literalJson ? entry.value : JSON.stringify(entry.value))
       rec.set('description', entry.description)
       app.save(rec)
       console.log('[0043] inserida chave de marca: ' + entry.key)
