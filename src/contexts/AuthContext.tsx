@@ -15,12 +15,6 @@ interface AuthContextType {
   isInternal: boolean
   isOperational: boolean
   login: (email: string, pass: string) => Promise<void>
-  signup: (payload: {
-    email: string
-    password: string
-    name: string
-    phone?: string
-  }) => Promise<void>
   requestOTP: (email: string) => Promise<{ success: boolean; message: string; otpId?: string }>
   loginWithOTP: (otpId: string, code: string) => Promise<void>
   requestPasswordReset: (email: string) => Promise<{ error: unknown }>
@@ -90,41 +84,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(true)
     try {
       await pb.collection('users').authWithPassword(email.trim().toLowerCase(), pass)
-      await fetchCurrentUser()
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const signup = async ({
-    email,
-    password,
-    name,
-    phone,
-  }: {
-    email: string
-    password: string
-    name: string
-    phone?: string
-  }) => {
-    setIsLoading(true)
-    try {
-      const cleanEmail = email.trim().toLowerCase()
-      await pb.collection('users').create({
-        email: cleanEmail,
-        password,
-        passwordConfirm: password,
-        name: name.trim(),
-        phone: phone ? phone.trim() : '',
-      })
-
-      try {
-        await pb.collection('users').requestVerification(cleanEmail)
-      } catch {
-        // best-effort email dispatch
-      }
-
-      await pb.collection('users').authWithPassword(cleanEmail, password)
       await fetchCurrentUser()
     } finally {
       setIsLoading(false)
@@ -230,7 +189,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isInternal,
         isOperational,
         login,
-        signup,
         requestOTP,
         loginWithOTP,
         requestPasswordReset,

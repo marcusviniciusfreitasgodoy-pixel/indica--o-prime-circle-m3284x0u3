@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-11-14T22:19:38.770Z",
+  "generatedAt": "2026-11-14T23:08:28.307Z",
   "collections": [
     {
       "name": "users",
@@ -7,7 +7,7 @@
       "apiRules": {
         "list": "@request.auth.id != '' && (id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
         "view": "@request.auth.id != '' && (id = @request.auth.id || @request.auth.is_admin = true || @request.auth.is_operador = true || @request.auth.is_financeiro = true)",
-        "create": "",
+        "create": null,
         "update": "@request.auth.id != '' && id = @request.auth.id && @request.body.is_admin:isset = false && @request.body.is_operador:isset = false && @request.body.is_financeiro:isset = false",
         "delete": null
       },
