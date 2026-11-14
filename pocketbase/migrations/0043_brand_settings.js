@@ -6,7 +6,7 @@
 //    (qualquer chave que contenha "qa_harness_ran"). O hook qa_harness.pb.js
 //    gravava resultados ali; o harness já foi removido do repo.
 //
-// 2) Insere as 14 chaves centrais de marca em program_settings com os valores
+// 2) Insere as 13 chaves centrais de marca em program_settings com os valores
 //    oficiais da Godoy Prime hoje fixos no código (fontes: src/main.css,
 //    src/components/brand/GodoyLogo.tsx, pocketbase/migrations/0041,
 //    index.html e hooks de comunicação). Não duplica chave que já exista.
@@ -14,13 +14,10 @@
 // public_base_url é o domínio oficial do programa, já usado fixo nos hooks
 // (operations.pb.js:3424, partners_levels_benefits.pb.js:169 etc).
 //
-// NOTA sobre value_json: o campo é `required` na coleção (0004) e o PocketBase
-// rejeita vazio "", `null` e até strings de zero-largura — a validação de campo
-// JSON required exige um valor presente. Por isso `support_whatsapp` (que deve
-// nascer vazio) é gravado como '{}' — objeto JSON não-string, que todos os
-// leitores (hook GET /backend/v1/public/brand e hooks do front) tratam como
-// "sem WhatsApp". O padrão do seed anterior (0028/0029, JSON '""') não serve
-// para value_json required nesta instância.
+// Regra desta migração: NENHUMA chave nasce com valor vazio — value_json é
+// `required` na coleção (0004) e o PocketBase rejeita "", null, "null", [] e
+// {}. A chave support_whatsapp NÃO é criada aqui (não existe WhatsApp real);
+// a rota pública GET /backend/v1/public/brand devolve "" para chaves ausentes.
 
 migrate(
   (app) => {
@@ -69,26 +66,6 @@ migrate(
         description: 'E-mail de contato/suporte (canal de privacidade nos documentos)',
       },
       {
-        // value_json é required: vazio, null e '""' são rejeitados, então
-        // "sem WhatsApp" nasce como '{}' (objeto JSON); leitores tratam
-        // valor não-string como vazio → botões de WhatsApp ocultos.
-        key: 'support_whatsapp',
-        value: '{}',
-        literalJson: true,
-        description:
-          'WhatsApp de suporte no formato internacional somente dígitos (ex.: 5521XXXXXXXXX). Vazio/objeto = botões de WhatsApp ficam ocultos.',
-      },
-      {
-        // value_json é required: vazio, null e '""' são rejeitados, então
-        // "sem valor" nasce como '{}' (objeto JSON); leitores tratam
-        // valor não-string como vazio.
-        key: 'clube_beneficios_url',
-        value: '{}',
-        literalJson: true,
-        description:
-          'URL do Clube de beneficios Godoy Prime exibido no painel de participantes ativos',
-      },
-      {
         key: 'public_base_url',
         value: 'https://indicacao.godoyprime.com.br',
         description: 'URL base pública do programa (links de indicação /i/CODIGO)',
@@ -128,6 +105,9 @@ migrate(
     const col = app.findCollectionByNameOrId('program_settings')
 
     BRAND_ENTRIES.forEach((entry) => {
+      if (!entry.value || entry.value === 'null' || entry.value === '[]' || entry.value === '{}') {
+        throw new Error('[0043] valor vazio proibido em value_json para a chave ' + entry.key)
+      }
       let existing = null
       try {
         existing = app.findFirstRecordByData('program_settings', 'key', entry.key)
@@ -139,16 +119,14 @@ migrate(
       }
       const rec = new Record(col)
       rec.set('key', entry.key)
-      // value_json é required (nunca aceita vazio/null): '{}' para "sem valor",
-      // JSON.stringify para todo o resto.
-      rec.set('value_json', entry.literalJson ? entry.value : JSON.stringify(entry.value))
+      rec.set('value_json', JSON.stringify(entry.value))
       rec.set('description', entry.description)
       app.save(rec)
       console.log('[0043] inserida chave de marca: ' + entry.key)
     })
   },
   (app) => {
-    // down: remove apenas as 14 chaves de marca (a limpeza de QA não é
+    // down: remove apenas as 13 chaves de marca (a limpeza de QA não é
     // revertida — apagar dados do harness é permanente de propósito).
     const keys = [
       'brand_name',
@@ -157,7 +135,6 @@ migrate(
       'cnpj',
       'creci',
       'support_email',
-      'support_whatsapp',
       'public_base_url',
       'site_url',
       'logo_url',
