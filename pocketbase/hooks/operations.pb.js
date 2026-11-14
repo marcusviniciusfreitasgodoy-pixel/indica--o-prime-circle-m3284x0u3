@@ -5,23 +5,9 @@
  * Verifica se o usuário tem papel operacional (admin ou operador) em user_roles.
  * Papéis como 'financeiro' não autorizam operações de equipe.
  */
-function isOperationalRole(authRecord) {
-  if (!authRecord) return false
-  if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) return true
-  try {
-    const roles = $app.findRecordsByFilter(
-      'user_roles',
-      'user_id = {:uid} && (role = "admin" || role = "operador")',
-      'created',
-      5,
-      0,
-      { uid: authRecord.id },
-    )
-    return roles.length > 0
-  } catch (_) {
-    return false
-  }
-}
+// Papel operacional (admin ou operador): checagem usada DENTRO de cada callback.
+// Nada declarado no topo é visível aos callbacks do PocketBase (JSVM em pool separado),
+// então a verificação é sempre inline — ver blocos "let isOperational" nos handlers.
 
 /**
  * Hook on referrals create: trigger duplicate check and set initial fields
@@ -641,7 +627,25 @@ routerAdd('POST', '/backend/v1/referrals/request-capture', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
+  let isOperational = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      isOperational = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isOperational = roles.length > 0
+    }
+  } catch (_) {
+    isOperational = false
+  }
+  if (!isOperational) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -825,7 +829,25 @@ routerAdd('POST', '/backend/v1/referrals/return-capture', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
+  let isOperational = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      isOperational = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isOperational = roles.length > 0
+    }
+  } catch (_) {
+    isOperational = false
+  }
+  if (!isOperational) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -898,7 +920,25 @@ routerAdd('POST', '/backend/v1/referrals/register-listing', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
+  let isOperational = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      isOperational = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isOperational = roles.length > 0
+    }
+  } catch (_) {
+    isOperational = false
+  }
+  if (!isOperational) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -2658,7 +2698,25 @@ routerAdd('POST', '/backend/v1/referrals/resolve-attribution-hint', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
+  let isOperational = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      isOperational = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isOperational = roles.length > 0
+    }
+  } catch (_) {
+    isOperational = false
+  }
+  if (!isOperational) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -3120,7 +3178,25 @@ routerAdd('POST', '/backend/v1/referrals/confirm-consent', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
+  let isOperational = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      isOperational = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isOperational = roles.length > 0
+    }
+  } catch (_) {
+    isOperational = false
+  }
+  if (!isOperational) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -3164,7 +3240,25 @@ routerAdd('POST', '/backend/v1/admin/participants/approve', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
+  let isOperational = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      isOperational = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isOperational = roles.length > 0
+    }
+  } catch (_) {
+    isOperational = false
+  }
+  if (!isOperational) return e.json(403, { message: 'Acesso negado.' })
 
   const reqInfo = e.requestInfo()
   const body = reqInfo.body || {}
@@ -3656,7 +3750,25 @@ routerAdd('GET', '/backend/v1/documents/{id}/download-url', (e) => {
   const authRecord = e.auth
   if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
 
-  if (!isOperationalRole(authRecord)) return e.json(403, { message: 'Acesso negado.' })
+  let isOperational = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      isOperational = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      isOperational = roles.length > 0
+    }
+  } catch (_) {
+    isOperational = false
+  }
+  if (!isOperational) return e.json(403, { message: 'Acesso negado.' })
 
   const docId = e.request.pathValue('id')
   if (!docId) return e.json(400, { message: 'ID do documento não informado.' })
@@ -4331,3 +4443,125 @@ onRecordAfterDeleteSuccess((e) => {
 
   e.next()
 }, 'participants')
+
+/**
+ * POST /backend/v1/referrals/assign-operator
+ * Atribui (ou remove) o operador responsável por uma indicação.
+ * Corpo: { referral_id, operator_id | null }
+ * operator_id null/vazio = remover o operador atual.
+ */
+routerAdd('POST', '/backend/v1/referrals/assign-operator', (e) => {
+  const authRecord = e.auth
+  if (!authRecord) return e.json(401, { message: 'Não autorizado.' })
+
+  // Papéis aceitos para chamar: admin ou operador (mesma checagem das outras rotas de operação).
+  // Inline: nada declarado no topo do arquivo é visível dentro dos callbacks do PocketBase.
+  let canAssign = false
+  try {
+    if (authRecord.getBool('is_admin') || authRecord.getBool('is_operador')) {
+      canAssign = true
+    } else {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador")',
+        'created',
+        5,
+        0,
+        { uid: authRecord.id },
+      )
+      canAssign = roles.length > 0
+    }
+  } catch (_) {
+    canAssign = false
+  }
+  if (!canAssign) return e.json(403, { message: 'Acesso negado.' })
+
+  const reqInfo = e.requestInfo()
+  const body = reqInfo.body || {}
+  const referralId = (body.referral_id || '').trim()
+  // operator_id pode ser null para REMOVER o operador atual
+  const operatorId =
+    body.operator_id === null || body.operator_id === undefined
+      ? ''
+      : String(body.operator_id).trim()
+
+  if (!referralId) return e.json(400, { message: 'ID da indicação é obrigatório.' })
+
+  let referral
+  try {
+    referral = $app.findRecordById('referrals', referralId)
+  } catch (_) {
+    return e.json(404, { message: 'Indicação não encontrada.' })
+  }
+
+  let operatorUser = null
+  if (operatorId) {
+    try {
+      operatorUser = $app.findRecordById('_pb_users_auth_', operatorId)
+    } catch (_) {
+      return e.json(404, { message: 'Operador informado não encontrado.' })
+    }
+
+    // Papel de equipe: admin, operador ou financeiro (mesmo conjunto usado em /admin/team/assign-role)
+    let isTeam = false
+    try {
+      const roles = $app.findRecordsByFilter(
+        'user_roles',
+        'user_id = {:uid} && (role = "admin" || role = "operador" || role = "financeiro")',
+        'created',
+        5,
+        0,
+        { uid: operatorUser.id },
+      )
+      isTeam = roles.length > 0
+    } catch (_) {}
+    if (
+      !isTeam &&
+      (operatorUser.getBool('is_admin') ||
+        operatorUser.getBool('is_operador') ||
+        operatorUser.getBool('is_financeiro'))
+    ) {
+      isTeam = true
+    }
+
+    if (!isTeam) {
+      return e.json(400, {
+        message:
+          'O usuário informado não possui papel de equipe (admin, operador ou financeiro) e não pode ser atribuído como operador.',
+      })
+    }
+  }
+
+  const previousOwnerId = referral.getString('current_owner_id')
+  referral.set('current_owner_id', operatorId)
+  $app.save(referral)
+
+  try {
+    const auditCol = $app.findCollectionByNameOrId('audit_logs')
+    const audit = new Record(auditCol)
+    audit.set('actor_id', authRecord.id)
+    audit.set('actor_email', authRecord.getString('email'))
+    audit.set('action', operatorId ? 'operator_assigned' : 'operator_removed')
+    audit.set('resource_type', 'referrals')
+    audit.set('resource_id', referral.id)
+    audit.set(
+      'details',
+      JSON.stringify({
+        previous_owner_id: previousOwnerId,
+        new_owner_id: operatorId,
+        operator_email: operatorUser ? operatorUser.getString('email') : null,
+      }),
+    )
+    audit.set('ip_address', e.request.remoteAddr)
+    $app.save(audit)
+  } catch (_) {}
+
+  return e.json(200, {
+    success: true,
+    message: operatorId
+      ? 'Operador atribuído à indicação com sucesso.'
+      : 'Operador removido da indicação com sucesso.',
+    referral_id: referral.id,
+    current_owner_id: operatorId,
+  })
+})
