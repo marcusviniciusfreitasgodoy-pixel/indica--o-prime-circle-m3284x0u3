@@ -636,7 +636,7 @@ onRecordAfterUpdateSuccess((e) => {
 }, 'referrals')
 
 /**
- * Modelo v4 (0045): a recompensa de fechamento (R$ 2.500) só é gerada quando a
+ * Modelo v4: a recompensa de fechamento (R$ 2.500) só é gerada quando a
  * comissão do negócio é registrada como recebida (ver rota register-commission-received).
  */
 onRecordAfterCreateSuccess((e) => {
@@ -646,6 +646,16 @@ onRecordAfterCreateSuccess((e) => {
 
 /**
  * POST /backend/v1/rewards/register-commission-received
+ * Modelo v4: registro da comissão recebida gera recompensa de fechamento do
+ * INDICADOR de cada indicação do negócio, lendo a regra ativa pela data de registro
+ * da indicação. Regras desta versão:
+ * - Negócio cancelado (cancelled_at preenchido): registro RECUSADO com erro claro.
+ * - Somente deal_type = 'venda' gera recompensa de fechamento (locação não gera).
+ * - Recompensa de valor fixo é paga integralmente (sem teto de 10% da comissão).
+ * - Recompensa de fechamento fica FORA do teto anual (sem 'em revisão' nem motivo
+ *   'teto anual' nela; o teto segue valendo para captação e primeira visita).
+ * - O pipeline de ajuste (indicador laranja/único etc.) só altera recompensas em
+ *   'pendente_dados' ou 'em_analise'; jamais toca em paga/aprovada/em_lote/cancelada.
  */
 routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
   const authRecord = e.auth
@@ -689,6 +699,19 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
     return e.json(404, { message: 'Negócio não encontrado.' })
   }
 
+  // Item 3: negócio cancelado não aceita registro de comissão.
+  if ((deal.getString('cancelled_at') || '').trim() !== '') {
+    return e.json(409, {
+      success: false,
+      message:
+        'Registro de comissão recusado: o negócio está cancelado (cancelled_at preenchido) e não gera recompensas.',
+    })
+  }
+
+  // Item 2: apenas negócios de venda geram recompensa de fechamento.
+  const dealType = (deal.getString('deal_type') || '').trim()
+  const isVenda = dealType === 'venda'
+
   deal.set('commission_received_at', commissionReceivedAt)
   deal.set('commission_received_brl', valorRecebido)
   $app.save(deal)
@@ -698,13 +721,13 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
   const ownerRefId = deal.getString('owner_referral_id')
   const buyerRefId = deal.getString('buyer_referral_id')
 
-  // Modelo v4 (0045): o registro da comissão recebida é o marco que libera a recompensa
+  // Modelo v4: o registro da comissão recebida é o marco que libera a recompensa
   // de fechamento do INDICADOR de cada indicação do negócio. A regra ativa de marco
-  // 'fechamento' é lida pela data de registro da indicação (item 8 do modelo oficial).
+  // 'fechamento' é lida pela data de registro da indicação.
   // Sem regra ativa vigente, nenhuma recompensa é gerada.
 
   // Seleciona a regra ativa de fechamento para o participante, vigente na DATA DA
-  // INDICAÇÃO (item 8: indicações existentes seguem a regra vigente quando registradas).
+  // INDICAÇÃO (indicações existentes seguem a regra vigente quando registradas).
   function findClosingRuleForReferral(participant, referral) {
     const categoryId = participant.getString('category_id')
     let refType = referral.getString('referral_type')
@@ -745,38 +768,9 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
     return validRules[0]
   }
 
-  // Teto anual de recompensas do participante (contagem no ano civil corrente).
-  function isParticipantOverAnnualCap(participantId) {
-    let annualCap = 8
-    try {
-      const stCap = $app.findFirstRecordByData(
-        'program_settings',
-        'key',
-        'annual_reward_cap_per_participant',
-      )
-      const capVal = JSON.parse(stCap.getString('value_json'))
-      if (typeof capVal === 'number') annualCap = capVal
-    } catch (_) {}
-
-    try {
-      const currentYear = new Date().getFullYear()
-      const yearStart = `${currentYear}-01-01 00:00:00.000Z`
-      const yearEnd = `${currentYear}-12-31 23:59:59.999Z`
-      const countedThisYear = $app.findRecordsByFilter(
-        'rewards',
-        `participant_id = '${participantId}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote' || status = 'em_analise' || status = 'pendente_dados') && created >= '${yearStart}' && created <= '${yearEnd}'`,
-        '',
-        100,
-        0,
-      )
-      if (countedThisYear && countedThisYear.length >= annualCap) return true
-    } catch (_) {}
-    return false
-  }
-
   // Cria a recompensa de fechamento para o INDICADOR da indicação, com o valor lido da
   // regra ativa de marco 'fechamento' vigente na data de registro da indicação.
-  // Respeita o pipeline existente: status pendente_dados/em_analise, teto anual e auditoria.
+  // Pipeline de ajuste posterior: indicador laranja/único etc. (veja adiante).
   function createClosingRewardForReferral(dealRec, referral) {
     const partId = referral.getString('participant_id')
     if (!partId) return null
@@ -820,12 +814,9 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
     const hasCpfPix = !!(
       (participant.getString('pix_key') || '').trim() && (participant.getString('cpf') || '').trim()
     )
-    let initialStatus = !hasCpfPix ? 'pendente_dados' : 'em_analise'
-    let adjustmentReason = ''
-    if (isParticipantOverAnnualCap(participant.id)) {
-      initialStatus = 'em_revisao_admin'
-      adjustmentReason = 'teto anual'
-    }
+    // Item 5: fechamento fica FORA do teto anual — nunca 'em_revisao_admin' nem
+    // motivo 'teto anual' na recompensa de fechamento.
+    const initialStatus = !hasCpfPix ? 'pendente_dados' : 'em_analise'
 
     const rewardsCol = $app.findCollectionByNameOrId('rewards')
     const rew = new Record(rewardsCol)
@@ -841,9 +832,6 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
     rew.set('final_amount_brl', amount)
     rew.set('via_decline', false)
     rew.set('status', initialStatus)
-    if (adjustmentReason) {
-      rew.set('adjustment_reason', adjustmentReason)
-    }
     $app.save(rew)
 
     try {
@@ -868,24 +856,27 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
     return rew
   }
 
-  if (ownerRefId) {
-    try {
-      createClosingRewardForReferral(deal, $app.findRecordById('referrals', ownerRefId))
-    } catch (errOwner) {
-      console.error(
-        '[register-commission-received] Erro ao gerar fechamento (proprietário):',
-        errOwner,
-      )
+  // Item 2: só percorre o pipeline de fechamento para negócios de VENDA (locação não gera).
+  if (isVenda) {
+    if (ownerRefId) {
+      try {
+        createClosingRewardForReferral(deal, $app.findRecordById('referrals', ownerRefId))
+      } catch (errOwner) {
+        console.error(
+          '[register-commission-received] Erro ao gerar fechamento (proprietário):',
+          errOwner,
+        )
+      }
     }
-  }
-  if (buyerRefId) {
-    try {
-      createClosingRewardForReferral(deal, $app.findRecordById('referrals', buyerRefId))
-    } catch (errBuyer) {
-      console.error(
-        '[register-commission-received] Erro ao gerar fechamento (comprador):',
-        errBuyer,
-      )
+    if (buyerRefId) {
+      try {
+        createClosingRewardForReferral(deal, $app.findRecordById('referrals', buyerRefId))
+      } catch (errBuyer) {
+        console.error(
+          '[register-commission-received] Erro ao gerar fechamento (comprador):',
+          errBuyer,
+        )
+      }
     }
   }
 
@@ -977,6 +968,24 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
         indicatorRewards[0].getString('participant_id') ===
           indicatorRewards[1].getString('participant_id')
 
+  // Item 1: pipeline de ajuste só pode alterar recompensas em pendente_dados ou
+  // em_analise — jamais paga, aprovada, em_lote ou cancelada.
+
+  function canAdjust(rew) {
+    const st = rew.getString('status')
+    return st === 'pendente_dados' || st === 'em_analise'
+  }
+
+  function hasCpfPixFor(partId) {
+    let part = null
+    try {
+      part = $app.findRecordById('participants', partId)
+    } catch (_) {}
+    return (
+      part && !!((part.getString('pix_key') || '').trim() && (part.getString('cpf') || '').trim())
+    )
+  }
+
   if (isSameIndicator && indicatorRewards.length >= 2) {
     let bestRew = indicatorRewards[0]
     let otherRew = indicatorRewards[1]
@@ -987,72 +996,55 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
       otherRew = indicatorRewards[0]
     }
 
-    otherRew.set('status', 'cancelada')
-    otherRew.set('adjusted_amount_brl', 0)
-    otherRew.set('final_amount_brl', 0)
-    otherRew.set(
-      'adjustment_reason',
-      'Mesmo indicador nos dois lados: cancelada pela regra de indicador único (prevaleceu a maior recompensa).',
-    )
-    $app.save(otherRew)
-
-    const cap10 = valorRecebido * 0.1
-    let finalVal = Math.max(calc0, calc1)
-    let reason = 'Mesmo indicador nos dois lados (maior recompensa selecionada).'
-    if (finalVal > cap10) {
-      finalVal = cap10
-      reason += ` Limitada ao teto de 10% da comissão recebida (R$ ${cap10.toFixed(2)}).`
+    // Indicador único: cancela a recompensa menor apenas se ela ainda estiver
+    // ajustável (pendente_dados/em_analise); recompensa paga/aprovada/em_lote é mantida.
+    if (canAdjust(otherRew)) {
+      otherRew.set('status', 'cancelada')
+      otherRew.set('adjusted_amount_brl', 0)
+      otherRew.set('final_amount_brl', 0)
+      otherRew.set(
+        'adjustment_reason',
+        'Mesmo indicador nos dois lados: cancelada pela regra de indicador único (prevaleceu a maior recompensa).',
+      )
+      $app.save(otherRew)
     }
-    bestRew.set('adjusted_amount_brl', finalVal)
-    bestRew.set('final_amount_brl', finalVal)
-    bestRew.set('adjustment_reason', reason)
 
-    let part = null
-    try {
-      part = $app.findRecordById('participants', bestRew.getString('participant_id'))
-    } catch (_) {}
-    const hasCpfPix =
-      part && !!((part.getString('pix_key') || '').trim() && (part.getString('cpf') || '').trim())
-    bestRew.set('status', finalVal > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise')
-    $app.save(bestRew)
+    // Item 4: recompensa de valor fixo é paga integralmente — sem teto de 10%.
+    const finalVal = Math.max(calc0, calc1)
+    const reason = 'Mesmo indicador nos dois lados (maior recompensa selecionada).'
+    if (canAdjust(bestRew)) {
+      bestRew.set('adjusted_amount_brl', finalVal)
+      bestRew.set('final_amount_brl', finalVal)
+      bestRew.set('adjustment_reason', reason)
+      bestRew.set(
+        'status',
+        finalVal > 0 && !hasCpfPixFor(bestRew.getString('participant_id'))
+          ? 'pendente_dados'
+          : 'em_analise',
+      )
+      $app.save(bestRew)
+    }
   } else {
-    const capPerSide = valorRecebido * 0.1
-
     for (let i = 0; i < dealRewards.length; i++) {
       const rew = dealRewards[i]
-      if (rew.getString('status') === 'cancelada') continue
+      if (!canAdjust(rew)) continue
 
-      const calcAmount = rew.getFloat('calculated_amount_brl') || 0
-      let finalAmount = calcAmount
-      const reasons = []
-
-      if (rew.getString('beneficiary_type') === 'indicador') {
-        if (finalAmount > capPerSide) {
-          finalAmount = capPerSide
-          reasons.push(
-            `Ajustado pelo teto de 10% da comissão recebida (de R$ ${calcAmount.toFixed(2)} para R$ ${capPerSide.toFixed(2)}).`,
-          )
-        }
-      }
+      // Item 4: valor integral da regra — nenhum teto de 10% da comissão é aplicado.
+      const finalAmount = rew.getFloat('calculated_amount_brl') || 0
 
       rew.set('adjusted_amount_brl', finalAmount)
       rew.set('final_amount_brl', finalAmount)
-      if (reasons.length > 0) {
-        rew.set('adjustment_reason', reasons.join(' '))
-      }
 
       if (orangeCheck && !orangeCheck.same_indicator) {
         rew.set('status', 'em_revisao_admin')
         rew.set('orange_flag_reason', orangeCheck.reason)
       } else {
-        let part = null
-        try {
-          part = $app.findRecordById('participants', rew.getString('participant_id'))
-        } catch (_) {}
-        const hasCpfPix =
-          part &&
-          !!((part.getString('pix_key') || '').trim() && (part.getString('cpf') || '').trim())
-        rew.set('status', finalAmount > 0 && !hasCpfPix ? 'pendente_dados' : 'em_analise')
+        rew.set(
+          'status',
+          finalAmount > 0 && !hasCpfPixFor(rew.getString('participant_id'))
+            ? 'pendente_dados'
+            : 'em_analise',
+        )
       }
 
       $app.save(rew)
