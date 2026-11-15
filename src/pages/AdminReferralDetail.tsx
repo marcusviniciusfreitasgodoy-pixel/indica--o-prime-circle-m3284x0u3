@@ -62,6 +62,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { useToast } from '@/hooks/use-toast'
+import { getProgramRewardValues, RewardValues, formatRuleBrl } from '@/services/rewardValues'
 import {
   Building,
   User,
@@ -177,6 +178,7 @@ export function AdminReferralDetailPage() {
   const [copiedMessage, setCopiedMessage] = useState(false)
   const [creciInput, setCreciInput] = useState('')
   const [savingCreci, setSavingCreci] = useState(false)
+  const [rewardValues, setRewardValues] = useState<RewardValues | null>(null)
 
   const loadData = async () => {
     if (!id) return
@@ -185,7 +187,7 @@ export function AdminReferralDetailPage() {
       const [refRes, evRes, caRes, ntRes, tkRes, docRes, cpRes, rcRes, opsRes] = await Promise.all([
         pb.collection('referrals').getOne<Referral>(id, {
           expand:
-            'current_owner_id,original_owner_id,condominium_id,assigned_operator_id,participant_id',
+            'current_owner_id,original_owner_id,condominium_id,assigned_operator_id,participant_id,participant_id.category_id',
         }),
         getReferralEvents(id),
         getContactAttempts(id),
@@ -210,6 +212,15 @@ export function AdminReferralDetailPage() {
       // Initialize defaults for modals
       setPublicSummary(refRes.public_summary || refRes.description || '')
       setListingLink(refRes.listing_link || '')
+
+      // Valores das regras ativas do banco (nunca escritos à mão)
+      try {
+        const participant = refRes.expand?.participant_id as any
+        const catId = participant?.category_id || participant?.expand?.category_id?.id || undefined
+        setRewardValues(await getProgramRewardValues(catId))
+      } catch {
+        setRewardValues(null)
+      }
     } catch (err: any) {
       toast({
         title: 'Erro ao carregar indicação',
@@ -2114,7 +2125,8 @@ export function AdminReferralDetailPage() {
                 </SelectTrigger>
                 <SelectContent className="bg-stone-900 border-stone-800 text-stone-100 rounded-none">
                   <SelectItem value="sim">
-                    Sim (gera recompensa de R$ 500 para indicador ativo)
+                    Sim (gera recompensa de {formatRuleBrl(rewardValues?.firstVisitBrl ?? null)}{' '}
+                    para indicador ativo)
                   </SelectItem>
                   <SelectItem value="nao">
                     Não (apenas registra atendimento sem recompensa)

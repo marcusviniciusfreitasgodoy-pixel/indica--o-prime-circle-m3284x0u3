@@ -636,10 +636,11 @@ onRecordAfterUpdateSuccess((e) => {
 }, 'referrals')
 
 /**
- * Ao criar negócio (deals), cria regras de fechamento
+ * Modelo v4 (0045): a recompensa de fechamento (R$ 2.500) só é gerada quando a
+ * comissão do negócio é registrada como recebida (ver rota register-commission-received).
  */
 onRecordAfterCreateSuccess((e) => {
-  // modelo v3: sem recompensa no fechamento
+  // modelo v4: nenhuma recompensa é criada no registro do negócio
   e.next()
 }, 'deals')
 
@@ -692,7 +693,204 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
   deal.set('commission_received_brl', valorRecebido)
   $app.save(deal)
 
-  // Busca recompensas do negócio
+  // Checagem de indicador laranja ou mesmo indicador
+  let orangeCheck = null
+  const ownerRefId = deal.getString('owner_referral_id')
+  const buyerRefId = deal.getString('buyer_referral_id')
+
+  // Modelo v4 (0045): o registro da comissão recebida é o marco que libera a recompensa
+  // de fechamento do INDICADOR de cada indicação do negócio. A regra ativa de marco
+  // 'fechamento' é lida pela data de registro da indicação (item 8 do modelo oficial).
+  // Sem regra ativa vigente, nenhuma recompensa é gerada.
+
+  // Seleciona a regra ativa de fechamento para o participante, vigente na DATA DA
+  // INDICAÇÃO (item 8: indicações existentes seguem a regra vigente quando registradas).
+  function findClosingRuleForReferral(participant, referral) {
+    const categoryId = participant.getString('category_id')
+    let refType = referral.getString('referral_type')
+    if (!refType || refType === 'proprietario') {
+      const rawType = referral.getString('type')
+      refType = rawType === 'proprietario_locacao' ? 'proprietario_locacao' : 'proprietario_venda'
+    }
+    if (refType !== 'comprador' && refType !== 'proprietario_venda') return null
+
+    const campId = referral.getString('campaign_id')
+    const condoId = referral.getString('condominium_id')
+    const refCreatedStr = referral.getString('created')
+    const refDate = refCreatedStr ? new Date(refCreatedStr) : new Date()
+
+    const ruleFilter = `category_id = '${categoryId}' && milestone = 'fechamento' && beneficiary_type = 'indicador' && active = true && (referral_type = '${refType}' || referral_type = 'todos')`
+    const rules = $app.findRecordsByFilter('reward_rules', ruleFilter, '-version', 50, 0)
+    if (!rules || rules.length === 0) return null
+
+    const validRules = rules.filter((r) => {
+      const vf = r.getString('valid_from')
+      const vt = r.getString('valid_to')
+      if (vf && new Date(vf) > refDate) return false
+      if (vt && new Date(vt) < refDate) return false
+      const rc = r.getString('campaign_id')
+      const rco = r.getString('condominium_id')
+      if (rc && rc !== campId) return false
+      if (rco && rco !== condoId) return false
+      return true
+    })
+    if (validRules.length === 0) return null
+
+    validRules.sort((a, b) => {
+      const aScope = (a.getString('campaign_id') ? 2 : 0) + (a.getString('condominium_id') ? 1 : 0)
+      const bScope = (b.getString('campaign_id') ? 2 : 0) + (b.getString('condominium_id') ? 1 : 0)
+      if (bScope !== aScope) return bScope - aScope
+      return (b.getInt('version') || 1) - (a.getInt('version') || 1)
+    })
+    return validRules[0]
+  }
+
+  // Teto anual de recompensas do participante (contagem no ano civil corrente).
+  function isParticipantOverAnnualCap(participantId) {
+    let annualCap = 8
+    try {
+      const stCap = $app.findFirstRecordByData(
+        'program_settings',
+        'key',
+        'annual_reward_cap_per_participant',
+      )
+      const capVal = JSON.parse(stCap.getString('value_json'))
+      if (typeof capVal === 'number') annualCap = capVal
+    } catch (_) {}
+
+    try {
+      const currentYear = new Date().getFullYear()
+      const yearStart = `${currentYear}-01-01 00:00:00.000Z`
+      const yearEnd = `${currentYear}-12-31 23:59:59.999Z`
+      const countedThisYear = $app.findRecordsByFilter(
+        'rewards',
+        `participant_id = '${participantId}' && (status = 'paga' || status = 'aprovada' || status = 'em_lote' || status = 'em_analise' || status = 'pendente_dados') && created >= '${yearStart}' && created <= '${yearEnd}'`,
+        '',
+        100,
+        0,
+      )
+      if (countedThisYear && countedThisYear.length >= annualCap) return true
+    } catch (_) {}
+    return false
+  }
+
+  // Cria a recompensa de fechamento para o INDICADOR da indicação, com o valor lido da
+  // regra ativa de marco 'fechamento' vigente na data de registro da indicação.
+  // Respeita o pipeline existente: status pendente_dados/em_analise, teto anual e auditoria.
+  function createClosingRewardForReferral(dealRec, referral) {
+    const partId = referral.getString('participant_id')
+    if (!partId) return null
+
+    let participant = null
+    try {
+      participant = $app.findRecordById('participants', partId)
+    } catch (_) {
+      return null
+    }
+
+    // Regra C9 / C7: entidade_condominial e front "parceiros" nunca recebem dinheiro
+    const categoryId = participant.getString('category_id')
+    let isEntidadeCondominial = false
+    let isPartnerFront = false
+    try {
+      const partCat = $app.findRecordById('participant_categories', categoryId)
+      if (partCat.getString('slug') === 'entidade_condominial') isEntidadeCondominial = true
+      if (partCat.getString('front') === 'parceiros') isPartnerFront = true
+    } catch (_) {}
+    if (isEntidadeCondominial || isPartnerFront) return null
+
+    const rule = findClosingRuleForReferral(participant, referral)
+    if (!rule) return null // sem regra ativa de fechamento: não gera
+
+    // Duplicidade: já existe recompensa de fechamento para esta indicação?
+    const exist = $app.findRecordsByFilter(
+      'rewards',
+      `referral_id = '${referral.id}' && milestone = 'fechamento' && beneficiary_type = 'indicador'`,
+      '',
+      1,
+      0,
+    )
+    if (exist && exist.length > 0) return null
+
+    const rType = rule.getString('reward_type')
+    if (rType !== 'valor_fixo') return null
+    const amount = rule.getFloat('fixed_amount_brl') || 0
+    if (amount <= 0) return null
+
+    const hasCpfPix = !!(
+      (participant.getString('pix_key') || '').trim() && (participant.getString('cpf') || '').trim()
+    )
+    let initialStatus = !hasCpfPix ? 'pendente_dados' : 'em_analise'
+    let adjustmentReason = ''
+    if (isParticipantOverAnnualCap(participant.id)) {
+      initialStatus = 'em_revisao_admin'
+      adjustmentReason = 'teto anual'
+    }
+
+    const rewardsCol = $app.findCollectionByNameOrId('rewards')
+    const rew = new Record(rewardsCol)
+    rew.set('referral_id', referral.id)
+    rew.set('deal_id', dealRec.id)
+    rew.set('milestone', 'fechamento')
+    rew.set('beneficiary_type', 'indicador')
+    rew.set('participant_id', participant.id)
+    rew.set('rule_id', rule.id)
+    rew.set('reward_type', rType)
+    rew.set('calculated_amount_brl', amount)
+    rew.set('adjusted_amount_brl', amount)
+    rew.set('final_amount_brl', amount)
+    rew.set('via_decline', false)
+    rew.set('status', initialStatus)
+    if (adjustmentReason) {
+      rew.set('adjustment_reason', adjustmentReason)
+    }
+    $app.save(rew)
+
+    try {
+      const auditCol = $app.findCollectionByNameOrId('audit_logs')
+      const audit = new Record(auditCol)
+      audit.set('action', 'reward_created_closing')
+      audit.set('resource_type', 'rewards')
+      audit.set('resource_id', rew.id)
+      audit.set(
+        'details',
+        JSON.stringify({
+          referral_id: referral.id,
+          deal_id: dealRec.id,
+          amount,
+          status: initialStatus,
+          rule_id: rule.id,
+        }),
+      )
+      $app.save(audit)
+    } catch (_) {}
+
+    return rew
+  }
+
+  if (ownerRefId) {
+    try {
+      createClosingRewardForReferral(deal, $app.findRecordById('referrals', ownerRefId))
+    } catch (errOwner) {
+      console.error(
+        '[register-commission-received] Erro ao gerar fechamento (proprietário):',
+        errOwner,
+      )
+    }
+  }
+  if (buyerRefId) {
+    try {
+      createClosingRewardForReferral(deal, $app.findRecordById('referrals', buyerRefId))
+    } catch (errBuyer) {
+      console.error(
+        '[register-commission-received] Erro ao gerar fechamento (comprador):',
+        errBuyer,
+      )
+    }
+  }
+
+  // Busca recompensas do negócio (inclui as de fechamento recém-criadas, que passam
+  // pelo mesmo pipeline de ajuste de teto/indicador laranja abaixo)
   const dealRewards = $app.findRecordsByFilter(
     'rewards',
     `deal_id = '${deal.id}' && milestone = 'fechamento'`,
@@ -700,11 +898,6 @@ routerAdd('POST', '/backend/v1/rewards/register-commission-received', (e) => {
     50,
     0,
   )
-
-  // Checagem de indicador laranja ou mesmo indicador
-  let orangeCheck = null
-  const ownerRefId = deal.getString('owner_referral_id')
-  const buyerRefId = deal.getString('buyer_referral_id')
 
   if (ownerRefId && buyerRefId) {
     try {

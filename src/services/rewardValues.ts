@@ -2,6 +2,8 @@ import pb from '@/lib/pocketbase/client'
 import type { RewardRule } from '@/services/rewards'
 
 export interface RewardValues {
+  captureVendaBrl: number | null
+  captureLocacaoBrl: number | null
   firstVisitBrl: number | null
   closingBuyerBrl: number | null
   closingOwnerSaleBrl: number | null
@@ -10,6 +12,14 @@ export interface RewardValues {
 export interface ClosingRewardsPreview {
   buyer: number | null
   ownerSale: number | null
+}
+
+/**
+ * Formata um valor lido das regras ativas (ou um traço quando a regra não existe).
+ */
+export function formatRuleBrl(value: number | null): string {
+  if (value === null || value === undefined) return '—'
+  return `R$ ${value.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 function ruleAmount(rule: RewardRule): number | null {
@@ -24,6 +34,8 @@ function ruleAmount(rule: RewardRule): number | null {
  */
 export async function getProgramRewardValues(categoryId?: string): Promise<RewardValues> {
   const empty: RewardValues = {
+    captureVendaBrl: null,
+    captureLocacaoBrl: null,
     firstVisitBrl: null,
     closingBuyerBrl: null,
     closingOwnerSaleBrl: null,
@@ -49,11 +61,15 @@ export async function getProgramRewardValues(categoryId?: string): Promise<Rewar
         )
         .sort((a, b) => (b.version || 0) - (a.version || 0))[0]
 
+    const captureVenda = byKey('captada', 'proprietario_venda')
+    const captureLocacao = byKey('captada', 'proprietario_locacao')
     const firstVisit = byKey('primeira_visita_realizada', 'comprador')
     const closingBuyer = byKey('fechamento', 'comprador')
     const closingOwner = byKey('fechamento', 'proprietario_venda')
 
     return {
+      captureVendaBrl: captureVenda ? ruleAmount(captureVenda) : null,
+      captureLocacaoBrl: captureLocacao ? ruleAmount(captureLocacao) : null,
       firstVisitBrl: firstVisit ? ruleAmount(firstVisit) : null,
       closingBuyerBrl: closingBuyer ? ruleAmount(closingBuyer) : null,
       closingOwnerSaleBrl: closingOwner ? ruleAmount(closingOwner) : null,

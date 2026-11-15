@@ -4,6 +4,7 @@ import pb from '@/lib/pocketbase/client'
 import { useAuth } from '@/contexts/AuthContext'
 import { MemberNavbar } from '@/components/MemberNavbar'
 import { getRawMemberReferrals, ParticipantReferralItem } from '@/services/referrals'
+import { getProgramRewardValues, RewardValues, formatRuleBrl } from '@/services/rewardValues'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -55,6 +56,7 @@ export default function DashboardPage() {
   const [copiedLink, setCopiedLink] = useState(false)
   const [rewardsStats, setRewardsStats] = useState<RewardSummary>({ aReceber: 0, recebido: 0 })
   const [clubeBeneficiosUrl, setClubeBeneficiosUrl] = useState<string>('')
+  const [rewardValues, setRewardValues] = useState<RewardValues | null>(null)
 
   // Filtering state
   const [searchQuery, setSearchQuery] = useState('')
@@ -92,6 +94,16 @@ export default function DashboardPage() {
                   slug: cat.slug,
                   allowed_channels: cat.allowed_channels,
                 })
+              }
+
+              // Valores das regras ativas do banco (nunca escritos à mão)
+              try {
+                const rv = await getProgramRewardValues(
+                  partRec.category_id || (cat as any)?.id || undefined,
+                )
+                setRewardValues(rv)
+              } catch {
+                setRewardValues(null)
               }
 
               // Carregar valores fixos reais das recompensas
@@ -431,11 +443,24 @@ export default function DashboardPage() {
               Valores fixos da recompensa por indicação:
             </p>
             <p className="leading-relaxed text-[11px] break-words">
-              <strong className="font-mono">R$ 100</strong> para indicação de proprietário (venda ou
-              locação) com assinatura de autorização ou decisão da Godoy Prime de não prosseguir com
-              imóvel qualificado. • <strong className="font-mono">R$ 500</strong> para indicação de
-              comprador na primeira visita com corretor credenciado e capacidade demonstrada. A
-              recompensa remunera a informação e independe de fechamento.
+              <strong className="font-mono">
+                {formatRuleBrl(rewardValues?.captureVendaBrl ?? null)}
+              </strong>{' '}
+              para indicação de proprietário de venda na captação formal do imóvel •{' '}
+              <strong className="font-mono">
+                {formatRuleBrl(rewardValues?.captureLocacaoBrl ?? null)}
+              </strong>{' '}
+              para indicação de proprietário de locação na captação formal do imóvel •{' '}
+              <strong className="font-mono">
+                {formatRuleBrl(rewardValues?.firstVisitBrl ?? null)}
+              </strong>{' '}
+              para indicação de comprador na primeira visita com corretor credenciado e capacidade
+              financeira demonstrada •{' '}
+              <strong className="font-mono">
+                {formatRuleBrl(rewardValues?.closingBuyerBrl ?? null)}
+              </strong>{' '}
+              por indicação de comprador ou de proprietário de venda quando o negócio for concluído
+              e a comissão correspondente for recebida pela Godoy Prime.
             </p>
           </div>
         </div>
@@ -556,7 +581,19 @@ export default function DashboardPage() {
               {filteredItems.map((item) => {
                 const stage = item.timeline_stage || item.public_stage || 'Nova'
                 const isBuyer = item.referral_type === 'comprador'
-                const rewardExpected = isBuyer ? 'R$ 500,00' : 'R$ 100,00'
+                const isLocacao =
+                  item.referral_type === 'proprietario_locacao' ||
+                  item.referral_type === 'proprietario'
+                // Valor previsto: próximo marco da linha do tempo, lido das regras ativas
+                const visited = !!item.primeira_visita_at
+                const rewardExpected = isBuyer
+                  ? formatRuleBrl(
+                      (visited ? rewardValues?.closingBuyerBrl : rewardValues?.firstVisitBrl) ??
+                        null,
+                    )
+                  : isLocacao
+                    ? formatRuleBrl(rewardValues?.captureLocacaoBrl ?? null)
+                    : formatRuleBrl(rewardValues?.captureVendaBrl ?? null)
 
                 return (
                   <Card
