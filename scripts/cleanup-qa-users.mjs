@@ -11,9 +11,9 @@
  * (confira no painel Skip Cloud antes de rodar).
  */
 
-const BASE_URL = process.env.PB_URL || 'https://SEU-SUBDOMINIO.pocketbase.goskip.app'
-const EMAIL = process.env.PB_SUPERUSER_EMAIL
-const PASSWORD = process.env.PB_SUPERUSER_PASSWORD
+const BASE_URL =
+  process.env.PB_URL || 'https://indicacao-prime-circle-1ba22.shrd01.internal.goskip.dev'
+const TOKEN = process.env.PB_SUPERUSER_TOKEN
 const DRY_RUN = process.env.DRY_RUN === '1'
 
 const QA_USER_IDS = [
@@ -55,8 +55,8 @@ const LINKED_COLLECTIONS = [
   { name: 'referral_events', fields: ['actor_id'] },
 ]
 
-if (!EMAIL || !PASSWORD) {
-  console.error('Defina PB_SUPERUSER_EMAIL e PB_SUPERUSER_PASSWORD no ambiente.')
+if (!TOKEN) {
+  console.error('Defina PB_SUPERUSER_TOKEN no ambiente (token de superusuário pronto).')
   process.exit(1)
 }
 
@@ -71,13 +71,15 @@ async function api(path, options = {}) {
 
 async function main() {
   console.log(`Base: ${BASE_URL}${DRY_RUN ? ' (DRY RUN)' : ''}`)
-  const auth = await api('/api/collections/_superusers/auth-with-password', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ identity: EMAIL, password: PASSWORD }),
-  })
-  const token = auth.token
-  const headers = { Authorization: token }
+  // Valida a autenticação por token ANTES de qualquer operação destrutiva.
+  const probe = await api(
+    '/api/collections/users/records?perPage=1&filter=' + encodeURIComponent("email~'qa.probe'"),
+    {
+      headers: { Authorization: TOKEN },
+    },
+  )
+  console.log(`Auth por token OK (probe encontrou ${probe.totalItems} usuários qa.probe).`)
+  const headers = { Authorization: TOKEN }
 
   const deleted = {}
 
